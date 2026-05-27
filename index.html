@@ -105,7 +105,7 @@
     </header>
     <div class="seccion-titulo">📋 Módulos</div>
     <div class="modulos">
-      <div class="modulo"><div class="emoji">📦</div><p>Pedido Axionlog</p></div>
+      <div class="modulo" onclick="abrirAxionlog()"><div class="emoji">📦</div><p>Pedido Axionlog</p></div>
       <div class="modulo" onclick="abrirCoca()"><div class="emoji">🥤</div><p>Pedido Coca</p></div>
       <div class="modulo" onclick="window.location.href='auditoria.html'"><div class="emoji">⏰</div><p>Conteo de Horas</p></div>
       <div class="modulo"><div class="emoji">📊</div><p>Cashflow</p></div>
@@ -353,6 +353,11 @@
     window.abrirCoca = function() {
       const local = document.getElementById('nombre-local').textContent;
       window.location.href = 'coca.html?local=' + encodeURIComponent(local);
+    }
+
+    window.abrirAxionlog = function() {
+      const local = document.getElementById('nombre-local').textContent;
+      window.location.href = 'axionlog.html?local=' + encodeURIComponent(local);
     }
 
     window.entrarLocal = function(nombre) {
