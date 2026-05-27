@@ -7,8 +7,8 @@
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: sans-serif; background: #f0f2f5; color: #1a1a1a; }
-    .pantalla { display: none; min-height: 100vh; }
-    .pantalla.activa { display: flex; flex-direction: column; }
+    .pantalla { display: none; min-height: 100vh; flex-direction: column; }
+    .pantalla.activa { display: flex; }
     #inicio { background: #1a1a2e; justify-content: center; align-items: center; gap: 32px; padding: 40px 24px; }
     .inicio-header { text-align: center; color: white; }
     .inicio-header h1 { font-size: 28px; }
@@ -18,7 +18,7 @@
     .local-card .emoji { font-size: 40px; }
     .local-card h2 { font-size: 20px; margin-top: 10px; }
     .local-card p { font-size: 13px; color: #aaa; margin-top: 4px; }
-    #panel-local { background: #f0f2f5; flex-direction: column; }
+    .btn-general { background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.3); border-radius: 16px; padding: 18px 20px; text-align: center; cursor: pointer; color: white; width: 100%; max-width: 320px; font-size: 16px; font-weight: 600; }
     header { background: #1a1a2e; color: white; padding: 16px 20px; display: flex; align-items: center; gap: 12px; }
     .btn-volver { background: rgba(255,255,255,0.15); border: none; color: white; border-radius: 8px; padding: 6px 12px; font-size: 18px; cursor: pointer; }
     header h1 { font-size: 18px; }
@@ -27,13 +27,33 @@
     .modulo .emoji { font-size: 32px; }
     .modulo p { font-size: 13px; margin-top: 8px; font-weight: 600; color: #333; }
     .seccion-titulo { padding: 8px 16px 4px; font-size: 11px; font-weight: 700; color: #999; text-transform: uppercase; }
-    .caja-general { margin: 4px 16px 24px; background: #1a1a2e; color: white; border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; }
-    .caja-general .emoji { font-size: 32px; }
-    .caja-general p { margin-top: 8px; font-weight: 600; font-size: 15px; }
-    .caja-general span { font-size: 12px; color: #aaa; }
+
+    /* CAJA */
+    #caja { background: #f0f2f5; }
+    .caja-form { background: white; margin: 12px 16px; border-radius: 12px; padding: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); }
+    .caja-form h3 { font-size: 14px; font-weight: 700; margin-bottom: 12px; color: #333; }
+    .campo { margin-bottom: 10px; }
+    .campo label { font-size: 12px; color: #666; display: block; margin-bottom: 4px; }
+    .campo input, .campo select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; }
+    .btn-guardar { width: 100%; background: #1a1a2e; color: white; border: none; border-radius: 8px; padding: 12px; font-size: 15px; font-weight: 600; cursor: pointer; margin-top: 4px; }
+    .movimientos-lista { padding: 0 16px 24px; }
+    .movimiento-item { background: white; border-radius: 10px; padding: 12px 14px; margin-bottom: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); display: flex; justify-content: space-between; align-items: center; }
+    .mov-info { flex: 1; }
+    .mov-monto { font-size: 16px; font-weight: 700; }
+    .mov-monto.entrada { color: #2a9d5c; }
+    .mov-monto.salida { color: #e63946; }
+    .mov-monto.voucher { color: #e67e22; }
+    .mov-monto.alquiler { color: #8e44ad; }
+    .mov-monto.expensas { color: #2980b9; }
+    .mov-detalle { font-size: 12px; color: #666; margin-top: 2px; }
+    .mov-acciones { display: flex; gap: 6px; }
+    .btn-eliminar { background: #fff0f0; border: none; color: #e63946; border-radius: 6px; padding: 6px 10px; cursor: pointer; font-size: 13px; }
+    .cargando { text-align: center; padding: 20px; color: #999; font-size: 14px; }
   </style>
 </head>
 <body>
+
+  <!-- PANTALLA INICIO -->
   <div class="pantalla activa" id="inicio">
     <div class="inicio-header">
       <h1>⚡ Waysub Panel</h1>
@@ -50,11 +70,14 @@
         <h2>Morón</h2>
         <p>Subway · Balcarce</p>
       </div>
+      <div class="btn-general" onclick="abrirCaja()">💰 Movimiento de Caja</div>
     </div>
   </div>
+
+  <!-- PANTALLA LOCAL -->
   <div class="pantalla" id="panel-local">
     <header>
-      <button class="btn-volver" onclick="volver()">←</button>
+      <button class="btn-volver" onclick="volver('inicio')">←</button>
       <h1 id="nombre-local">Local</h1>
     </header>
     <div class="seccion-titulo">📋 Módulos</div>
@@ -64,22 +87,133 @@
       <div class="modulo"><div class="emoji">⏰</div><p>Conteo de Horas</p></div>
       <div class="modulo"><div class="emoji">📊</div><p>Cashflow</p></div>
     </div>
-    <div class="seccion-titulo">🌐 General</div>
-    <div class="caja-general">
-      <div class="emoji">💰</div>
-      <p>Movimiento de Caja</p>
-      <span>Todos los locales</span>
+  </div>
+
+  <!-- PANTALLA CAJA -->
+  <div class="pantalla" id="caja">
+    <header>
+      <button class="btn-volver" onclick="volver('inicio')">←</button>
+      <h1>💰 Movimiento de Caja</h1>
+    </header>
+
+    <div class="caja-form">
+      <h3>Nuevo movimiento</h3>
+      <div class="campo">
+        <label>Fecha</label>
+        <input type="date" id="inp-fecha">
+      </div>
+      <div class="campo">
+        <label>Local</label>
+        <select id="inp-local">
+          <option value="Subway Ramos">Subway Ramos</option>
+          <option value="Subway Morón">Subway Morón</option>
+          <option value="Balcarce Ramos">Balcarce Ramos</option>
+          <option value="Balcarce Morón">Balcarce Morón</option>
+        </select>
+      </div>
+      <div class="campo">
+        <label>Tipo</label>
+        <select id="inp-tipo">
+          <option value="entrada">➕ Entrada</option>
+          <option value="salida">➖ Salida</option>
+          <option value="voucher">🧾 Voucher</option>
+          <option value="alquiler">🏠 Alquiler</option>
+          <option value="expensas">🏢 Expensas</option>
+        </select>
+      </div>
+      <div class="campo">
+        <label>Monto ($)</label>
+        <input type="number" id="inp-monto" placeholder="500000">
+      </div>
+      <div class="campo">
+        <label>Descripción (opcional)</label>
+        <input type="text" id="inp-descripcion" placeholder="Ej: pago proveedor">
+      </div>
+      <button class="btn-guardar" onclick="guardarMovimiento()">Guardar movimiento</button>
+    </div>
+
+    <div class="seccion-titulo">📋 Últimos movimientos</div>
+    <div class="movimientos-lista" id="lista-movimientos">
+      <div class="cargando">Cargando...</div>
     </div>
   </div>
-  <script>
-    function entrarLocal(nombre) {
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, orderBy, query } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAB2-btgFqGiCe1YdZSDv4EShV601N-uQs",
+      authDomain: "waysub-web.firebaseapp.com",
+      projectId: "waysub-web",
+      storageBucket: "waysub-web.firebasestorage.app",
+      messagingSenderId: "219825581217",
+      appId: "1:219825581217:web:6f752ee27a5446400114e0"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // Fecha de hoy por defecto
+    document.getElementById('inp-fecha').valueAsDate = new Date();
+
+    async function cargarMovimientos() {
+      const lista = document.getElementById('lista-movimientos');
+      lista.innerHTML = '<div class="cargando">Cargando...</div>';
+      const q = query(collection(db, "movimientos"), orderBy("fecha", "desc"));
+      const snap = await getDocs(q);
+      if (snap.empty) { lista.innerHTML = '<div class="cargando">No hay movimientos aún</div>'; return; }
+      lista.innerHTML = '';
+      snap.forEach(d => {
+        const m = d.data();
+        const monto = Number(m.monto).toLocaleString('es-AR');
+        lista.innerHTML += `
+          <div class="movimiento-item">
+            <div class="mov-info">
+              <div class="mov-monto ${m.tipo}">$${monto}</div>
+              <div class="mov-detalle">${m.local} · ${m.tipo} · ${m.fecha}${m.descripcion ? ' · ' + m.descripcion : ''}</div>
+            </div>
+            <div class="mov-acciones">
+              <button class="btn-eliminar" onclick="window.eliminarMovimiento('${d.id}')">🗑</button>
+            </div>
+          </div>`;
+      });
+    }
+
+    window.guardarMovimiento = async function() {
+      const fecha = document.getElementById('inp-fecha').value;
+      const local = document.getElementById('inp-local').value;
+      const tipo = document.getElementById('inp-tipo').value;
+      const monto = document.getElementById('inp-monto').value;
+      const descripcion = document.getElementById('inp-descripcion').value;
+      if (!fecha || !monto) { alert('Completá fecha y monto'); return; }
+      await addDoc(collection(db, "movimientos"), { fecha, local, tipo, monto, descripcion });
+      document.getElementById('inp-monto').value = '';
+      document.getElementById('inp-descripcion').value = '';
+      cargarMovimientos();
+    }
+
+    window.eliminarMovimiento = async function(id) {
+      if (!confirm('¿Eliminar este movimiento?')) return;
+      await deleteDoc(doc(db, "movimientos", id));
+      cargarMovimientos();
+    }
+
+    window.abrirCaja = function() {
+      document.querySelectorAll('.pantalla').forEach(p => p.classList.remove('activa'));
+      document.getElementById('caja').classList.add('activa');
+      cargarMovimientos();
+    }
+
+    window.entrarLocal = function(nombre) {
       document.getElementById('nombre-local').textContent = nombre;
-      document.getElementById('inicio').classList.remove('activa');
+      document.querySelectorAll('.pantalla').forEach(p => p.classList.remove('activa'));
       document.getElementById('panel-local').classList.add('activa');
     }
-    function volver() {
-      document.getElementById('panel-local').classList.remove('activa');
-      document.getElementById('inicio').classList.add('activa');
+
+    window.volver = function(destino) {
+      document.querySelectorAll('.pantalla').forEach(p => p.classList.remove('activa'));
+      document.getElementById(destino).classList.add('activa');
     }
   </script>
 </body>
