@@ -21,12 +21,10 @@
       display: flex;
       gap: 10px;
       padding: 16px;
-      overflow-x: auto;
     }
 
     .local-tab {
       flex: 1;
-      min-width: 140px;
       background: white;
       border-radius: 12px;
       padding: 16px;
@@ -42,8 +40,22 @@
     .local-tab .emoji { font-size: 28px; }
     .local-tab h2 { font-size: 15px; margin-top: 6px; }
 
-    .modulos {
+    .panel {
+      display: none;
       padding: 0 16px 16px;
+    }
+    .panel.activo { display: block; }
+
+    .seccion-titulo {
+      padding: 8px 0 10px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #999;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .modulos {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 12px;
@@ -63,7 +75,7 @@
     .modulo p { font-size: 13px; margin-top: 8px; font-weight: 600; color: #333; }
 
     .caja-general {
-      margin: 0 16px 24px;
+      margin: 8px 16px 24px;
       background: #1a1a2e;
       color: white;
       border-radius: 12px;
@@ -75,13 +87,11 @@
     .caja-general p { margin-top: 8px; font-weight: 600; font-size: 15px; }
     .caja-general span { font-size: 12px; color: #aaa; }
 
-    .seccion-titulo {
-      padding: 8px 16px 4px;
-      font-size: 11px;
-      font-weight: 700;
-      color: #999;
-      text-transform: uppercase;
-      letter-spacing: 1px;
+    .seccion-general {
+      padding: 0 16px;
+    }
+    .seccion-general .seccion-titulo {
+      padding: 4px 0 10px;
     }
   </style>
 </head>
@@ -92,6 +102,7 @@
     <p>Panel de control interno</p>
   </header>
 
+  <!-- PESTAÑAS -->
   <div class="locales">
     <div class="local-tab active" onclick="seleccionarLocal('ramos', this)">
       <div class="emoji">🏪</div>
@@ -103,29 +114,56 @@
     </div>
   </div>
 
-  <div class="seccion-titulo" id="titulo-local">📍 Ramos Mejía</div>
-
-  <div class="modulos">
-    <div class="modulo">
-      <div class="emoji">📦</div>
-      <p>Pedido Axionlog</p>
-    </div>
-    <div class="modulo">
-      <div class="emoji">🥤</div>
-      <p>Pedido Coca</p>
-    </div>
-    <div class="modulo">
-      <div class="emoji">⏰</div>
-      <p>Conteo de Horas</p>
-    </div>
-    <div class="modulo">
-      <div class="emoji">📊</div>
-      <p>Cashflow</p>
+  <!-- PANEL RAMOS -->
+  <div class="panel activo" id="panel-ramos">
+    <div class="seccion-titulo">📍 Ramos Mejía</div>
+    <div class="modulos">
+      <div class="modulo">
+        <div class="emoji">📦</div>
+        <p>Pedido Axionlog</p>
+      </div>
+      <div class="modulo">
+        <div class="emoji">🥤</div>
+        <p>Pedido Coca</p>
+      </div>
+      <div class="modulo">
+        <div class="emoji">⏰</div>
+        <p>Conteo de Horas</p>
+      </div>
+      <div class="modulo">
+        <div class="emoji">📊</div>
+        <p>Cashflow</p>
+      </div>
     </div>
   </div>
 
-  <div class="seccion-titulo">🌐 General</div>
+  <!-- PANEL MORÓN -->
+  <div class="panel" id="panel-moron">
+    <div class="seccion-titulo">📍 Morón</div>
+    <div class="modulos">
+      <div class="modulo">
+        <div class="emoji">📦</div>
+        <p>Pedido Axionlog</p>
+      </div>
+      <div class="modulo">
+        <div class="emoji">🥤</div>
+        <p>Pedido Coca</p>
+      </div>
+      <div class="modulo">
+        <div class="emoji">⏰</div>
+        <p>Conteo de Horas</p>
+      </div>
+      <div class="modulo">
+        <div class="emoji">📊</div>
+        <p>Cashflow</p>
+      </div>
+    </div>
+  </div>
 
+  <!-- CAJA GENERAL -->
+  <div class="seccion-general">
+    <div class="seccion-titulo">🌐 General</div>
+  </div>
   <div class="caja-general">
     <div class="emoji">💰</div>
     <p>Movimiento de Caja</p>
@@ -135,9 +173,9 @@
   <script>
     function seleccionarLocal(local, el) {
       document.querySelectorAll('.local-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('activo'));
       el.classList.add('active');
-      const nombres = { ramos: 'Ramos Mejía', moron: 'Morón' };
-      document.getElementById('titulo-local').textContent = '📍 ' + nombres[local];
+      document.getElementById('panel-' + local).classList.add('activo');
     }
   </script>
 
