@@ -9,6 +9,8 @@
     body { font-family: sans-serif; background: #f0f2f5; color: #1a1a1a; }
     .pantalla { display: none; min-height: 100vh; flex-direction: column; }
     .pantalla.activa { display: flex; }
+
+    /* INICIO */
     #inicio { background: #1a1a2e; justify-content: center; align-items: center; gap: 32px; padding: 40px 24px; }
     .inicio-header { text-align: center; color: white; }
     .inicio-header h1 { font-size: 28px; }
@@ -19,9 +21,13 @@
     .local-card h2 { font-size: 20px; margin-top: 10px; }
     .local-card p { font-size: 13px; color: #aaa; margin-top: 4px; }
     .btn-general { background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.3); border-radius: 16px; padding: 18px 20px; text-align: center; cursor: pointer; color: white; width: 100%; max-width: 320px; font-size: 16px; font-weight: 600; }
-    header { background: #1a1a2e; color: white; padding: 16px 20px; display: flex; align-items: center; gap: 12px; }
+
+    /* HEADER */
+    header { background: #1a1a2e; color: white; padding: 16px 20px; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 10; }
     .btn-volver { background: rgba(255,255,255,0.15); border: none; color: white; border-radius: 8px; padding: 6px 12px; font-size: 18px; cursor: pointer; }
     header h1 { font-size: 18px; }
+
+    /* MODULOS */
     .modulos { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 16px; }
     .modulo { background: white; border-radius: 12px; padding: 20px 12px; text-align: center; cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,0.07); }
     .modulo .emoji { font-size: 32px; }
@@ -29,31 +35,68 @@
     .seccion-titulo { padding: 8px 16px 4px; font-size: 11px; font-weight: 700; color: #999; text-transform: uppercase; }
 
     /* CAJA */
-    #caja { background: #f0f2f5; }
-    .caja-form { background: white; margin: 12px 16px; border-radius: 12px; padding: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); }
+    #caja { background: #f0f2f5; overflow-y: auto; }
+
+    /* TOTALES */
+    .totales-box { margin: 12px 16px 0; background: #1a1a2e; border-radius: 12px; padding: 16px; color: white; }
+    .saldo-neto { text-align: center; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.15); }
+    .saldo-neto span { font-size: 12px; color: #aaa; }
+    .saldo-neto h2 { font-size: 28px; font-weight: 700; margin-top: 4px; }
+    .saldo-neto h2.positivo { color: #2ecc71; }
+    .saldo-neto h2.negativo { color: #e74c3c; }
+    .totales-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .total-item { background: rgba(255,255,255,0.08); border-radius: 8px; padding: 10px; }
+    .total-item span { font-size: 11px; color: #aaa; }
+    .total-item p { font-size: 15px; font-weight: 700; margin-top: 2px; }
+    .total-item p.entrada { color: #2ecc71; }
+    .total-item p.salida { color: #e74c3c; }
+
+    .totales-detalle { margin: 8px 16px 0; background: white; border-radius: 12px; padding: 14px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); }
+    .totales-detalle h4 { font-size: 11px; font-weight: 700; color: #999; text-transform: uppercase; margin-bottom: 10px; }
+    .detalle-fila { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid #f0f0f0; font-size: 13px; }
+    .detalle-fila:last-child { border-bottom: none; }
+    .detalle-fila span { color: #666; }
+    .detalle-fila strong { color: #1a1a1a; }
+
+    /* FILTROS */
+    .filtros { margin: 8px 16px 0; display: flex; gap: 8px; flex-wrap: wrap; }
+    .filtro-select { flex: 1; min-width: 120px; padding: 8px; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; background: white; }
+
+    /* FORM */
+    .caja-form { background: white; margin: 8px 16px 0; border-radius: 12px; padding: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); }
     .caja-form h3 { font-size: 14px; font-weight: 700; margin-bottom: 12px; color: #333; }
     .campo { margin-bottom: 10px; }
     .campo label { font-size: 12px; color: #666; display: block; margin-bottom: 4px; }
     .campo input, .campo select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; }
     .btn-guardar { width: 100%; background: #1a1a2e; color: white; border: none; border-radius: 8px; padding: 12px; font-size: 15px; font-weight: 600; cursor: pointer; margin-top: 4px; }
-    .movimientos-lista { padding: 0 16px 24px; }
+
+    /* CATEGORIAS */
+    .cat-manager { background: white; margin: 8px 16px 0; border-radius: 12px; padding: 14px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); }
+    .cat-manager h4 { font-size: 11px; font-weight: 700; color: #999; text-transform: uppercase; margin-bottom: 10px; }
+    .cat-lista { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+    .cat-tag { background: #f0f2f5; border-radius: 20px; padding: 4px 10px; font-size: 12px; display: flex; align-items: center; gap: 6px; }
+    .cat-tag button { background: none; border: none; color: #999; cursor: pointer; font-size: 14px; padding: 0; }
+    .cat-nueva { display: flex; gap: 8px; }
+    .cat-nueva input { flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; }
+    .cat-nueva button { background: #1a1a2e; color: white; border: none; border-radius: 8px; padding: 8px 14px; font-size: 13px; cursor: pointer; }
+
+    /* LISTA */
+    .movimientos-lista { padding: 8px 16px 24px; }
     .movimiento-item { background: white; border-radius: 10px; padding: 12px 14px; margin-bottom: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); display: flex; justify-content: space-between; align-items: center; }
     .mov-info { flex: 1; }
     .mov-monto { font-size: 16px; font-weight: 700; }
     .mov-monto.entrada { color: #2a9d5c; }
-    .mov-monto.salida { color: #e63946; }
-    .mov-monto.voucher { color: #e67e22; }
-    .mov-monto.alquiler { color: #8e44ad; }
-    .mov-monto.expensas { color: #2980b9; }
+    .mov-monto.salida, .mov-monto.voucher, .mov-monto.alquiler, .mov-monto.expensas { color: #e63946; }
     .mov-detalle { font-size: 12px; color: #666; margin-top: 2px; }
     .mov-acciones { display: flex; gap: 6px; }
     .btn-eliminar { background: #fff0f0; border: none; color: #e63946; border-radius: 6px; padding: 6px 10px; cursor: pointer; font-size: 13px; }
     .cargando { text-align: center; padding: 20px; color: #999; font-size: 14px; }
+    .sin-resultados { text-align: center; padding: 20px; color: #bbb; font-size: 14px; }
   </style>
 </head>
 <body>
 
-  <!-- PANTALLA INICIO -->
+  <!-- INICIO -->
   <div class="pantalla activa" id="inicio">
     <div class="inicio-header">
       <h1>⚡ Waysub Panel</h1>
@@ -74,7 +117,7 @@
     </div>
   </div>
 
-  <!-- PANTALLA LOCAL -->
+  <!-- PANEL LOCAL -->
   <div class="pantalla" id="panel-local">
     <header>
       <button class="btn-volver" onclick="volver('inicio')">←</button>
@@ -89,19 +132,59 @@
     </div>
   </div>
 
-  <!-- PANTALLA CAJA -->
+  <!-- CAJA -->
   <div class="pantalla" id="caja">
     <header>
       <button class="btn-volver" onclick="volver('inicio')">←</button>
       <h1>💰 Movimiento de Caja</h1>
     </header>
 
+    <!-- TOTALES -->
+    <div class="totales-box">
+      <div class="saldo-neto">
+        <span>Saldo neto</span>
+        <h2 id="saldo-neto-valor">$0</h2>
+      </div>
+      <div class="totales-grid">
+        <div class="total-item"><span>Total entradas</span><p class="entrada" id="total-entradas">$0</p></div>
+        <div class="total-item"><span>Total salidas</span><p class="salida" id="total-salidas">$0</p></div>
+      </div>
+    </div>
+
+    <div class="totales-detalle">
+      <h4>Por categoría</h4>
+      <div id="detalle-categorias"></div>
+    </div>
+
+    <div class="totales-detalle">
+      <h4>Por local</h4>
+      <div id="detalle-locales"></div>
+    </div>
+
+    <!-- FILTROS -->
+    <div class="filtros">
+      <select class="filtro-select" id="filtro-periodo" onchange="aplicarFiltros()">
+        <option value="todo">📅 Todo</option>
+        <option value="hoy">Hoy</option>
+        <option value="semana">Esta semana</option>
+        <option value="mes">Este mes</option>
+      </select>
+      <select class="filtro-select" id="filtro-local" onchange="aplicarFiltros()">
+        <option value="todos">🏪 Todos los locales</option>
+        <option value="Subway Ramos">Subway Ramos</option>
+        <option value="Subway Morón">Subway Morón</option>
+        <option value="Balcarce Ramos">Balcarce Ramos</option>
+        <option value="Balcarce Morón">Balcarce Morón</option>
+      </select>
+      <select class="filtro-select" id="filtro-categoria" onchange="aplicarFiltros()">
+        <option value="todas">📂 Todas las categorías</option>
+      </select>
+    </div>
+
+    <!-- FORM -->
     <div class="caja-form">
       <h3>Nuevo movimiento</h3>
-      <div class="campo">
-        <label>Fecha</label>
-        <input type="date" id="inp-fecha">
-      </div>
+      <div class="campo"><label>Fecha</label><input type="date" id="inp-fecha"></div>
       <div class="campo">
         <label>Local</label>
         <select id="inp-local">
@@ -111,28 +194,27 @@
           <option value="Balcarce Morón">Balcarce Morón</option>
         </select>
       </div>
-      <div class="campo">
-        <label>Tipo</label>
-        <select id="inp-tipo">
-          <option value="entrada">➕ Entrada</option>
-          <option value="salida">➖ Salida</option>
-          <option value="voucher">🧾 Voucher</option>
-          <option value="alquiler">🏠 Alquiler</option>
-          <option value="expensas">🏢 Expensas</option>
-        </select>
-      </div>
-      <div class="campo">
-        <label>Monto ($)</label>
-        <input type="number" id="inp-monto" placeholder="500000">
-      </div>
-      <div class="campo">
-        <label>Descripción (opcional)</label>
-        <input type="text" id="inp-descripcion" placeholder="Ej: pago proveedor">
-      </div>
+      <div class="campo"><label>Categoría</label><select id="inp-tipo"></select></div>
+      <div class="campo"><label>Monto ($)</label><input type="number" id="inp-monto" placeholder="500000"></div>
+      <div class="campo"><label>Descripción (opcional)</label><input type="text" id="inp-descripcion" placeholder="Ej: pago proveedor"></div>
       <button class="btn-guardar" onclick="guardarMovimiento()">Guardar movimiento</button>
     </div>
 
-    <div class="seccion-titulo">📋 Últimos movimientos</div>
+    <!-- CATEGORIAS -->
+    <div class="cat-manager">
+      <h4>Gestionar categorías</h4>
+      <div class="cat-lista" id="cat-lista"></div>
+      <div class="cat-nueva">
+        <input type="text" id="nueva-cat-nombre" placeholder="Nueva categoría...">
+        <select id="nueva-cat-tipo" style="padding:8px;border:1px solid #ddd;border-radius:8px;font-size:13px;">
+          <option value="entrada">➕ Entrada</option>
+          <option value="salida">➖ Salida</option>
+        </select>
+        <button onclick="agregarCategoria()">+</button>
+      </div>
+    </div>
+
+    <div class="seccion-titulo">📋 Movimientos</div>
     <div class="movimientos-lista" id="lista-movimientos">
       <div class="cargando">Cargando...</div>
     </div>
@@ -140,7 +222,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, orderBy, query } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, orderBy, query, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAB2-btgFqGiCe1YdZSDv4EShV601N-uQs",
@@ -154,30 +236,139 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // Fecha de hoy por defecto
-    document.getElementById('inp-fecha').valueAsDate = new Date();
+    let todosLosMovimientos = [];
+    let categorias = [
+      { nombre: "Entrada", tipo: "entrada" },
+      { nombre: "Salida", tipo: "salida" },
+      { nombre: "Voucher", tipo: "salida" },
+      { nombre: "Alquiler", tipo: "salida" },
+      { nombre: "Expensas", tipo: "salida" }
+    ];
+
+    async function cargarCategorias() {
+      const ref = doc(db, "config", "categorias");
+      const snap = await getDoc(ref);
+      if (snap.exists()) categorias = snap.data().lista;
+      renderCategorias();
+    }
+
+    async function guardarCategorias() {
+      await setDoc(doc(db, "config", "categorias"), { lista: categorias });
+    }
+
+    function renderCategorias() {
+      const lista = document.getElementById('cat-lista');
+      const selTipo = document.getElementById('inp-tipo');
+      const selFiltro = document.getElementById('filtro-categoria');
+
+      lista.innerHTML = categorias.map((c, i) =>
+        `<div class="cat-tag">${c.nombre} <button onclick="window.eliminarCategoria(${i})">×</button></div>`
+      ).join('');
+
+      selTipo.innerHTML = categorias.map(c =>
+        `<option value="${c.nombre}">${c.tipo === 'entrada' ? '➕' : '➖'} ${c.nombre}</option>`
+      ).join('');
+
+      selFiltro.innerHTML = `<option value="todas">📂 Todas las categorías</option>` +
+        categorias.map(c => `<option value="${c.nombre}">${c.nombre}</option>`).join('');
+    }
+
+    window.agregarCategoria = async function() {
+      const nombre = document.getElementById('nueva-cat-nombre').value.trim();
+      const tipo = document.getElementById('nueva-cat-tipo').value;
+      if (!nombre) return;
+      categorias.push({ nombre, tipo });
+      await guardarCategorias();
+      renderCategorias();
+      document.getElementById('nueva-cat-nombre').value = '';
+    }
+
+    window.eliminarCategoria = async function(i) {
+      if (!confirm('¿Eliminar esta categoría?')) return;
+      categorias.splice(i, 1);
+      await guardarCategorias();
+      renderCategorias();
+    }
+
+    function esEntrada(cat) {
+      const c = categorias.find(x => x.nombre === cat);
+      return c ? c.tipo === 'entrada' : false;
+    }
 
     async function cargarMovimientos() {
-      const lista = document.getElementById('lista-movimientos');
-      lista.innerHTML = '<div class="cargando">Cargando...</div>';
       const q = query(collection(db, "movimientos"), orderBy("fecha", "desc"));
       const snap = await getDocs(q);
-      if (snap.empty) { lista.innerHTML = '<div class="cargando">No hay movimientos aún</div>'; return; }
-      lista.innerHTML = '';
-      snap.forEach(d => {
-        const m = d.data();
-        const monto = Number(m.monto).toLocaleString('es-AR');
-        lista.innerHTML += `
-          <div class="movimiento-item">
-            <div class="mov-info">
-              <div class="mov-monto ${m.tipo}">$${monto}</div>
-              <div class="mov-detalle">${m.local} · ${m.tipo} · ${m.fecha}${m.descripcion ? ' · ' + m.descripcion : ''}</div>
-            </div>
-            <div class="mov-acciones">
-              <button class="btn-eliminar" onclick="window.eliminarMovimiento('${d.id}')">🗑</button>
-            </div>
-          </div>`;
+      todosLosMovimientos = [];
+      snap.forEach(d => todosLosMovimientos.push({ id: d.id, ...d.data() }));
+      aplicarFiltros();
+    }
+
+    window.aplicarFiltros = function() {
+      const periodo = document.getElementById('filtro-periodo').value;
+      const localFiltro = document.getElementById('filtro-local').value;
+      const catFiltro = document.getElementById('filtro-categoria').value;
+
+      const hoy = new Date().toISOString().split('T')[0];
+      const lunes = (() => { const d = new Date(); d.setDate(d.getDate() - d.getDay() + 1); return d.toISOString().split('T')[0]; })();
+      const primeroDeMes = hoy.substring(0, 7) + '-01';
+
+      let filtrados = todosLosMovimientos.filter(m => {
+        if (periodo === 'hoy' && m.fecha !== hoy) return false;
+        if (periodo === 'semana' && m.fecha < lunes) return false;
+        if (periodo === 'mes' && m.fecha < primeroDeMes) return false;
+        if (localFiltro !== 'todos' && m.local !== localFiltro) return false;
+        if (catFiltro !== 'todas' && m.tipo !== catFiltro) return false;
+        return true;
       });
+
+      renderTotales(filtrados);
+      renderLista(filtrados);
+    }
+
+    function renderTotales(movs) {
+      let entradas = 0, salidas = 0;
+      const porCat = {}, porLocal = {};
+
+      movs.forEach(m => {
+        const monto = Number(m.monto);
+        const entrada = esEntrada(m.tipo);
+        if (entrada) entradas += monto; else salidas += monto;
+
+        porCat[m.tipo] = (porCat[m.tipo] || 0) + (entrada ? monto : -monto);
+        porLocal[m.local] = (porLocal[m.local] || 0) + (entrada ? monto : -monto);
+      });
+
+      const saldo = entradas - salidas;
+      const fmt = n => '$' + Math.abs(n).toLocaleString('es-AR');
+
+      const elSaldo = document.getElementById('saldo-neto-valor');
+      elSaldo.textContent = (saldo < 0 ? '-' : '') + fmt(saldo);
+      elSaldo.className = saldo >= 0 ? 'positivo' : 'negativo';
+      document.getElementById('total-entradas').textContent = fmt(entradas);
+      document.getElementById('total-salidas').textContent = fmt(salidas);
+
+      document.getElementById('detalle-categorias').innerHTML = Object.entries(porCat).map(([k, v]) =>
+        `<div class="detalle-fila"><span>${k}</span><strong style="color:${v>=0?'#2a9d5c':'#e63946'}">${v<0?'-':''}${fmt(v)}</strong></div>`
+      ).join('') || '<div class="sin-resultados">Sin datos</div>';
+
+      document.getElementById('detalle-locales').innerHTML = Object.entries(porLocal).map(([k, v]) =>
+        `<div class="detalle-fila"><span>${k}</span><strong style="color:${v>=0?'#2a9d5c':'#e63946'}">${v<0?'-':''}${fmt(v)}</strong></div>`
+      ).join('') || '<div class="sin-resultados">Sin datos</div>';
+    }
+
+    function renderLista(movs) {
+      const lista = document.getElementById('lista-movimientos');
+      if (movs.length === 0) { lista.innerHTML = '<div class="sin-resultados">No hay movimientos</div>'; return; }
+      lista.innerHTML = movs.map(m => `
+        <div class="movimiento-item">
+          <div class="mov-info">
+            <div class="mov-monto ${esEntrada(m.tipo) ? 'entrada' : 'salida'}">$${Number(m.monto).toLocaleString('es-AR')}</div>
+            <div class="mov-detalle">${m.local} · ${m.tipo} · ${m.fecha}${m.descripcion ? ' · ' + m.descripcion : ''}</div>
+          </div>
+          <div class="mov-acciones">
+            <button class="btn-eliminar" onclick="window.eliminarMovimiento('${m.id}')">🗑</button>
+          </div>
+        </div>`).join('');
     }
 
     window.guardarMovimiento = async function() {
@@ -202,6 +393,7 @@
     window.abrirCaja = function() {
       document.querySelectorAll('.pantalla').forEach(p => p.classList.remove('activa'));
       document.getElementById('caja').classList.add('activa');
+      cargarCategorias();
       cargarMovimientos();
     }
 
@@ -215,6 +407,8 @@
       document.querySelectorAll('.pantalla').forEach(p => p.classList.remove('activa'));
       document.getElementById(destino).classList.add('activa');
     }
+
+    document.getElementById('inp-fecha').valueAsDate = new Date();
   </script>
 </body>
 </html>
