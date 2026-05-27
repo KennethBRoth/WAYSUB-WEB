@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Auditoría de Asistencia</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{font-family:sans-serif;background:#f0f2f5;color:#1a1a1a;font-size:14px;}
+    .app{max-width:900px;margin:0 auto;padding:12px;}
+    .topbar{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap;background:#1a1a2e;padding:16px;border-radius:12px;}
+    .topbar h1{font-size:16px;font-weight:500;flex:1;color:white;}
+    .btn-volver{background:rgba(255,255,255,0.15);border:none;color:white;border-radius:8px;padding:6px 12px;font-size:18px;cursor:pointer;}
+    select.local-select{padding:6px 10px;border:0.5px solid #ccc;border-radius:8px;background:white;color:#1a1a1a;font-size:13px;}
+    .tabs{display:flex;gap:4px;margin-bottom:14px;border-bottom:1px solid #ddd;}
+    .tab{padding:8px 14px;font-size:13px;cursor:pointer;border-bottom:2px solid transparent;color:#666;}
+    .tab.active{color:#1a1a1a;border-bottom-color:#1a1a1a;font-weight:500;}
+    .screen{display:none;}
+    .screen.active{display:block;}
+    .card{background:white;border:0.5px solid #e0e0e0;border-radius:12px;padding:14px;margin-bottom:10px;}
+    table{width:100%;border-collapse:collapse;font-size:13px;}
+    th{text-align:left;padding:8px 10px;font-weight:500;color:#666;border-bottom:1px solid #eee;}
+    td{padding:8px 10px;border-bottom:1px solid #eee;}
+    tr:last-child td{border-bottom:none;}
+    tr:hover td{background:#f9f9f9;}
+    .btn{padding:7px 14px;border:0.5px solid #ccc;border-radius:8px;background:transparent;color:#1a1a1a;cursor:pointer;font-size:13px;}
+    .btn:hover{background:#f0f0f0;}
+    .btn-primary{background:#1a1a2e;color:white;border-color:#1a1a2e;}
+    .btn-primary:hover{opacity:0.85;}
+    .btn-sm{padding:4px 10px;font-size:12px;}
+    .btn-danger{border-color:#e63946;color:#e63946;}
+    .badge{display:inline-block;padding:3px 8px;border-radius:8px;font-size:11px;font-weight:500;}
+    .badge-alta{background:#FCEBEB;color:#A32D2D;}
+    .badge-media{background:#FAEEDA;color:#854F0B;}
+    .badge-baja{background:#FAEEDA;color:#854F0B;}
+    .badge-info{background:#E6F1FB;color:#185FA5;}
+    .form-row{margin-bottom:10px;}
+    .form-row label{display:block;font-size:12px;color:#666;margin-bottom:4px;}
+    .form-row input,.form-row select{width:100%;padding:8px;border:0.5px solid #ccc;border-radius:8px;background:white;color:#1a1a1a;font-size:13px;}
+    .flex-between{display:flex;align-items:center;justify-content:space-between;}
+    .toast{position:fixed;bottom:20px;right:20px;background:#1a1a2e;color:white;padding:10px 16px;border-radius:8px;font-size:13px;z-index:200;display:none;}
+    .empty-state{text-align:center;padding:40px 20px;color:#999;}
+    .empty-state i{font-size:32px;display:block;margin-bottom:8px;}
+    .results-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+    @media(max-width:600px){.results-grid{grid-template-columns:1fr;}}
+    .perf-item{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #eee;font-size:13px;}
+    .perf-item:last-child{border-bottom:none;}
+    .dev-item{padding:8px 0;border-bottom:1px solid #eee;}
+    .dev-item:last-child{border-bottom:none;}
+    .dropzone{border:1.5px dashed #ccc;border-radius:12px;padding:30px;text-align:center;cursor:pointer;color:#999;}
+    .dropzone:hover{background:#f9f9f9;}
+    .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
+    .cal-day-label{text-align:center;font-size:11px;font-weight:500;color:#999;padding:4px 0;}
+    .cal-day{border:0.5px solid #e0e0e0;border-radius:8px;padding:6px 4px;min-height:56px;cursor:pointer;background:white;}
+    .cal-day:hover{background:#f0f2f5;}
+    .cal-day.vacio{background:transparent;border-color:transparent;cursor:default;}
+    .cal-day .dia-num{font-size:12px;font-weight:500;color:#999;}
+    .cal-day .turno-tag{background:#E6F1FB;color:#185FA5;border-radius:4px;font-size:10px;padding:2px 4px;margin-top:3px;display:block;line-height:1.4;}
+    .cal-day.tiene-turno{border-color:#185FA5;}
+    .cal-day.tiene-turno .dia-num{color:#185FA5;}
+    .modal-bg{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.4);z-index:100;padding:16px;align-items:flex-start;justify-content:center;overflow-y:auto;}
+    .modal-bg.open{display:flex;}
+    .modal{background:white;border-radius:12px;padding:18px;width:100%;max-width:400px;margin-top:20px;}
+    .modal h3{font-size:15px;font-weight:500;margin-bottom:14px;}
+    .time-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <div class="topbar">
+    <button class="btn-volver" onclick="window.location.href='index.html'">←</button>
+    <h1>⏰ Auditoría de asistencia</h1>
+    <select class="local-select" id="sel-local" onchange="cambiarLocal()">
+      <option value="ramos">Ramos Mejía</option>
+      <option value="moron">Morón</option>
+    </select>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" onclick="showTab('empleados',this)">👥 Empleados</div>
+    <div class="tab" onclick="showTab('auditoria',this)">📤 Auditoría</div>
+    <div class="tab" onclick="showTab('resultados',this)">📊 Resultados</div>
+  </div>
+
+  <!-- EMPLEADOS -->
+  <div id="screen-empleados" class="screen active">
+    <div class="flex-between" style="margin-bottom:10px;">
+      <span style="font-size:13px;color:#666;" id="emp-count">0 empleados</span>
+      <button class="btn btn-primary btn-sm" onclick="abrirModalNuevoEmp()">+ Nuevo empleado</button>
+    </div>
+    <div class="card" style="padding:0;overflow:hidden;">
+      <table>
+        <thead><tr><th>Nombre</th><th>Excepción</th><th>Turnos este mes</th><th></th></tr></thead>
+        <tbody id="tabla-empleados"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- CALENDARIO -->
+  <div id="screen-calendario" class="screen">
+    <div class="flex-between" style="margin-bottom:10px;">
+      <button class="btn btn-sm" onclick="showTab('empleados',null)">← Volver</button>
+      <span style="font-size:14px;font-weight:500;" id="cal-emp-nombre"></span>
+      <div style="display:flex;gap:6px;align-items:center;">
+        <select id="cal-mes" onchange="renderCalendario()" style="padding:5px 8px;border:0.5px solid #ccc;border-radius:8px;font-size:12px;">
+          <option value="1">Ene</option><option value="2">Feb</option><option value="3">Mar</option><option value="4">Abr</option><option value="5">May</option><option value="6">Jun</option><option value="7">Jul</option><option value="8">Ago</option><option value="9">Sep</option><option value="10">Oct</option><option value="11">Nov</option><option value="12">Dic</option>
+        </select>
+        <select id="cal-anio" onchange="renderCalendario()" style="padding:5px 8px;border:0.5px solid #ccc;border-radius:8px;font-size:12px;">
+          <option value="2025">2025</option><option value="2026">2026</option>
+        </select>
+      </div>
+    </div>
+    <div class="card">
+      <div class="cal-grid" style="margin-bottom:6px;">
+        <div class="cal-day-label">Lun</div><div class="cal-day-label">Mar</div><div class="cal-day-label">Mié</div>
+        <div class="cal-day-label">Jue</div><div class="cal-day-label">Vie</div><div class="cal-day-label">Sáb</div><div class="cal-day-label">Dom</div>
+      </div>
+      <div class="cal-grid" id="cal-grid"></div>
+    </div>
+    <p style="font-size:12px;color:#999;text-align:center;margin-top:-4px;">Tocá un día para agregar o editar el turno</p>
+  </div>
+
+  <!-- AUDITORIA -->
+  <div id="screen-auditoria" class="screen">
+    <div class="card">
+      <h3 style="margin-bottom:12px;">Nueva auditoría</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+        <div class="form-row"><label>Mes</label>
+          <select id="sel-mes"><option value="1">Enero</option><option value="2">Febrero</option><option value="3">Marzo</option><option value="4">Abril</option><option value="5">Mayo</option><option value="6">Junio</option><option value="7">Julio</option><option value="8">Agosto</option><option value="9">Septiembre</option><option value="10">Octubre</option><option value="11">Noviembre</option><option value="12">Diciembre</option></select>
+        </div>
+        <div class="form-row"><label>Año</label><input type="number" id="inp-anio" value="2025"></div>
+      </div>
+      <div class="dropzone" onclick="document.getElementById('file-input').click()">
+        <div style="font-size:28px;margin-bottom:8px;">📂</div>
+        <p style="font-weight:500;">Subir Excel de fichajes</p>
+        <p style="font-size:12px;margin-top:4px;">Hacé clic o arrastrá el archivo .xlsx</p>
+        <input type="file" id="file-input" accept=".xlsx,.xls" style="display:none;" onchange="procesarArchivo(event)">
+      </div>
+      <div id="preview-fichajes" style="margin-top:10px;display:none;">
+        <p style="font-size:12px;color:#666;" id="preview-info"></p>
+        <button class="btn btn-primary" style="width:100%;margin-top:8px;" onclick="ejecutarAuditoria()">▶ Procesar auditoría</button>
+      </div>
+      <button class="btn" style="width:100%;margin-top:8px;" onclick="usarDemo()">🗄 Usar datos de demostración</button>
+    </div>
+    <div class="card">
+      <h3 style="margin-bottom:10px;">Historial</h3>
+      <div id="lista-historial"></div>
+    </div>
+  </div>
+
+  <!-- RESULTADOS -->
+  <div id="screen-resultados" class="screen">
+    <div id="res-vacio" class="empty-state"><div style="font-size:32px;">📊</div><p>Procesá una auditoría primero</p></div>
+    <div id="res-contenido" style="display:none;">
+      <div style="display:flex;gap:6px;justify-content:flex-end;margin-bottom:10px;">
+        <button class="btn btn-sm" onclick="exportarResultados()">⬇ Exportar Excel</button>
+        <button class="btn btn-sm" onclick="guardarAuditoria()">💾 Guardar</button>
+      </div>
+      <div class="results-grid">
+        <div>
+          <p style="font-size:11px;font-weight:500;color:#999;text-transform:uppercase;margin-bottom:8px;">Con desvíos</p>
+          <div id="lista-desvios"></div>
+        </div>
+        <div>
+          <p style="font-size:11px;font-weight:500;color:#999;text-transform:uppercase;margin-bottom:8px;">Cumplimiento perfecto</p>
+          <div id="lista-perfectos"></div>
+        </div>
+      </div>
+      <div class="card" style="margin-top:12px;">
+        <h3 style="margin-bottom:10px;">Resumen para liquidación</h3>
+        <table>
+          <thead><tr><th>Empleado</th><th>Incidencias</th><th>Pierde presentismo</th><th>Obs.</th></tr></thead>
+          <tbody id="tabla-resumen"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL EMPLEADO -->
+  <div class="modal-bg" id="modal-emp-bg">
+    <div class="modal">
+      <div class="flex-between" style="margin-bottom:14px;">
+        <h3 id="modal-emp-title">Nuevo empleado</h3>
+        <button class="btn btn-sm" onclick="cerrarModalEmp()">✕</button>
+      </div>
+      <div class="form-row"><label>Nombre</label><input type="text" id="inp-emp-nombre" placeholder="Nombre completo"></div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+        <input type="checkbox" id="inp-exc-anticipado">
+        <label for="inp-exc-anticipado" style="font-size:13px;">Ignorar ingresos muy anticipados</label>
+      </div>
+      <div class="form-row"><label>Notas (opcional)</label><input type="text" id="inp-emp-notas" placeholder="Observaciones..."></div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px;">
+        <button class="btn" onclick="cerrarModalEmp()">Cancelar</button>
+        <button class="btn btn-primary" onclick="guardarNuevoEmp()">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL TURNO -->
+  <div class="modal-bg" id="modal-turno-bg">
+    <div class="modal">
+      <div class="flex-between" style="margin-bottom:14px;">
+        <h3 id="modal-turno-title">Turno del día</h3>
+        <button class="btn btn-sm" onclick="cerrarModalTurno()">✕</button>
+      </div>
+      <div class="time-row">
+        <div class="form-row"><label>Entrada</label><input type="time" id="inp-turno-e" value="09:00"></div>
+        <div class="form-row"><label>Salida</label><input type="time" id="inp-turno-s" value="17:00"></div>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:space-between;margin-top:14px;">
+        <button class="btn btn-danger btn-sm" id="btn-eliminar-turno" onclick="eliminarTurno()">🗑 Eliminar</button>
+        <div style="display:flex;gap:8px;">
+          <button class="btn" onclick="cerrarModalTurno()">Cancelar</button>
+          <button class="btn btn-primary" onclick="guardarTurno()">Guardar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+const MESES_FULL=['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+let local='ramos';
+let empEditIdx=-1;
+let calEmpIdx=-1;
+let turnoFechaActual=null;
+let resultadosActuales=null;
+let fichajesCargados=null;
+
+function getEmpleados(){return JSON.parse(localStorage.getItem('emp_'+local)||'[]');}
+function setEmpleados(e){localStorage.setItem('emp_'+local,JSON.stringify(e));}
+function getTurnos(idx,mes,anio){return JSON.parse(localStorage.getItem('turnos_'+local+'_'+idx+'_'+anio+'_'+mes)||'{}');}
+function setTurnos(idx,mes,anio,data){localStorage.setItem('turnos_'+local+'_'+idx+'_'+anio+'_'+mes,JSON.stringify(data));}
+
+function seedIfEmpty(){
+  if(getEmpleados().length>0)return;
+  const seed=[
+    {nombre:'Sebastián',excAnticipado:false,notas:''},
+    {nombre:'Camila',excAnticipado:false,notas:''},
+    {nombre:'Celeste',excAnticipado:false,notas:''},
+    {nombre:'Melissa',excAnticipado:false,notas:''},
+    {nombre:'Norma',excAnticipado:true,notas:'Siempre llega antes de hora'},
+    {nombre:'Dylan',excAnticipado:false,notas:''}
+  ];
+  setEmpleados(seed);
+}
+
+function cambiarLocal(){local=document.getElementById('sel-local').value;renderEmpleados();renderHistorial();}
+
+function showTab(t,el){
+  document.querySelectorAll('.tab').forEach(e=>e.classList.remove('active'));
+  document.querySelectorAll('.screen').forEach(e=>e.classList.remove('active'));
+  if(el)el.classList.add('active');
+  else document.querySelectorAll('.tab')[0].classList.add('active');
+  document.getElementById('screen-'+t).classList.add('active');
+}
+
+function renderEmpleados(){
+  const emps=getEmpleados();
+  document.getElementById('emp-count').textContent=emps.length+' empleados';
+  const now=new Date();
+  const tbody=document.getElementById('tabla-empleados');
+  if(!emps.length){tbody.innerHTML='<tr><td colspan="4"><div class="empty-state"><p>Sin empleados cargados</p></div></td></tr>';return;}
+  tbody.innerHTML=emps.map((e,i)=>{
+    const t=getTurnos(i,now.getMonth()+1,now.getFullYear());
+    const cnt=Object.keys(t).length;
+    return`<tr><td style="font-weight:500;">${e.nombre}</td><td>${e.excAnticipado?'<span class="badge badge-info">Sí</span>':'-'}</td><td><span style="font-size:12px;color:#666;">${cnt} turno${cnt!==1?'s':''}</span></td><td style="text-align:right;"><button class="btn btn-sm" onclick="abrirCalendario(${i})">📅 Turnos</button> <button class="btn btn-sm" onclick="editarEmp(${i})">✏️</button> <button class="btn btn-sm btn-danger" onclick="eliminarEmp(${i})">🗑</button></td></tr>`;
+  }).join('');
+}
+
+function abrirCalendario(idx){
+  calEmpIdx=idx;
+  const emp=getEmpleados()[idx];
+  document.getElementById('cal-emp-nombre').textContent=emp.nombre;
+  const now=new Date();
+  document.getElementById('cal-mes').value=now.getMonth()+1;
+  document.getElementById('cal-anio').value=now.getFullYear();
+  document.querySelectorAll('.tab').forEach(e=>e.classList.remove('active'));
+  document.querySelectorAll('.screen').forEach(e=>e.classList.remove('active'));
+  document.getElementById('screen-calendario').classList.add('active');
+  renderCalendario();
+}
+
+function renderCalendario(){
+  const mes=parseInt(document.getElementById('cal-mes').value);
+  const anio=parseInt(document.getElementById('cal-anio').value);
+  const turnos=getTurnos(calEmpIdx,mes,anio);
+  const diasEnMes=new Date(anio,mes,0).getDate();
+  const primerDia=new Date(anio,mes-1,1).getDay();
+  const offset=primerDia===0?6:primerDia-1;
+  let html='';
+  for(let i=0;i<offset;i++)html+='<div class="cal-day vacio"></div>';
+  for(let d=1;d<=diasEnMes;d++){
+    const key=String(d).padStart(2,'0');
+    const t=turnos[key];
+    html+=`<div class="cal-day ${t?'tiene-turno':''}" onclick="abrirModalTurno(${d})"><div class="dia-num">${d}</div>${t?`<span class="turno-tag">${t.e}<br>${t.s}</span>`:''}</div>`;
+  }
+  document.getElementById('cal-grid').innerHTML=html;
+}
+
+function abrirModalTurno(dia){
+  const mes=parseInt(document.getElementById('cal-mes').value);
+  const anio=parseInt(document.getElementById('cal-anio').value);
+  const key=String(dia).padStart(2,'0');
+  turnoFechaActual={dia,mes,anio,key};
+  const t=getTurnos(calEmpIdx,mes,anio)[key];
+  document.getElementById('modal-turno-title').textContent='Turno del '+dia+'/'+mes+'/'+anio;
+  document.getElementById('inp-turno-e').value=t?t.e:'09:00';
+  document.getElementById('inp-turno-s').value=t?t.s:'17:00';
+  document.getElementById('btn-eliminar-turno').style.display=t?'block':'none';
+  document.getElementById('modal-turno-bg').classList.add('open');
+}
+
+function cerrarModalTurno(){document.getElementById('modal-turno-bg').classList.remove('open');}
+
+function guardarTurno(){
+  const{mes,anio,key}=turnoFechaActual;
+  const turnos=getTurnos(calEmpIdx,mes,anio);
+  turnos[key]={e:document.getElementById('inp-turno-e').value,s:document.getElementById('inp-turno-s').value};
+  setTurnos(calEmpIdx,mes,anio,turnos);
+  cerrarModalTurno();
+  renderCalendario();
+  renderEmpleados();
+  toast('Turno guardado');
+}
+
+function eliminarTurno(){
+  const{mes,anio,key}=turnoFechaActual;
+  const turnos=getTurnos(calEmpIdx,mes,anio);
+  delete turnos[key];
+  setTurnos(calEmpIdx,mes,anio,turnos);
+  cerrarModalTurno();
+  renderCalendario();
+  renderEmpleados();
+  toast('Turno eliminado');
+}
+
+function abrirModalNuevoEmp(){
+  empEditIdx=-1;
+  document.getElementById('modal-emp-title').textContent='Nuevo empleado';
+  document.getElementById('inp-emp-nombre').value='';
+  document.getElementById('inp-exc-anticipado').checked=false;
+  document.getElementById('inp-emp-notas').value='';
+  document.getElementById('modal-emp-bg').classList.add('open');
+}
+
+function editarEmp(i){
+  empEditIdx=i;
+  const e=getEmpleados()[i];
+  document.getElementById('modal-emp-title').textContent='Editar empleado';
+  document.getElementById('inp-emp-nombre').value=e.nombre;
+  document.getElementById('inp-exc-anticipado').checked=e.excAnticipado;
+  document.getElementById('inp-emp-notas').value=e.notas||'';
+  document.getElementById('modal-emp-bg').classList.add('open');
+}
+
+function cerrarModalEmp(){document.getElementById('modal-emp-bg').classList.remove('open');}
+
+function guardarNuevoEmp(){
+  const nombre=document.getElementById('inp-emp-nombre').value.trim();
+  if(!nombre){toast('Escribí el nombre');return;}
+  const emp={nombre,excAnticipado:document.getElementById('inp-exc-anticipado').checked,notas:document.getElementById('inp-emp-notas').value};
+  const emps=getEmpleados();
+  if(empEditIdx>=0)emps[empEditIdx]=emp; else emps.push(emp);
+  setEmpleados(emps);
+  cerrarModalEmp();
+  renderEmpleados();
+  toast(empEditIdx>=0?'Empleado actualizado':'Empleado agregado');
+}
+
+function eliminarEmp(i){
+  if(!confirm('¿Eliminar este empleado?'))return;
+  const emps=getEmpleados();
+  emps.splice(i,1);
+  setEmpleados(emps);
+  renderEmpleados();
+  toast('Empleado eliminado');
+}
+
+function procesarArchivo(event){
+  const file=event.target.files[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const wb=XLSX.read(new Uint8Array(e.target.result),{type:'array',cellDates:true});
+    const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{raw:false});
+    fichajesCargados=rows;
+    document.getElementById('preview-info').textContent=rows.length+' registros encontrados';
+    document.getElementById('preview-fichajes').style.display='block';
+    toast('Archivo cargado');
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function usarDemo(){
+  const mes=parseInt(document.getElementById('sel-mes').value);
+  const anio=parseInt(document.getElementById('inp-anio').value);
+  fichajesCargados=generarDemo(mes,anio);
+  document.getElementById('preview-info').textContent=fichajesCargados.length+' fichajes de demo generados';
+  document.getElementById('preview-fichajes').style.display='block';
+  toast('Demo lista');
+}
+
+function generarDemo(mes,anio){
+  const rows=[];
+  getEmpleados().forEach((emp,idx)=>{
+    const turnos=getTurnos(idx,mes,anio);
+    Object.entries(turnos).forEach(([key,t])=>{
+      const d=parseInt(key);
+      const rand=Math.random();
+      if(rand<0.1)return;
+      let eMin=0,sMin=0;
+      if(rand<0.25)eMin=Math.floor(Math.random()*20)+12;
+      else if(rand<0.35)sMin=-Math.floor(Math.random()*10)-5;
+      const dd=String(d).padStart(2,'0');
+      const mm=String(mes).padStart(2,'0');
+      const fmtT=m=>{const h=Math.floor(((m%1440)+1440)%1440/60);const mn=((m%1440)+1440)%1440%60;return String(h).padStart(2,'0')+':'+String(mn).padStart(2,'0');};
+      const[eh,em]=t.e.split(':').map(Number);
+      const[sh,sm]=t.s.split(':').map(Number);
+      rows.push({Usuario:emp.nombre,Ingreso:dd+'/'+mm+'/'+anio+' '+fmtT(eh*60+em+eMin),Salida:dd+'/'+mm+'/'+anio+' '+fmtT(sh*60+sm+sMin)});
+    });
+  });
+  return rows;
+}
+
+function parseFecha(str){
+  if(!str)return null;
+  const m=str.match(/(\d+)\/(\d+)\/(\d+)\s+(\d+):(\d+)/);
+  if(!m)return null;
+  return new Date(parseInt(m[3]),parseInt(m[2])-1,parseInt(m[1]),parseInt(m[4]),parseInt(m[5]));
+}
+
+function toMin(s){const[h,m]=s.split(':').map(Number);return h*60+m;}
+
+function ejecutarAuditoria(){
+  if(!fichajesCargados){toast('Cargá fichajes primero');return;}
+  const mes=parseInt(document.getElementById('sel-mes').value);
+  const anio=parseInt(document.getElementById('inp-anio').value);
+  const emps=getEmpleados();
+  const consolidado={};
+  fichajesCargados.forEach(f=>{
+    const nombre=(f.Usuario||f.usuario||'').trim();
+    const ingreso=parseFecha(f.Ingreso||f.ingreso||'');
+    const salida=parseFecha(f.Salida||f.salida||'');
+    if(!nombre||!ingreso)return;
+    const key=nombre.toLowerCase()+'|'+ingreso.getDate()+'/'+(ingreso.getMonth()+1)+'/'+ingreso.getFullYear();
+    if(!consolidado[key])consolidado[key]={nombre,ingreso,salida};
+    else{
+      if(ingreso<consolidado[key].ingreso)consolidado[key].ingreso=ingreso;
+      if(salida&&(!consolidado[key].salida||salida>consolidado[key].salida))consolidado[key].salida=salida;
+    }
+  });
+  const DIAS=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+  const resultados=emps.map((emp,idx)=>{
+    const turnos=getTurnos(idx,mes,anio);
+    const desvios=[];
+    Object.entries(turnos).forEach(([key,t])=>{
+      const d=parseInt(key);
+      const fecha=new Date(anio,mes-1,d);
+      const fechaStr=d+'/'+mes+'/'+anio;
+      const fKey=emp.nombre.toLowerCase()+'|'+fechaStr;
+      const fich=consolidado[fKey];
+      const dia=DIAS[fecha.getDay()];
+      if(!fich){desvios.push({fecha:d+'/'+mes,dia,planif:t.e+'-'+t.s,real:'--',tipo:'D',msg:'AUSENCIA - no se presentó',sev:'alta'});return;}
+      const planE=toMin(t.e);
+      let planS=toMin(t.s);
+      if(planS<=planE)planS+=1440;
+      const realE=fich.ingreso.getHours()*60+fich.ingreso.getMinutes();
+      const realS=fich.salida?(fich.salida.getHours()*60+fich.salida.getMinutes()):null;
+      const realStr=fich.ingreso.getHours()+':'+String(fich.ingreso.getMinutes()).padStart(2,'0')+(fich.salida?'-'+fich.salida.getHours()+':'+String(fich.salida.getMinutes()).padStart(2,'0'):'');
+      const diffE=realE-planE;
+      if(Math.abs(diffE)>240)desvios.push({fecha:d+'/'+mes,dia,planif:t.e+'-'+t.s,real:realStr,tipo:'E',msg:'Posible cambio de turno informal',sev:'info'});
+      else if(diffE>10)desvios.push({fecha:d+'/'+mes,dia,planif:t.e+'-'+t.s,real:realStr,tipo:'A',msg:'Llegó '+diffE+' min tarde - PIERDE PRESENTISMO',sev:'alta'});
+      else if(!emp.excAnticipado&&diffE<-30)desvios.push({fecha:d+'/'+mes,dia,planif:t.e+'-'+t.s,real:realStr,tipo:'C',msg:'Fichó '+Math.abs(diffE)+' min antes',sev:'baja'});
+      if(realS!==null&&(realS-planS%1440)<-2)desvios.push({fecha:d+'/'+mes,dia,planif:t.e+'-'+t.s,real:realStr,tipo:'B',msg:'Salió '+Math.abs(realS-planS%1440)+' min antes',sev:'media'});
+    });
+    return{empleado:emp,desvios};
+  });
+  resultadosActuales={mes,anio,local,resultados,timestamp:Date.now()};
+  renderResultados(resultados);
+  document.querySelectorAll('.tab').forEach(e=>e.classList.remove('active'));
+  document.querySelectorAll('.tab')[2].classList.add('active');
+  document.querySelectorAll('.screen').forEach(e=>e.classList.remove('active'));
+  document.getElementById('screen-resultados').classList.add('active');
+}
+
+function renderResultados(resultados){
+  document.getElementById('res-vacio').style.display='none';
+  document.getElementById('res-contenido').style.display='block';
+  const conDev=resultados.filter(r=>r.desvios.length>0);
+  const sinDev=resultados.filter(r=>r.desvios.length===0);
+  document.getElementById('lista-desvios').innerHTML=!conDev.length?'<div class="empty-state"><p>Sin desvíos</p></div>':conDev.map(r=>`<div class="card" style="margin-bottom:8px;"><div style="font-weight:500;margin-bottom:8px;">${r.empleado.nombre}</div>${r.desvios.map(d=>`<div class="dev-item"><div class="flex-between"><span style="font-size:12px;color:#666;">${d.dia} ${d.fecha} · ${d.planif} vs ${d.real}</span><span class="badge badge-${d.sev}">${d.sev}</span></div><div style="font-size:12px;margin-top:2px;">${d.msg}</div></div>`).join('')}</div>`).join('');
+  document.getElementById('lista-perfectos').innerHTML=!sinDev.length?'<p style="color:#999;font-size:13px;">Todos tienen desvíos</p>':sinDev.map(r=>`<div class="perf-item"><span style="color:#2a9d5c;font-size:20px;">✅</span><span style="font-weight:500;">${r.empleado.nombre}</span><span class="badge" style="background:#EAF3DE;color:#3B6D11;">PRESENTISMO</span></div>`).join('');
+  document.getElementById('tabla-resumen').innerHTML=resultados.map(r=>{const pierde=r.desvios.some(d=>d.tipo==='A'||d.tipo==='D');return`<tr><td style="font-weight:500;">${r.empleado.nombre}</td><td>${r.desvios.length}</td><td>${pierde?'<span class="badge badge-alta">Sí</span>':'<span class="badge" style="background:#EAF3DE;color:#3B6D11;">No</span>'}</td><td style="font-size:12px;color:#666;">${r.desvios.filter(d=>d.tipo==='A').length>0?r.desvios.filter(d=>d.tipo==='A').length+' tarde(s)':''}</td></tr>`;}).join('');
+}
+
+function guardarAuditoria(){
+  if(!resultadosActuales)return;
+  const key='aud_'+resultadosActuales.local+'_'+resultadosActuales.anio+'_'+String(resultadosActuales.mes).padStart(2,'0');
+  localStorage.setItem(key,JSON.stringify(resultadosActuales));
+  renderHistorial();
+  toast('Auditoría guardada');
+}
+
+function renderHistorial(){
+  const keys=Object.keys(localStorage).filter(k=>k.startsWith('aud_'+local));
+  const div=document.getElementById('lista-historial');
+  if(!keys.length){div.innerHTML='<p style="color:#999;font-size:13px;">Sin auditorías guardadas</p>';return;}
+  div.innerHTML=keys.sort().reverse().map(k=>{const d=JSON.parse(localStorage.getItem(k));return`<div class="flex-between" style="padding:8px 0;border-bottom:1px solid #eee;"><span style="font-size:13px;">${MESES_FULL[d.mes]} ${d.anio}</span><button class="btn btn-sm" onclick="verAuditoria('${k}')">👁 Ver</button></div>`;}).join('');
+}
+
+function verAuditoria(key){
+  const data=JSON.parse(localStorage.getItem(key));
+  resultadosActuales=data;
+  renderResultados(data.resultados);
+  document.querySelectorAll('.tab').forEach(e=>e.classList.remove('active'));
+  document.querySelectorAll('.tab')[2].classList.add('active');
+  document.querySelectorAll('.screen').forEach(e=>e.classList.remove('active'));
+  document.getElementById('screen-resultados').classList.add('active');
+}
+
+function exportarResultados(){
+  if(!resultadosActuales)return;
+  const rows=[['Empleado','Fecha','Día','Planificado','Real','Tipo','Severidad','Detalle']];
+  resultadosActuales.resultados.forEach(r=>r.desvios.forEach(d=>rows.push([r.empleado.nombre,d.fecha,d.dia,d.planif,d.real,d.tipo,d.sev,d.msg])));
+  const ws=XLSX.utils.aoa_to_sheet(rows);
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,'Auditoría',ws);
+  XLSX.writeFile(wb,'auditoria_'+local+'_'+resultadosActuales.mes+'_'+resultadosActuales.anio+'.xlsx');
+}
+
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.style.display='block';setTimeout(()=>t.style.display='none',2500);}
+
+seedIfEmpty();
+renderEmpleados();
+renderHistorial();
+const now=new Date();
+document.getElementById('sel-mes').value=now.getMonth()+1;
+document.getElementById('inp-anio').value=now.getFullYear();
+</script>
+</body>
+</html>
