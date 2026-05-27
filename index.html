@@ -4,9 +4,142 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Waysub Panel</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: sans-serif; background: #f0f2f5; color: #1a1a1a; }
+
+    header {
+      background: #1a1a2e;
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+    header h1 { font-size: 22px; letter-spacing: 1px; }
+    header p { font-size: 12px; color: #aaa; margin-top: 4px; }
+
+    .locales {
+      display: flex;
+      gap: 10px;
+      padding: 16px;
+      overflow-x: auto;
+    }
+
+    .local-tab {
+      flex: 1;
+      min-width: 140px;
+      background: white;
+      border-radius: 12px;
+      padding: 16px;
+      text-align: center;
+      border: 2px solid transparent;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .local-tab.active {
+      border-color: #e63946;
+      background: #fff5f5;
+    }
+    .local-tab .emoji { font-size: 28px; }
+    .local-tab h2 { font-size: 15px; margin-top: 6px; }
+
+    .modulos {
+      padding: 0 16px 16px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .modulo {
+      background: white;
+      border-radius: 12px;
+      padding: 20px 12px;
+      text-align: center;
+      cursor: pointer;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+      transition: transform 0.15s;
+    }
+    .modulo:active { transform: scale(0.97); }
+    .modulo .emoji { font-size: 32px; }
+    .modulo p { font-size: 13px; margin-top: 8px; font-weight: 600; color: #333; }
+
+    .caja-general {
+      margin: 0 16px 24px;
+      background: #1a1a2e;
+      color: white;
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+      cursor: pointer;
+    }
+    .caja-general .emoji { font-size: 32px; }
+    .caja-general p { margin-top: 8px; font-weight: 600; font-size: 15px; }
+    .caja-general span { font-size: 12px; color: #aaa; }
+
+    .seccion-titulo {
+      padding: 8px 16px 4px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #999;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+  </style>
 </head>
 <body>
-  <h1>Waysub Panel</h1>
-  <p>En construcción...</p>
+
+  <header>
+    <h1>⚡ Waysub Panel</h1>
+    <p>Panel de control interno</p>
+  </header>
+
+  <div class="locales">
+    <div class="local-tab active" onclick="seleccionarLocal('ramos', this)">
+      <div class="emoji">🏪</div>
+      <h2>Ramos Mejía</h2>
+    </div>
+    <div class="local-tab" onclick="seleccionarLocal('moron', this)">
+      <div class="emoji">🏪</div>
+      <h2>Morón</h2>
+    </div>
+  </div>
+
+  <div class="seccion-titulo" id="titulo-local">📍 Ramos Mejía</div>
+
+  <div class="modulos">
+    <div class="modulo">
+      <div class="emoji">📦</div>
+      <p>Pedido Axionlog</p>
+    </div>
+    <div class="modulo">
+      <div class="emoji">🥤</div>
+      <p>Pedido Coca</p>
+    </div>
+    <div class="modulo">
+      <div class="emoji">⏰</div>
+      <p>Conteo de Horas</p>
+    </div>
+    <div class="modulo">
+      <div class="emoji">📊</div>
+      <p>Cashflow</p>
+    </div>
+  </div>
+
+  <div class="seccion-titulo">🌐 General</div>
+
+  <div class="caja-general">
+    <div class="emoji">💰</div>
+    <p>Movimiento de Caja</p>
+    <span>Todos los locales</span>
+  </div>
+
+  <script>
+    function seleccionarLocal(local, el) {
+      document.querySelectorAll('.local-tab').forEach(t => t.classList.remove('active'));
+      el.classList.add('active');
+      const nombres = { ramos: 'Ramos Mejía', moron: 'Morón' };
+      document.getElementById('titulo-local').textContent = '📍 ' + nombres[local];
+    }
+  </script>
+
 </body>
 </html>
