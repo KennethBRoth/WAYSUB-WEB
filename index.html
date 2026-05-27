@@ -7,92 +7,26 @@
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: sans-serif; background: #f0f2f5; color: #1a1a1a; }
-
-    header {
-      background: #1a1a2e;
-      color: white;
-      padding: 20px;
-      text-align: center;
-    }
-    header h1 { font-size: 22px; letter-spacing: 1px; }
+    header { background: #1a1a2e; color: white; padding: 20px; text-align: center; }
+    header h1 { font-size: 22px; }
     header p { font-size: 12px; color: #aaa; margin-top: 4px; }
-
-    .locales {
-      display: flex;
-      gap: 10px;
-      padding: 16px;
-    }
-
-    .local-tab {
-      flex: 1;
-      background: white;
-      border-radius: 12px;
-      padding: 16px;
-      text-align: center;
-      border: 2px solid transparent;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .local-tab.active {
-      border-color: #e63946;
-      background: #fff5f5;
-    }
+    .locales { display: flex; gap: 10px; padding: 16px; }
+    .local-tab { flex: 1; background: white; border-radius: 12px; padding: 16px; text-align: center; border: 2px solid transparent; cursor: pointer; }
+    .local-tab.active { border-color: #e63946; background: #fff5f5; }
     .local-tab .emoji { font-size: 28px; }
     .local-tab h2 { font-size: 15px; margin-top: 6px; }
-
-    .panel {
-      display: none;
-      padding: 0 16px 16px;
-    }
+    .panel { display: none; padding: 0 16px 16px; }
     .panel.activo { display: block; }
-
-    .seccion-titulo {
-      padding: 8px 0 10px;
-      font-size: 11px;
-      font-weight: 700;
-      color: #999;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-
-    .modulos {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-    }
-
-    .modulo {
-      background: white;
-      border-radius: 12px;
-      padding: 20px 12px;
-      text-align: center;
-      cursor: pointer;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.07);
-      transition: transform 0.15s;
-    }
-    .modulo:active { transform: scale(0.97); }
+    .seccion-titulo { padding: 8px 0 10px; font-size: 11px; font-weight: 700; color: #999; text-transform: uppercase; }
+    .modulos { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .modulo { background: white; border-radius: 12px; padding: 20px 12px; text-align: center; cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,0.07); }
     .modulo .emoji { font-size: 32px; }
     .modulo p { font-size: 13px; margin-top: 8px; font-weight: 600; color: #333; }
-
-    .caja-general {
-      margin: 8px 16px 24px;
-      background: #1a1a2e;
-      color: white;
-      border-radius: 12px;
-      padding: 20px;
-      text-align: center;
-      cursor: pointer;
-    }
+    .caja-general { margin: 8px 16px 24px; background: #1a1a2e; color: white; border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; }
     .caja-general .emoji { font-size: 32px; }
     .caja-general p { margin-top: 8px; font-weight: 600; font-size: 15px; }
     .caja-general span { font-size: 12px; color: #aaa; }
-
-    .seccion-general {
-      padding: 0 16px;
-    }
-    .seccion-general .seccion-titulo {
-      padding: 4px 0 10px;
-    }
+    .seccion-general { padding: 0 16px; }
   </style>
 </head>
 <body>
@@ -102,7 +36,6 @@
     <p>Panel de control interno</p>
   </header>
 
-  <!-- PESTAÑAS -->
   <div class="locales">
     <div class="local-tab active" onclick="seleccionarLocal('ramos', this)">
       <div class="emoji">🏪</div>
@@ -114,53 +47,26 @@
     </div>
   </div>
 
-  <!-- PANEL RAMOS -->
   <div class="panel activo" id="panel-ramos">
     <div class="seccion-titulo">📍 Ramos Mejía</div>
     <div class="modulos">
-      <div class="modulo">
-        <div class="emoji">📦</div>
-        <p>Pedido Axionlog</p>
-      </div>
-      <div class="modulo">
-        <div class="emoji">🥤</div>
-        <p>Pedido Coca</p>
-      </div>
-      <div class="modulo">
-        <div class="emoji">⏰</div>
-        <p>Conteo de Horas</p>
-      </div>
-      <div class="modulo">
-        <div class="emoji">📊</div>
-        <p>Cashflow</p>
-      </div>
+      <div class="modulo"><div class="emoji">📦</div><p>Pedido Axionlog</p></div>
+      <div class="modulo"><div class="emoji">🥤</div><p>Pedido Coca</p></div>
+      <div class="modulo"><div class="emoji">⏰</div><p>Conteo de Horas</p></div>
+      <div class="modulo"><div class="emoji">📊</div><p>Cashflow</p></div>
     </div>
   </div>
 
-  <!-- PANEL MORÓN -->
   <div class="panel" id="panel-moron">
     <div class="seccion-titulo">📍 Morón</div>
     <div class="modulos">
-      <div class="modulo">
-        <div class="emoji">📦</div>
-        <p>Pedido Axionlog</p>
-      </div>
-      <div class="modulo">
-        <div class="emoji">🥤</div>
-        <p>Pedido Coca</p>
-      </div>
-      <div class="modulo">
-        <div class="emoji">⏰</div>
-        <p>Conteo de Horas</p>
-      </div>
-      <div class="modulo">
-        <div class="emoji">📊</div>
-        <p>Cashflow</p>
-      </div>
+      <div class="modulo"><div class="emoji">📦</div><p>Pedido Axionlog</p></div>
+      <div class="modulo"><div class="emoji">🥤</div><p>Pedido Coca</p></div>
+      <div class="modulo"><div class="emoji">⏰</div><p>Conteo de Horas</p></div>
+      <div class="modulo"><div class="emoji">📊</div><p>Cashflow</p></div>
     </div>
   </div>
 
-  <!-- CAJA GENERAL -->
   <div class="seccion-general">
     <div class="seccion-titulo">🌐 General</div>
   </div>
