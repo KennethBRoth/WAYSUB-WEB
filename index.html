@@ -26,4 +26,61 @@
     .modulo { background: white; border-radius: 12px; padding: 20px 12px; text-align: center; cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,0.07); }
     .modulo .emoji { font-size: 32px; }
     .modulo p { font-size: 13px; margin-top: 8px; font-weight: 600; color: #333; }
-    .seccion-titulo { padding: 8px 16px 4px; font-size: 11px;
+    .seccion-titulo { padding: 8px 16px 4px; font-size: 11px; font-weight: 700; color: #999; text-transform: uppercase; }
+    .caja-general { margin: 4px 16px 24px; background: #1a1a2e; color: white; border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; }
+    .caja-general .emoji { font-size: 32px; }
+    .caja-general p { margin-top: 8px; font-weight: 600; font-size: 15px; }
+    .caja-general span { font-size: 12px; color: #aaa; }
+  </style>
+</head>
+<body>
+  <div class="pantalla activa" id="inicio">
+    <div class="inicio-header">
+      <h1>⚡ Waysub Panel</h1>
+      <p>Seleccioná un local para continuar</p>
+    </div>
+    <div class="locales-grid">
+      <div class="local-card" onclick="entrarLocal('Ramos Mejía')">
+        <div class="emoji">🏪</div>
+        <h2>Ramos Mejía</h2>
+        <p>Subway · Balcarce</p>
+      </div>
+      <div class="local-card" onclick="entrarLocal('Morón')">
+        <div class="emoji">🏪</div>
+        <h2>Morón</h2>
+        <p>Subway · Balcarce</p>
+      </div>
+    </div>
+  </div>
+  <div class="pantalla" id="panel-local">
+    <header>
+      <button class="btn-volver" onclick="volver()">←</button>
+      <h1 id="nombre-local">Local</h1>
+    </header>
+    <div class="seccion-titulo">📋 Módulos</div>
+    <div class="modulos">
+      <div class="modulo"><div class="emoji">📦</div><p>Pedido Axionlog</p></div>
+      <div class="modulo"><div class="emoji">🥤</div><p>Pedido Coca</p></div>
+      <div class="modulo"><div class="emoji">⏰</div><p>Conteo de Horas</p></div>
+      <div class="modulo"><div class="emoji">📊</div><p>Cashflow</p></div>
+    </div>
+    <div class="seccion-titulo">🌐 General</div>
+    <div class="caja-general">
+      <div class="emoji">💰</div>
+      <p>Movimiento de Caja</p>
+      <span>Todos los locales</span>
+    </div>
+  </div>
+  <script>
+    function entrarLocal(nombre) {
+      document.getElementById('nombre-local').textContent = nombre;
+      document.getElementById('inicio').classList.remove('activa');
+      document.getElementById('panel-local').classList.add('activa');
+    }
+    function volver() {
+      document.getElementById('panel-local').classList.remove('activa');
+      document.getElementById('inicio').classList.add('activa');
+    }
+  </script>
+</body>
+</html>
