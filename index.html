@@ -106,7 +106,7 @@
     <div class="seccion-titulo">📋 Módulos</div>
     <div class="modulos">
       <div class="modulo"><div class="emoji">📦</div><p>Pedido Axionlog</p></div>
-      <div class="modulo"><div class="emoji">🥤</div><p>Pedido Coca</p></div>
+      <div class="modulo" onclick="abrirCoca()"><div class="emoji">🥤</div><p>Pedido Coca</p></div>
       <div class="modulo" onclick="window.location.href='auditoria.html'"><div class="emoji">⏰</div><p>Conteo de Horas</p></div>
       <div class="modulo"><div class="emoji">📊</div><p>Cashflow</p></div>
     </div>
@@ -198,7 +198,7 @@
       projectId: "waysub-web",
       storageBucket: "waysub-web.firebasestorage.app",
       messagingSenderId: "219825581217",
-      appId: "1:219825581217:web:6f752ee27a5446400114e0"
+      appId: "1:219825581817:web:6f752ee27a5446400114e0"
     };
 
     const app = initializeApp(firebaseConfig);
@@ -348,6 +348,11 @@
       document.getElementById('caja').classList.add('activa');
       cargarCategorias();
       cargarMovimientos();
+    }
+
+    window.abrirCoca = function() {
+      const local = document.getElementById('nombre-local').textContent;
+      window.location.href = 'coca.html?local=' + encodeURIComponent(local);
     }
 
     window.entrarLocal = function(nombre) {
