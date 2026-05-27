@@ -3,574 +3,370 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pedido Coca · Waysub</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <title>Waysub Panel</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: sans-serif; background: #f0f2f5; color: #1a1a1a; min-height: 100vh; }
-    header { background: #1a1a2e; color: white; padding: 16px 20px; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 100; }
+    body { font-family: sans-serif; background: #f0f2f5; color: #1a1a1a; }
+    .pantalla { display: none; min-height: 100vh; flex-direction: column; }
+    .pantalla.activa { display: flex; }
+    #inicio { background: #1a1a2e; justify-content: center; align-items: center; gap: 32px; padding: 40px 24px; }
+    .inicio-header { text-align: center; color: white; }
+    .inicio-header h1 { font-size: 28px; }
+    .inicio-header p { font-size: 14px; color: #aaa; margin-top: 8px; }
+    .locales-grid { display: flex; flex-direction: column; gap: 16px; width: 100%; max-width: 320px; }
+    .local-card { background: rgba(255,255,255,0.08); border: 2px solid rgba(255,255,255,0.15); border-radius: 16px; padding: 28px 20px; text-align: center; cursor: pointer; color: white; }
+    .local-card .emoji { font-size: 40px; }
+    .local-card h2 { font-size: 20px; margin-top: 10px; }
+    .local-card p { font-size: 13px; color: #aaa; margin-top: 4px; }
+    .btn-general { background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.3); border-radius: 16px; padding: 18px 20px; text-align: center; cursor: pointer; color: white; width: 100%; max-width: 320px; font-size: 16px; font-weight: 600; }
+    header { background: #1a1a2e; color: white; padding: 16px 20px; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 10; }
     .btn-volver { background: rgba(255,255,255,0.15); border: none; color: white; border-radius: 8px; padding: 6px 12px; font-size: 18px; cursor: pointer; }
-    header h1 { font-size: 18px; flex: 1; }
-    .local-badge { background: rgba(255,255,255,0.15); border-radius: 20px; padding: 4px 12px; font-size: 12px; }
-    .tabs { display: flex; background: white; border-bottom: 2px solid #f0f2f5; position: sticky; top: 57px; z-index: 99; }
-    .tab { flex: 1; padding: 12px 8px; text-align: center; font-size: 12px; font-weight: 600; color: #999; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.2s; }
-    .tab.activo { color: #1a1a2e; border-bottom-color: #1a1a2e; }
-    .seccion { display: none; padding-bottom: 80px; }
-    .seccion.activa { display: block; }
-    .card { background: white; margin: 12px 16px 0; border-radius: 12px; padding: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); }
-    .card h3 { font-size: 13px; font-weight: 700; color: #999; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 14px; }
-    .metodo-selector { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 12px 16px 0; }
-    .metodo-btn { background: white; border: 2px solid #e0e0e0; border-radius: 12px; padding: 16px 10px; text-align: center; cursor: pointer; transition: all 0.2s; }
-    .metodo-btn.activo { border-color: #1a1a2e; background: #1a1a2e; color: white; }
-    .metodo-btn .metodo-emoji { font-size: 28px; display: block; margin-bottom: 6px; }
-    .metodo-btn .metodo-label { font-size: 12px; font-weight: 600; }
-    .foto-area { border: 2px dashed #ddd; border-radius: 12px; padding: 24px; text-align: center; cursor: pointer; transition: all 0.2s; background: #fafafa; }
-    .foto-area:hover { border-color: #1a1a2e; background: #f5f5f5; }
-    .foto-area input { display: none; }
-    .foto-area p { font-size: 13px; color: #999; margin-top: 8px; }
-    .foto-preview { max-width: 100%; border-radius: 8px; margin-top: 10px; display: none; }
-    .btn-analizar { width: 100%; background: #1a1a2e; color: white; border: none; border-radius: 8px; padding: 12px; font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 10px; display: none; }
-    .btn-analizar:disabled { opacity: 0.6; cursor: wait; }
-    .analizando { text-align: center; padding: 16px; color: #666; font-size: 13px; display: none; }
-    .productos-tabla { width: 100%; border-collapse: collapse; font-size: 13px; }
-    .productos-tabla th { text-align: left; padding: 8px 6px; font-size: 11px; color: #999; font-weight: 700; text-transform: uppercase; border-bottom: 2px solid #f0f2f5; }
-    .productos-tabla td { padding: 8px 6px; border-bottom: 1px solid #f8f8f8; vertical-align: middle; }
-    .productos-tabla tr:last-child td { border-bottom: none; }
-    .productos-tabla input[type=number] { width: 64px; padding: 6px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; text-align: center; }
-    .productos-tabla input[type=number]:focus { outline: none; border-color: #1a1a2e; }
-    .grupo-header td { background: #f8f9ff; font-weight: 700; font-size: 11px; color: #1a1a2e; text-transform: uppercase; letter-spacing: 0.5px; padding: 10px 6px 6px; }
-    .transfer-fila { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; }
-    .transfer-fila select, .transfer-fila input { flex: 1; min-width: 80px; padding: 8px; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; }
-    .transfer-fila button { background: #fff0f0; border: none; color: #e63946; border-radius: 6px; padding: 8px 10px; cursor: pointer; font-size: 14px; }
-    .btn-agregar-transfer { background: none; border: 1px dashed #ddd; border-radius: 8px; padding: 8px; width: 100%; font-size: 13px; color: #999; cursor: pointer; margin-top: 4px; }
-    .resultado-tabla { width: 100%; border-collapse: collapse; font-size: 13px; }
-    .resultado-tabla th { text-align: left; padding: 8px 6px; font-size: 11px; color: #999; font-weight: 700; text-transform: uppercase; border-bottom: 2px solid #f0f2f5; }
-    .resultado-tabla td { padding: 8px 6px; border-bottom: 1px solid #f8f8f8; }
-    .resultado-tabla tr:last-child td { border-bottom: none; }
-    .badge-rojo { background: #fff0f0; color: #e63946; border-radius: 20px; padding: 2px 8px; font-size: 11px; font-weight: 700; }
-    .badge-naranja { background: #fff8ee; color: #e67e22; border-radius: 20px; padding: 2px 8px; font-size: 11px; font-weight: 700; }
-    .badge-verde { background: #f0fff4; color: #2a9d5c; border-radius: 20px; padding: 2px 8px; font-size: 11px; font-weight: 700; }
-    .pedido-input { width: 60px; padding: 5px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; text-align: center; }
-    .pedido-input.tiene-pedido { border-color: #e63946; background: #fff8f8; }
-    .alerta { border-radius: 10px; padding: 12px 14px; margin: 8px 16px 0; font-size: 13px; display: flex; align-items: flex-start; gap: 10px; }
-    .alerta-roja { background: #fff0f0; border: 1px solid #ffd0d0; color: #c0392b; }
-    .alerta-naranja { background: #fff8ee; border: 1px solid #ffd9a0; color: #a04000; }
-    .banner-auto { background: #f0fff4; border: 1px solid #c3e6cb; border-radius: 10px; padding: 10px 14px; margin: 12px 16px 0; font-size: 13px; color: #2a9d5c; display: none; }
-    .footer-btns { position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 1px solid #eee; padding: 12px 16px; display: flex; gap: 10px; z-index: 100; }
-    .btn-calcular { flex: 2; background: #1a1a2e; color: white; border: none; border-radius: 10px; padding: 14px; font-size: 15px; font-weight: 700; cursor: pointer; }
-    .btn-excel { flex: 1; background: #f0fff4; color: #2a9d5c; border: 1px solid #c3e6cb; border-radius: 10px; padding: 14px; font-size: 13px; font-weight: 600; cursor: pointer; display: none; }
-    .btn-guardar-hist { flex: 1; background: #f0f4ff; color: #1a1a2e; border: 1px solid #c5cff5; border-radius: 10px; padding: 14px; font-size: 13px; font-weight: 600; cursor: pointer; display: none; }
-    .historial-item { background: white; margin: 8px 16px 0; border-radius: 12px; padding: 14px 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
-    .historial-item .hist-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-    .historial-item .hist-fecha { font-size: 13px; font-weight: 700; }
-    .historial-item .hist-local { font-size: 11px; color: #999; }
-    .hist-resumen { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
-    .hist-kpi { background: #f8f8f8; border-radius: 8px; padding: 8px; text-align: center; }
-    .hist-kpi span { font-size: 10px; color: #999; display: block; }
-    .hist-kpi strong { font-size: 14px; }
-    .btn-eliminar-hist { background: none; border: none; color: #ccc; cursor: pointer; font-size: 16px; }
-    .sin-historial { text-align: center; padding: 40px 20px; color: #bbb; font-size: 14px; }
-    .seccion-titulo { padding: 12px 16px 4px; font-size: 11px; font-weight: 700; color: #999; text-transform: uppercase; letter-spacing: 1px; }
-    .fecha-rango { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .fecha-campo label { font-size: 11px; color: #999; display: block; margin-bottom: 4px; font-weight: 600; text-transform: uppercase; }
-    .fecha-campo input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; }
+    header h1 { font-size: 18px; }
+    .modulos { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 16px; }
+    .modulo { background: white; border-radius: 12px; padding: 20px 12px; text-align: center; cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,0.07); transition: transform 0.15s; }
+    .modulo:active { transform: scale(0.97); }
+    .modulo .emoji { font-size: 32px; }
+    .modulo p { font-size: 13px; margin-top: 8px; font-weight: 600; color: #333; }
+    .seccion-titulo { padding: 8px 16px 4px; font-size: 11px; font-weight: 700; color: #999; text-transform: uppercase; letter-spacing: 1px; }
+    .totales-box { margin: 12px 16px 0; background: #1a1a2e; border-radius: 12px; padding: 16px; color: white; }
+    .saldo-neto { text-align: center; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.15); }
+    .saldo-neto span { font-size: 12px; color: #aaa; }
+    .saldo-neto h2 { font-size: 28px; font-weight: 700; margin-top: 4px; }
+    .saldo-neto h2.positivo { color: #2ecc71; }
+    .saldo-neto h2.negativo { color: #e74c3c; }
+    .totales-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .total-item { background: rgba(255,255,255,0.08); border-radius: 8px; padding: 10px; }
+    .total-item span { font-size: 11px; color: #aaa; }
+    .total-item p { font-size: 15px; font-weight: 700; margin-top: 2px; }
+    .total-item p.entrada { color: #2ecc71; }
+    .total-item p.salida { color: #e74c3c; }
+    .totales-detalle { margin: 8px 16px 0; background: white; border-radius: 12px; padding: 14px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); }
+    .totales-detalle h4 { font-size: 11px; font-weight: 700; color: #999; text-transform: uppercase; margin-bottom: 10px; }
+    .detalle-fila { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid #f0f0f0; font-size: 13px; }
+    .detalle-fila:last-child { border-bottom: none; }
+    .filtros { margin: 8px 16px 0; display: flex; gap: 8px; flex-wrap: wrap; }
+    .filtro-select { flex: 1; min-width: 120px; padding: 8px; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; background: white; }
+    .caja-form { background: white; margin: 8px 16px 0; border-radius: 12px; padding: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); }
+    .caja-form h3 { font-size: 14px; font-weight: 700; margin-bottom: 12px; color: #333; }
+    .campo { margin-bottom: 10px; }
+    .campo label { font-size: 12px; color: #666; display: block; margin-bottom: 4px; }
+    .campo input, .campo select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; }
+    .btn-guardar { width: 100%; background: #1a1a2e; color: white; border: none; border-radius: 8px; padding: 12px; font-size: 15px; font-weight: 600; cursor: pointer; margin-top: 4px; }
+    .cat-manager { background: white; margin: 8px 16px 0; border-radius: 12px; padding: 14px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); }
+    .cat-manager h4 { font-size: 11px; font-weight: 700; color: #999; text-transform: uppercase; margin-bottom: 10px; }
+    .cat-lista { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+    .cat-tag { background: #f0f2f5; border-radius: 20px; padding: 4px 10px; font-size: 12px; display: flex; align-items: center; gap: 6px; }
+    .cat-tag button { background: none; border: none; color: #999; cursor: pointer; font-size: 14px; padding: 0; }
+    .cat-nueva { display: flex; gap: 8px; }
+    .cat-nueva input { flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; }
+    .cat-nueva button { background: #1a1a2e; color: white; border: none; border-radius: 8px; padding: 8px 14px; font-size: 13px; cursor: pointer; }
+    .cat-nueva select { padding: 8px; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; }
+    .movimientos-lista { padding: 8px 16px 24px; }
+    .movimiento-item { background: white; border-radius: 10px; padding: 12px 14px; margin-bottom: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); display: flex; justify-content: space-between; align-items: center; }
+    .mov-info { flex: 1; }
+    .mov-monto { font-size: 16px; font-weight: 700; }
+    .mov-monto.entrada { color: #2a9d5c; }
+    .mov-monto.salida { color: #e63946; }
+    .mov-detalle { font-size: 12px; color: #666; margin-top: 2px; }
+    .btn-eliminar { background: #fff0f0; border: none; color: #e63946; border-radius: 6px; padding: 6px 10px; cursor: pointer; font-size: 13px; }
+    .cargando { text-align: center; padding: 20px; color: #999; font-size: 14px; }
+    .sin-resultados { text-align: center; padding: 20px; color: #bbb; font-size: 14px; }
+    #caja { background: #f0f2f5; overflow-y: auto; }
   </style>
 </head>
 <body>
 
-<header>
-  <button class="btn-volver" onclick="window.location.href='index.html'">←</button>
-  <h1>🥤 Pedido Coca</h1>
-  <span class="local-badge" id="local-nombre">—</span>
-</header>
-
-<div class="tabs">
-  <div class="tab activo" onclick="cambiarTab('carga')">📥 Carga</div>
-  <div class="tab" onclick="cambiarTab('resultados')">📊 Resultados</div>
-  <div class="tab" onclick="cambiarTab('historial')">📋 Historial</div>
-</div>
-
-<div class="seccion activa" id="tab-carga">
-
-  <div class="banner-auto" id="banner-auto"></div>
-
-  <div class="card" style="margin-top:12px;">
-    <h3>Semana</h3>
-    <div class="fecha-rango">
-      <div class="fecha-campo">
-        <label>Desde</label>
-        <input type="date" id="fecha-desde">
+  <!-- INICIO -->
+  <div class="pantalla activa" id="inicio">
+    <div class="inicio-header">
+      <h1>⚡ Waysub Panel</h1>
+      <p>Seleccioná un local para continuar</p>
+    </div>
+    <div class="locales-grid">
+      <div class="local-card" onclick="entrarLocal('Ramos Mejía')">
+        <div class="emoji">🏪</div>
+        <h2>Ramos Mejía</h2>
+        <p>Subway · Balcarce</p>
       </div>
-      <div class="fecha-campo">
-        <label>Hasta</label>
-        <input type="date" id="fecha-hasta">
+      <div class="local-card" onclick="entrarLocal('Morón')">
+        <div class="emoji">🏪</div>
+        <h2>Morón</h2>
+        <p>Subway · Balcarce</p>
+      </div>
+      <div class="btn-general" onclick="abrirCaja()">💰 Movimiento de Caja</div>
+    </div>
+  </div>
+
+  <!-- PANEL LOCAL -->
+  <div class="pantalla" id="panel-local">
+    <header>
+      <button class="btn-volver" onclick="volver('inicio')">←</button>
+      <h1 id="nombre-local">Local</h1>
+    </header>
+    <div class="seccion-titulo">📋 Módulos</div>
+    <div class="modulos">
+      <div class="modulo"><div class="emoji">📦</div><p>Pedido Axionlog</p></div>
+      <div class="modulo" onclick="abrirCoca()"><div class="emoji">🥤</div><p>Pedido Coca</p></div>
+      <div class="modulo" onclick="window.location.href='auditoria.html'"><div class="emoji">⏰</div><p>Conteo de Horas</p></div>
+      <div class="modulo"><div class="emoji">📊</div><p>Cashflow</p></div>
+    </div>
+  </div>
+
+  <!-- CAJA -->
+  <div class="pantalla" id="caja">
+    <header>
+      <button class="btn-volver" onclick="volver('inicio')">←</button>
+      <h1>💰 Movimiento de Caja</h1>
+    </header>
+    <div class="totales-box">
+      <div class="saldo-neto">
+        <span>Saldo neto</span>
+        <h2 id="saldo-neto-valor">$0</h2>
+      </div>
+      <div class="totales-grid">
+        <div class="total-item"><span>Total entradas</span><p class="entrada" id="total-entradas">$0</p></div>
+        <div class="total-item"><span>Total salidas</span><p class="salida" id="total-salidas">$0</p></div>
       </div>
     </div>
-  </div>
-
-  <div class="seccion-titulo">Método de carga</div>
-  <div class="metodo-selector">
-    <div class="metodo-btn activo" id="btn-metodo-manual" onclick="setMetodo('manual')">
-      <span class="metodo-emoji">✏️</span>
-      <span class="metodo-label">Manual</span>
+    <div class="totales-detalle">
+      <h4>Por categoría</h4>
+      <div id="detalle-categorias"></div>
     </div>
-    <div class="metodo-btn" id="btn-metodo-foto" onclick="setMetodo('foto')">
-      <span class="metodo-emoji">📷</span>
-      <span class="metodo-label">Por foto (IA)</span>
+    <div class="totales-detalle">
+      <h4>Por local</h4>
+      <div id="detalle-locales"></div>
     </div>
-  </div>
-
-  <div id="zona-foto" style="display:none; margin: 0 16px;">
-    <div style="margin-top:12px;">
-      <p style="font-size:12px; color:#999; margin-bottom:8px; font-weight:600; text-transform:uppercase;">¿Qué foto querés subir?</p>
-      <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:12px;">
-        <button onclick="setTipoFoto('conteo')" id="tfb-conteo" style="background:#1a1a2e;color:white;border:2px solid #1a1a2e;border-radius:10px;padding:10px 4px;font-size:11px;font-weight:600;cursor:pointer;">📝<br>Conteo</button>
-        <button onclick="setTipoFoto('linisco')" id="tfb-linisco" style="background:white;color:#333;border:2px solid #ddd;border-radius:10px;padding:10px 4px;font-size:11px;font-weight:600;cursor:pointer;">💻<br>LINISCO</button>
-        <button onclick="setTipoFoto('femsa')" id="tfb-femsa" style="background:white;color:#333;border:2px solid #ddd;border-radius:10px;padding:10px 4px;font-size:11px;font-weight:600;cursor:pointer;">🧾<br>Factura</button>
+    <div class="filtros">
+      <select class="filtro-select" id="filtro-periodo" onchange="aplicarFiltros()">
+        <option value="todo">📅 Todo</option>
+        <option value="hoy">Hoy</option>
+        <option value="semana">Esta semana</option>
+        <option value="mes">Este mes</option>
+      </select>
+      <select class="filtro-select" id="filtro-local" onchange="aplicarFiltros()">
+        <option value="todos">🏪 Todos los locales</option>
+        <option value="Subway Ramos">Subway Ramos</option>
+        <option value="Subway Morón">Subway Morón</option>
+        <option value="Balcarce Ramos">Balcarce Ramos</option>
+        <option value="Balcarce Morón">Balcarce Morón</option>
+      </select>
+      <select class="filtro-select" id="filtro-categoria" onchange="aplicarFiltros()">
+        <option value="todas">📂 Todas las categorías</option>
+      </select>
+    </div>
+    <div class="caja-form">
+      <h3>Nuevo movimiento</h3>
+      <div class="campo"><label>Fecha</label><input type="date" id="inp-fecha"></div>
+      <div class="campo"><label>Local</label>
+        <select id="inp-local">
+          <option value="Subway Ramos">Subway Ramos</option>
+          <option value="Subway Morón">Subway Morón</option>
+          <option value="Balcarce Ramos">Balcarce Ramos</option>
+          <option value="Balcarce Morón">Balcarce Morón</option>
+        </select>
       </div>
-      <label class="foto-area">
-        <input type="file" accept="image/*" onchange="previewFoto(event)" id="foto-input">
-        <span style="font-size:32px;">📸</span>
-        <p>Tocá para subir foto</p>
-        <img class="foto-preview" id="foto-preview-img">
-      </label>
-      <button class="btn-analizar" id="btn-analizar" onclick="analizarFoto()">🔍 Analizar con IA</button>
-      <div class="analizando" id="analizando">⏳ Analizando imagen... un momento</div>
+      <div class="campo"><label>Categoría</label><select id="inp-tipo"></select></div>
+      <div class="campo"><label>Monto ($)</label><input type="number" id="inp-monto" placeholder="500000"></div>
+      <div class="campo"><label>Descripción (opcional)</label><input type="text" id="inp-descripcion" placeholder="Ej: pago proveedor"></div>
+      <button class="btn-guardar" onclick="guardarMovimiento()">Guardar movimiento</button>
+    </div>
+    <div class="cat-manager">
+      <h4>Gestionar categorías</h4>
+      <div class="cat-lista" id="cat-lista"></div>
+      <div class="cat-nueva">
+        <input type="text" id="nueva-cat-nombre" placeholder="Nueva categoría...">
+        <select id="nueva-cat-tipo">
+          <option value="entrada">➕ Entrada</option>
+          <option value="salida">➖ Salida</option>
+        </select>
+        <button onclick="agregarCategoria()">+</button>
+      </div>
+    </div>
+    <div class="seccion-titulo">📋 Movimientos</div>
+    <div class="movimientos-lista" id="lista-movimientos">
+      <div class="cargando">Cargando...</div>
     </div>
   </div>
 
-  <div class="card">
-    <h3>Stock Inicial (cierre semana anterior)</h3>
-    <table class="productos-tabla">
-      <thead><tr><th>Producto</th><th>Unid.</th></tr></thead>
-      <tbody id="tabla-stock-inicial"></tbody>
-    </table>
-  </div>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, orderBy, query, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-  <div class="card">
-    <h3>Ingreso FEMSA (entregado esta semana)</h3>
-    <table class="productos-tabla">
-      <thead><tr><th>Producto</th><th>Unid.</th></tr></thead>
-      <tbody id="tabla-femsa"></tbody>
-    </table>
-  </div>
-
-  <div class="card">
-    <h3>Ventas Sistema (LINISCO)</h3>
-    <table class="productos-tabla">
-      <thead><tr><th>Producto</th><th>Unid.</th></tr></thead>
-      <tbody id="tabla-ventas"></tbody>
-    </table>
-  </div>
-
-  <div class="card">
-    <h3>Stock Actual (conteo físico)</h3>
-    <table class="productos-tabla">
-      <thead><tr><th>Producto</th><th>Unid.</th></tr></thead>
-      <tbody id="tabla-stock-actual"></tbody>
-    </table>
-  </div>
-
-  <div class="card">
-    <h3>Transferencias entre locales (packs de 6u)</h3>
-    <div id="lista-transferencias"></div>
-    <button class="btn-agregar-transfer" onclick="agregarTransferencia()">+ Agregar transferencia</button>
-  </div>
-
-</div>
-
-<div class="seccion" id="tab-resultados">
-  <div id="alertas-container"></div>
-  <div class="card" style="margin-top:12px;">
-    <h3>Control de Inventario</h3>
-    <div style="overflow-x:auto;">
-      <table class="resultado-tabla">
-        <thead><tr><th>Producto</th><th>Disp.</th><th>Ventas</th><th>Consumo</th><th>Descuadre</th><th>Stock</th></tr></thead>
-        <tbody id="body-control"></tbody>
-      </table>
-    </div>
-  </div>
-  <div class="card">
-    <h3>Pedido Sugerido (editable)</h3>
-    <div style="overflow-x:auto;">
-      <table class="resultado-tabla">
-        <thead><tr><th>Producto</th><th>Consumo</th><th>Stock</th><th>Calc.</th><th>Packs</th></tr></thead>
-        <tbody id="body-pedido"></tbody>
-      </table>
-    </div>
-  </div>
-</div>
-
-<div class="seccion" id="tab-historial">
-  <div id="lista-historial" style="padding-bottom: 20px;"></div>
-</div>
-
-<div class="footer-btns">
-  <button class="btn-calcular" onclick="calcular()">⚡ Calcular</button>
-  <button class="btn-excel" id="btn-excel" onclick="exportarExcel()">📥 Excel</button>
-  <button class="btn-guardar-hist" id="btn-guardar" onclick="guardarEnFirebase()">💾 Guardar</button>
-</div>
-
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, query, where, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyAB2-btgFqGiCe1YdZSDv4EShV601N-uQs",
-    authDomain: "waysub-web.firebaseapp.com",
-    projectId: "waysub-web",
-    storageBucket: "waysub-web.firebasestorage.app",
-    messagingSenderId: "219825581217",
-    appId: "1:219825581217:web:6f752ee27a5446400114e0"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-
-  const GRUPOS = [
-    { grupo: "Coca-Cola", items: ["Coca Común", "Coca Zero", "Coca Light"] },
-    { grupo: "Sprite / Fanta", items: ["Sprite", "Sprite Zero", "Fanta"] },
-    { grupo: "Aquarius", items: ["Aquarius Manzana", "Aquarius Pera", "Aquarius Pomelo"] },
-    { grupo: "Agua", items: ["Agua Sin Gas", "Agua Con Gas"] },
-    { grupo: "Cepita", items: ["Cepita Manzana", "Cepita Naranja", "Cepita Multifruta"] },
-  ];
-  const TODOS_PRODUCTOS = GRUPOS.flatMap(g => g.items);
-  const PACK = 6;
-  const MULTIPLICADOR = 2.2;
-
-  let localActual = '';
-  let metodo = 'manual';
-  let tipoFoto = 'conteo';
-  let fotoBase64 = null;
-  let resultados = null;
-
-  // INIT
-  const params = new URLSearchParams(window.location.search);
-  localActual = params.get('local') || 'Desconocido';
-  document.getElementById('local-nombre').textContent = localActual;
-
-  // Fechas por defecto: lunes a domingo de la semana actual
-  const hoy = new Date();
-  const lunes = new Date(hoy);
-  lunes.setDate(hoy.getDate() - ((hoy.getDay() + 6) % 7));
-  const domingo = new Date(lunes);
-  domingo.setDate(lunes.getDate() + 6);
-  document.getElementById('fecha-desde').value = lunes.toISOString().split('T')[0];
-  document.getElementById('fecha-hasta').value = domingo.toISOString().split('T')[0];
-
-  construirTablas();
-  cargarStockInicialAutomatico();
-  cargarHistorial();
-
-  // STOCK INICIAL AUTOMÁTICO desde última semana guardada
-  async function cargarStockInicialAutomatico() {
-    try {
-      const q = query(
-        collection(db, "coca_historial"),
-        where("local", "==", localActual),
-        orderBy("timestamp", "desc"),
-        limit(1)
-      );
-      const snap = await getDocs(q);
-      if (snap.empty) return;
-      const ultimo = snap.docs[0].data();
-      const stockAnterior = {};
-      ultimo.control.forEach(r => { stockAnterior[r.prod] = r.stockActual; });
-      llenarTabla('stock-inicial', stockAnterior);
-      const desde = ultimo.fechaDesde || ultimo.fecha || '';
-      const hasta = ultimo.fechaHasta || '';
-      const banner = document.getElementById('banner-auto');
-      banner.style.display = 'block';
-      banner.textContent = `✅ Stock Inicial cargado automáticamente desde la semana ${desde}${hasta ? ' al ' + hasta : ''}`;
-    } catch(e) { /* sin historial todavía, no pasa nada */ }
-  }
-
-  function construirTablas() {
-    ['stock-inicial', 'femsa', 'ventas', 'stock-actual'].forEach(id => {
-      const tbody = document.getElementById('tabla-' + id);
-      tbody.innerHTML = '';
-      GRUPOS.forEach(g => {
-        const grFila = document.createElement('tr');
-        grFila.className = 'grupo-header';
-        grFila.innerHTML = '<td colspan="2">🔵 ' + g.grupo + '</td>';
-        tbody.appendChild(grFila);
-        g.items.forEach(prod => {
-          const tr = document.createElement('tr');
-          tr.innerHTML = '<td>' + prod + '</td><td><input type="number" min="0" value="0" data-tabla="' + id + '" data-prod="' + prod + '"></td>';
-          tbody.appendChild(tr);
-        });
-      });
-    });
-  }
-
-  window.cambiarTab = function(tab) {
-    document.querySelectorAll('.tab').forEach((t, i) => {
-      t.classList.toggle('activo', ['carga','resultados','historial'][i] === tab);
-    });
-    document.querySelectorAll('.seccion').forEach(s => s.classList.remove('activa'));
-    document.getElementById('tab-' + tab).classList.add('activa');
-    const btnCalc = document.querySelector('.btn-calcular');
-    if (tab === 'resultados') {
-      btnCalc.style.display = 'none';
-      document.getElementById('btn-excel').style.display = resultados ? 'block' : 'none';
-      document.getElementById('btn-guardar').style.display = resultados ? 'block' : 'none';
-    } else if (tab === 'historial') {
-      btnCalc.style.display = 'none';
-      document.getElementById('btn-excel').style.display = 'none';
-      document.getElementById('btn-guardar').style.display = 'none';
-    } else {
-      btnCalc.style.display = 'block';
-      document.getElementById('btn-excel').style.display = 'none';
-      document.getElementById('btn-guardar').style.display = 'none';
-    }
-  }
-
-  window.setMetodo = function(m) {
-    metodo = m;
-    document.getElementById('btn-metodo-manual').classList.toggle('activo', m === 'manual');
-    document.getElementById('btn-metodo-foto').classList.toggle('activo', m === 'foto');
-    document.getElementById('zona-foto').style.display = m === 'foto' ? 'block' : 'none';
-  }
-
-  window.setTipoFoto = function(t) {
-    tipoFoto = t;
-    ['conteo','linisco','femsa'].forEach(x => {
-      const btn = document.getElementById('tfb-' + x);
-      if (x === t) { btn.style.background = '#1a1a2e'; btn.style.color = 'white'; btn.style.borderColor = '#1a1a2e'; }
-      else { btn.style.background = 'white'; btn.style.color = '#333'; btn.style.borderColor = '#ddd'; }
-    });
-  }
-
-  window.previewFoto = function(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = ev => {
-      fotoBase64 = ev.target.result.split(',')[1];
-      const img = document.getElementById('foto-preview-img');
-      img.src = ev.target.result;
-      img.style.display = 'block';
-      document.getElementById('btn-analizar').style.display = 'block';
+    const firebaseConfig = {
+      apiKey: "AIzaSyAB2-btgFqGiCe1YdZSDv4EShV601N-uQs",
+      authDomain: "waysub-web.firebaseapp.com",
+      projectId: "waysub-web",
+      storageBucket: "waysub-web.firebasestorage.app",
+      messagingSenderId: "219825581217",
+      appId: "1:219825581217:web:6f752ee27a5446400114e0"
     };
-    reader.readAsDataURL(file);
-  }
 
-  window.analizarFoto = async function() {
-    if (!fotoBase64) return;
-    const btn = document.getElementById('btn-analizar');
-    const spin = document.getElementById('analizando');
-    btn.disabled = true;
-    btn.style.display = 'none';
-    spin.style.display = 'block';
-    const jsonBase = '{"Coca Común": 0, "Coca Zero": 0, "Coca Light": 0, "Sprite": 0, "Sprite Zero": 0, "Fanta": 0, "Aquarius Manzana": 0, "Aquarius Pera": 0, "Aquarius Pomelo": 0, "Agua Sin Gas": 0, "Agua Con Gas": 0, "Cepita Manzana": 0, "Cepita Naranja": 0, "Cepita Multifruta": 0}';
-    const prompts = {
-      conteo: 'Sos un asistente que lee conteos de stock de bebidas. Extraé los valores de cada producto. Respondé SOLO con JSON válido, sin texto extra ni backticks, en este formato: ' + jsonBase + ' Si un producto no aparece, ponele 0. Solo números enteros.',
-      linisco: 'Sos un asistente que lee capturas del sistema LINISCO de Subway Argentina. Extraé las unidades vendidas. Mapeá: "Agua saborizada 600cc" = distribuir entre Aquarius Manzana/Pera/Pomelo. "Cepita" = distribuir entre Cepita Manzana/Naranja/Multifruta. Respondé SOLO con JSON válido sin texto extra ni backticks: ' + jsonBase,
-      femsa: 'Sos un asistente que lee facturas de Coca-Cola FEMSA Argentina. Códigos: Agua s/g=84819, Agua c/g=84820, Coca Zero=48, Sprite Zero=197, Coca Común=2843, Coca Light=2845, Aq.Manzana=84440, Aq.Pera=84441, Aq.Pomelo=84442, Fanta=99794, Sprite=101218, Cepita Manzana=100222, Cepita Multifruta=100224, Cepita Naranja=100908. Respondé SOLO con JSON válido sin texto extra ni backticks: ' + jsonBase
-    };
-    try {
-      const resp = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
-          max_tokens: 1000,
-          messages: [{ role: "user", content: [
-            { type: "image", source: { type: "base64", media_type: "image/jpeg", data: fotoBase64 } },
-            { type: "text", text: prompts[tipoFoto] }
-          ]}]
-        })
-      });
-      const data = await resp.json();
-      const texto = data.content.find(b => b.type === 'text')?.text || '{}';
-      const valores = JSON.parse(texto);
-      const mapaTabla = { conteo: 'stock-actual', linisco: 'ventas', femsa: 'femsa' };
-      llenarTabla(mapaTabla[tipoFoto], valores);
-      if (tipoFoto === 'conteo' && confirm('¿También cargamos este conteo como Stock Inicial?')) {
-        llenarTabla('stock-inicial', valores);
-        document.getElementById('banner-auto').style.display = 'none';
-      }
-      spin.style.display = 'none';
-      btn.disabled = false;
-      btn.style.display = 'block';
-      btn.textContent = '✅ Analizado — subir otra foto';
-      fotoBase64 = null;
-      document.getElementById('foto-preview-img').style.display = 'none';
-    } catch (err) {
-      spin.style.display = 'none';
-      btn.disabled = false;
-      btn.style.display = 'block';
-      alert('Error al analizar la imagen. Intentá de nuevo.');
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    let todosLosMovimientos = [];
+    let categorias = [
+      { nombre: "Entrada", tipo: "entrada" },
+      { nombre: "Salida", tipo: "salida" },
+      { nombre: "Voucher", tipo: "salida" },
+      { nombre: "Alquiler", tipo: "salida" },
+      { nombre: "Expensas", tipo: "salida" }
+    ];
+
+    async function cargarCategorias() {
+      const ref = doc(db, "config", "categorias");
+      const snap = await getDoc(ref);
+      if (snap.exists()) categorias = snap.data().lista;
+      renderCategorias();
     }
-  }
 
-  function llenarTabla(tablaId, valores) {
-    document.querySelectorAll('input[data-tabla="' + tablaId + '"]').forEach(inp => {
-      if (valores[inp.dataset.prod] !== undefined) inp.value = valores[inp.dataset.prod];
-    });
-  }
-
-  function getValores(tablaId) {
-    const out = {};
-    document.querySelectorAll('input[data-tabla="' + tablaId + '"]').forEach(inp => {
-      out[inp.dataset.prod] = Number(inp.value) || 0;
-    });
-    return out;
-  }
-
-  window.agregarTransferencia = function() {
-    const div = document.createElement('div');
-    div.className = 'transfer-fila';
-    div.innerHTML = '<select style="flex:1.5">' + TODOS_PRODUCTOS.map(p => '<option>' + p + '</option>').join('') + '</select>' +
-      '<select><option value="entrada">← Recibido</option><option value="salida">→ Enviado</option></select>' +
-      '<input type="number" min="0" value="0" placeholder="packs" style="max-width:70px">' +
-      '<button onclick="this.parentElement.remove()">×</button>';
-    document.getElementById('lista-transferencias').appendChild(div);
-  }
-
-  function getTransferencias() {
-    const result = {};
-    TODOS_PRODUCTOS.forEach(p => result[p] = 0);
-    document.querySelectorAll('#lista-transferencias .transfer-fila').forEach(fila => {
-      const [selProd, selDir, inpPacks] = fila.querySelectorAll('select, input');
-      const unidades = (Number(inpPacks.value) || 0) * PACK;
-      result[selProd.value] += selDir.value === 'entrada' ? unidades : -unidades;
-    });
-    return result;
-  }
-
-  window.calcular = function() {
-    const stockInicial = getValores('stock-inicial');
-    const femsa = getValores('femsa');
-    const ventas = getValores('ventas');
-    const stockActual = getValores('stock-actual');
-    const transferencias = getTransferencias();
-    resultados = { control: [], pedido: [], alertas: [] };
-    TODOS_PRODUCTOS.forEach(prod => {
-      const disponible = stockInicial[prod] + femsa[prod] + transferencias[prod];
-      const consumo = disponible - stockActual[prod];
-      const descuadre = ventas[prod] - consumo;
-      const base = Math.max(consumo, 0);
-      const calculado = (base * MULTIPLICADOR) - stockActual[prod];
-      const packsCalc = Math.max(0, Math.ceil(calculado / PACK));
-      if (descuadre < -10) resultados.alertas.push({ tipo: 'rojo', msg: prod + ': descuadre negativo de ' + descuadre + ' unidades — faltan bebidas (robo, merma o consumo interno)' });
-      else if (descuadre > 10) resultados.alertas.push({ tipo: 'naranja', msg: prod + ': descuadre positivo de +' + descuadre + ' unidades — el sistema registró más de lo físico' });
-      resultados.control.push({ prod, disponible, ventas: ventas[prod], consumo, descuadre, stockActual: stockActual[prod] });
-      resultados.pedido.push({ prod, consumo: base, stockActual: stockActual[prod], calculado: Math.max(0, calculado), packsCalc });
-    });
-    renderResultados();
-    cambiarTab('resultados');
-  }
-
-  function renderResultados() {
-    if (!resultados) return;
-    document.getElementById('alertas-container').innerHTML = resultados.alertas.map(a =>
-      '<div class="alerta alerta-' + (a.tipo === 'rojo' ? 'roja' : 'naranja') + '">' + (a.tipo === 'rojo' ? '🔴' : '🟡') + ' ' + a.msg + '</div>'
-    ).join('');
-    document.getElementById('body-control').innerHTML = resultados.control.map(r => {
-      let dBadge = r.descuadre < -10 ? '<span class="badge-rojo">' + r.descuadre + '</span>'
-        : r.descuadre > 10 ? '<span class="badge-naranja">+' + r.descuadre + '</span>'
-        : '<span class="badge-verde">' + (r.descuadre >= 0 ? '+' : '') + r.descuadre + '</span>';
-      return '<tr><td>' + r.prod + '</td><td>' + r.disponible + '</td><td>' + r.ventas + '</td><td>' + r.consumo + '</td><td>' + dBadge + '</td><td>' + r.stockActual + '</td></tr>';
-    }).join('');
-    document.getElementById('body-pedido').innerHTML = resultados.pedido.map((r, i) =>
-      '<tr><td>' + r.prod + '</td><td>' + r.consumo + '</td><td>' + r.stockActual + '</td><td>' + r.calculado.toFixed(0) + '</td><td><input type="number" class="pedido-input ' + (r.packsCalc > 0 ? 'tiene-pedido' : '') + '" value="' + r.packsCalc + '" min="0" data-idx="' + i + '" onchange="actualizarPedido(this)"></td></tr>'
-    ).join('');
-    document.getElementById('btn-excel').style.display = 'block';
-    document.getElementById('btn-guardar').style.display = 'block';
-  }
-
-  window.actualizarPedido = function(inp) {
-    const idx = Number(inp.dataset.idx);
-    resultados.pedido[idx].packsCalc = Number(inp.value);
-    inp.className = 'pedido-input ' + (Number(inp.value) > 0 ? 'tiene-pedido' : '');
-  }
-
-  window.exportarExcel = function() {
-    if (!resultados) return;
-    const wb = XLSX.utils.book_new();
-    const desde = document.getElementById('fecha-desde').value;
-    const hasta = document.getElementById('fecha-hasta').value;
-    const rangoLabel = desde + ' al ' + hasta;
-    const ws1 = XLSX.utils.aoa_to_sheet([
-      ['Producto', 'Stock Disponible', 'Ventas Sistema', 'Consumo Real', 'Descuadre', 'Stock Actual'],
-      ...resultados.control.map(r => [r.prod, r.disponible, r.ventas, r.consumo, r.descuadre, r.stockActual])
-    ]);
-    ws1['!cols'] = [{wch:22},{wch:16},{wch:16},{wch:14},{wch:12},{wch:12}];
-    XLSX.utils.book_append_sheet(wb, ws1, '1. Control Inventario');
-    const ws2 = XLSX.utils.aoa_to_sheet([
-      ['Producto', 'Consumo Real', 'Stock Actual', 'Calculado (u)', 'Packs a Pedir'],
-      ...resultados.pedido.map(r => [r.prod, r.consumo, r.stockActual, Math.round(r.calculado), r.packsCalc])
-    ]);
-    ws2['!cols'] = [{wch:22},{wch:14},{wch:14},{wch:14},{wch:14}];
-    XLSX.utils.book_append_sheet(wb, ws2, '2. Pedido Sugerido');
-    const totalPacks = resultados.pedido.reduce((a, r) => a + r.packsCalc, 0);
-    const ws3 = XLSX.utils.aoa_to_sheet([
-      ['RESUMEN EJECUTIVO', ''], ['Local', localActual], ['Semana', rangoLabel],
-      ['Total packs a pedir', totalPacks],
-      ['Alertas rojas', resultados.alertas.filter(a => a.tipo === 'rojo').length],
-      ['Alertas naranjas', resultados.alertas.filter(a => a.tipo === 'naranja').length],
-      ['', ''], ['DETALLE PEDIDO', ''],
-      ...resultados.pedido.filter(r => r.packsCalc > 0).map(r => [r.prod, r.packsCalc + ' packs (' + (r.packsCalc * 6) + ' u)']),
-      ['', ''], ['ALERTAS', ''],
-      ...resultados.alertas.map(a => [a.tipo === 'rojo' ? '🔴' : '🟡', a.msg])
-    ]);
-    ws3['!cols'] = [{wch:30},{wch:30}];
-    XLSX.utils.book_append_sheet(wb, ws3, '3. Resumen Ejecutivo');
-    XLSX.writeFile(wb, 'Pedido-Coca-' + localActual + '-' + desde + '.xlsx');
-  }
-
-  window.guardarEnFirebase = async function() {
-    if (!resultados) return;
-    const desde = document.getElementById('fecha-desde').value;
-    const hasta = document.getElementById('fecha-hasta').value;
-    const btn = document.getElementById('btn-guardar');
-    btn.disabled = true;
-    btn.textContent = 'Guardando...';
-    try {
-      await addDoc(collection(db, "coca_historial"), {
-        local: localActual, fechaDesde: desde, fechaHasta: hasta,
-        timestamp: Date.now(), control: resultados.control,
-        pedido: resultados.pedido, alertas: resultados.alertas
-      });
-      btn.textContent = '✅ Guardado';
-      setTimeout(() => { btn.textContent = '💾 Guardar'; btn.disabled = false; }, 2000);
-      cargarHistorial();
-    } catch (e) {
-      btn.textContent = '💾 Guardar'; btn.disabled = false;
-      alert('Error al guardar. Revisá la conexión.');
+    async function guardarCategorias() {
+      await setDoc(doc(db, "config", "categorias"), { lista: categorias });
     }
-  }
 
-  async function cargarHistorial() {
-    const lista = document.getElementById('lista-historial');
-    lista.innerHTML = '<div class="sin-historial">Cargando...</div>';
-    try {
-      const q = query(collection(db, "coca_historial"), where("local", "==", localActual), orderBy("timestamp", "desc"));
+    function renderCategorias() {
+      const lista = document.getElementById('cat-lista');
+      const selTipo = document.getElementById('inp-tipo');
+      const selFiltro = document.getElementById('filtro-categoria');
+      lista.innerHTML = categorias.map((c, i) =>
+        `<div class="cat-tag">${c.nombre} <button onclick="window.eliminarCategoria(${i})">×</button></div>`
+      ).join('');
+      selTipo.innerHTML = categorias.map(c =>
+        `<option value="${c.nombre}">${c.tipo === 'entrada' ? '➕' : '➖'} ${c.nombre}</option>`
+      ).join('');
+      selFiltro.innerHTML = `<option value="todas">📂 Todas las categorías</option>` +
+        categorias.map(c => `<option value="${c.nombre}">${c.nombre}</option>`).join('');
+    }
+
+    window.agregarCategoria = async function() {
+      const nombre = document.getElementById('nueva-cat-nombre').value.trim();
+      const tipo = document.getElementById('nueva-cat-tipo').value;
+      if (!nombre) return;
+      categorias.push({ nombre, tipo });
+      await guardarCategorias();
+      renderCategorias();
+      document.getElementById('nueva-cat-nombre').value = '';
+    }
+
+    window.eliminarCategoria = async function(i) {
+      if (!confirm('¿Eliminar esta categoría?')) return;
+      categorias.splice(i, 1);
+      await guardarCategorias();
+      renderCategorias();
+    }
+
+    function esEntrada(cat) {
+      const c = categorias.find(x => x.nombre === cat);
+      return c ? c.tipo === 'entrada' : false;
+    }
+
+    async function cargarMovimientos() {
+      const q = query(collection(db, "movimientos"), orderBy("fecha", "desc"));
       const snap = await getDocs(q);
-      if (snap.empty) { lista.innerHTML = '<div class="sin-historial">Sin historial guardado aún</div>'; return; }
-      lista.innerHTML = '';
-      snap.forEach(d => {
-        const dat = d.data();
-        const totalPacks = dat.pedido.reduce((a, r) => a + r.packsCalc, 0);
-        const alertasRojas = dat.alertas.filter(a => a.tipo === 'rojo').length;
-        const rangoFecha = dat.fechaDesde ? dat.fechaDesde + ' → ' + (dat.fechaHasta || '') : (dat.fecha || '—');
-        const div = document.createElement('div');
-        div.className = 'historial-item';
-        div.innerHTML = '<div class="hist-header"><div><div class="hist-fecha">📅 ' + rangoFecha + '</div><div class="hist-local">' + dat.local + '</div></div><button class="btn-eliminar-hist" onclick="window.eliminarHistorial(\'' + d.id + '\')">🗑</button></div>' +
-          '<div class="hist-resumen"><div class="hist-kpi"><span>Total packs</span><strong>' + totalPacks + '</strong></div>' +
-          '<div class="hist-kpi"><span>🔴 Alertas</span><strong style="color:' + (alertasRojas > 0 ? '#e63946' : '#2a9d5c') + '">' + alertasRojas + '</strong></div>' +
-          '<div class="hist-kpi"><span>Productos</span><strong>' + dat.pedido.filter(r => r.packsCalc > 0).length + '</strong></div></div>';
-        lista.appendChild(div);
-      });
-    } catch (e) { lista.innerHTML = '<div class="sin-historial">Error al cargar historial</div>'; }
-  }
+      todosLosMovimientos = [];
+      snap.forEach(d => todosLosMovimientos.push({ id: d.id, ...d.data() }));
+      aplicarFiltros();
+    }
 
-  window.eliminarHistorial = async function(id) {
-    if (!confirm('¿Eliminar este registro?')) return;
-    await deleteDoc(doc(db, "coca_historial", id));
-    cargarHistorial();
-  }
-</script>
+    window.aplicarFiltros = function() {
+      const periodo = document.getElementById('filtro-periodo').value;
+      const localFiltro = document.getElementById('filtro-local').value;
+      const catFiltro = document.getElementById('filtro-categoria').value;
+      const hoy = new Date().toISOString().split('T')[0];
+      const lunes = (() => { const d = new Date(); d.setDate(d.getDate() - d.getDay() + 1); return d.toISOString().split('T')[0]; })();
+      const primeroDeMes = hoy.substring(0, 7) + '-01';
+      let filtrados = todosLosMovimientos.filter(m => {
+        if (periodo === 'hoy' && m.fecha !== hoy) return false;
+        if (periodo === 'semana' && m.fecha < lunes) return false;
+        if (periodo === 'mes' && m.fecha < primeroDeMes) return false;
+        if (localFiltro !== 'todos' && m.local !== localFiltro) return false;
+        if (catFiltro !== 'todas' && m.tipo !== catFiltro) return false;
+        return true;
+      });
+      renderTotales(filtrados);
+      renderLista(filtrados);
+    }
+
+    function renderTotales(movs) {
+      let entradas = 0, salidas = 0;
+      const porCat = {}, porLocal = {};
+      movs.forEach(m => {
+        const monto = Number(m.monto);
+        const entrada = esEntrada(m.tipo);
+        if (entrada) entradas += monto; else salidas += monto;
+        porCat[m.tipo] = (porCat[m.tipo] || 0) + (entrada ? monto : -monto);
+        porLocal[m.local] = (porLocal[m.local] || 0) + (entrada ? monto : -monto);
+      });
+      const saldo = entradas - salidas;
+      const fmt = n => '$' + Math.abs(n).toLocaleString('es-AR');
+      const elSaldo = document.getElementById('saldo-neto-valor');
+      elSaldo.textContent = (saldo < 0 ? '-' : '') + fmt(saldo);
+      elSaldo.className = saldo >= 0 ? 'positivo' : 'negativo';
+      document.getElementById('total-entradas').textContent = fmt(entradas);
+      document.getElementById('total-salidas').textContent = fmt(salidas);
+      document.getElementById('detalle-categorias').innerHTML = Object.entries(porCat).map(([k, v]) =>
+        `<div class="detalle-fila"><span>${k}</span><strong style="color:${v>=0?'#2a9d5c':'#e63946'}">${v<0?'-':''}${fmt(v)}</strong></div>`
+      ).join('') || '<div class="sin-resultados">Sin datos</div>';
+      document.getElementById('detalle-locales').innerHTML = Object.entries(porLocal).map(([k, v]) =>
+        `<div class="detalle-fila"><span>${k}</span><strong style="color:${v>=0?'#2a9d5c':'#e63946'}">${v<0?'-':''}${fmt(v)}</strong></div>`
+      ).join('') || '<div class="sin-resultados">Sin datos</div>';
+    }
+
+    function renderLista(movs) {
+      const lista = document.getElementById('lista-movimientos');
+      if (!movs.length) { lista.innerHTML = '<div class="sin-resultados">No hay movimientos</div>'; return; }
+      lista.innerHTML = movs.map(m => `
+        <div class="movimiento-item">
+          <div class="mov-info">
+            <div class="mov-monto ${esEntrada(m.tipo) ? 'entrada' : 'salida'}">$${Number(m.monto).toLocaleString('es-AR')}</div>
+            <div class="mov-detalle">${m.local} · ${m.tipo} · ${m.fecha}${m.descripcion ? ' · ' + m.descripcion : ''}</div>
+          </div>
+          <button class="btn-eliminar" onclick="window.eliminarMovimiento('${m.id}')">🗑</button>
+        </div>`).join('');
+    }
+
+    window.guardarMovimiento = async function() {
+      const fecha = document.getElementById('inp-fecha').value;
+      const local = document.getElementById('inp-local').value;
+      const tipo = document.getElementById('inp-tipo').value;
+      const monto = document.getElementById('inp-monto').value;
+      const descripcion = document.getElementById('inp-descripcion').value;
+      if (!fecha || !monto) { alert('Completá fecha y monto'); return; }
+      await addDoc(collection(db, "movimientos"), { fecha, local, tipo, monto, descripcion });
+      document.getElementById('inp-monto').value = '';
+      document.getElementById('inp-descripcion').value = '';
+      cargarMovimientos();
+    }
+
+    window.eliminarMovimiento = async function(id) {
+      if (!confirm('¿Eliminar este movimiento?')) return;
+      await deleteDoc(doc(db, "movimientos", id));
+      cargarMovimientos();
+    }
+
+    window.abrirCaja = function() {
+      document.querySelectorAll('.pantalla').forEach(p => p.classList.remove('activa'));
+      document.getElementById('caja').classList.add('activa');
+      cargarCategorias();
+      cargarMovimientos();
+    }
+
+    window.abrirCoca = function() {
+      const local = document.getElementById('nombre-local').textContent;
+      window.location.href = 'coca.html?local=' + encodeURIComponent(local);
+    }
+
+    window.entrarLocal = function(nombre) {
+      document.getElementById('nombre-local').textContent = nombre;
+      document.querySelectorAll('.pantalla').forEach(p => p.classList.remove('activa'));
+      document.getElementById('panel-local').classList.add('activa');
+    }
+
+    window.volver = function(destino) {
+      document.querySelectorAll('.pantalla').forEach(p => p.classList.remove('activa'));
+      document.getElementById(destino).classList.add('activa');
+    }
+
+    document.getElementById('inp-fecha').valueAsDate = new Date();
+  </script>
 </body>
 </html>
