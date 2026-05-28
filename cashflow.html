@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cashflow · Waysub</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: sans-serif; background: #f0f2f5; color: #1a1a1a; min-height: 100vh; }
+    header { background: #1a1a2e; color: white; padding: 16px 20px; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 100; }
+    .btn-volver { background: rgba(255,255,255,0.15); border: none; color: white; border-radius: 8px; padding: 6px 12px; font-size: 18px; cursor: pointer; }
+    header h1 { font-size: 18px; flex: 1; }
+    .tabs { display: flex; background: white; border-bottom: 2px solid #f0f2f5; position: sticky; top: 57px; z-index: 99; }
+    .tab { flex: 1; padding: 12px 4px; text-align: center; font-size: 11px; font-weight: 600; color: #999; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; }
+    .tab.activo { color: #1a1a2e; border-bottom-color: #1a1a2e; }
+    .seccion { display: none; padding-bottom: 100px; }
+    .seccion.activa { display: block; }
+    .card { background: white; margin: 12px 16px 0; border-radius: 12px; padding: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); }
+    .card h3 { font-size: 14px; font-weight: 800; color: #1a1a2e; margin-bottom: 14px; border-left: 4px solid #1a1a2e; padding-left: 10px; }
+    .campo { margin-bottom: 10px; }
+    .campo label { font-size: 12px; color: #666; display: block; margin-bottom: 4px; font-weight: 600; }
+    .campo input, .campo select, .campo textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; }
+    .campo input:focus, .campo select:focus { outline: none; border-color: #1a1a2e; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .ventas-tabla { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .ventas-tabla th { padding: 6px 4px; font-size: 10px; color: #999; font-weight: 700; text-transform: uppercase; border-bottom: 2px solid #f0f2f5; text-align: center; }
+    .ventas-tabla td { padding: 4px; border-bottom: 1px solid #f8f8f8; }
+    .ventas-tabla td:first-child { font-weight: 600; font-size: 11px; color: #666; text-align: center; }
+    .ventas-tabla input { width: 100%; padding: 5px; border: 1px solid #eee; border-radius: 4px; font-size: 12px; text-align: right; }
+    .ventas-tabla input:focus { outline: none; border-color: #1a1a2e; }
+    .ventas-tabla .total-row td { background: #1a1a2e; color: white; font-weight: 700; font-size: 12px; text-align: center; padding: 8px 4px; }
+    .btn-agregar { background: none; border: 1px dashed #ddd; border-radius: 8px; padding: 8px; width: 100%; font-size: 13px; color: #999; cursor: pointer; margin-top: 8px; }
+    .btn-agregar:hover { border-color: #1a1a2e; color: #1a1a2e; }
+
+    /* Proveedor con múltiples facturas */
+    .proveedor-bloque { border: 1px solid #eee; border-radius: 10px; margin-bottom: 10px; overflow: hidden; }
+    .proveedor-header { background: #f8f9ff; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; }
+    .proveedor-nombre { font-size: 13px; font-weight: 700; color: #1a1a2e; }
+    .proveedor-total { font-size: 12px; color: #2a9d5c; font-weight: 700; }
+    .proveedor-facturas { padding: 10px 14px; }
+    .factura-fila { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+    .factura-fila input[type=number] { flex: 1.5; padding: 8px; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; }
+    .factura-fila input[type=date] { flex: 1.2; padding: 8px; border: 1px solid #ddd; border-radius: 8px; font-size: 12px; }
+    .factura-fila button { background: #fff0f0; border: none; color: #e63946; border-radius: 6px; padding: 8px 10px; cursor: pointer; flex-shrink: 0; }
+    .btn-add-factura { background: none; border: 1px dashed #ddd; border-radius: 6px; padding: 6px; width: 100%; font-size: 12px; color: #999; cursor: pointer; }
+
+    /* Servicios */
+    .servicio-fila { background: #f8f9ff; border-radius: 8px; padding: 10px; margin-bottom: 8px; }
+    .servicio-fila-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+    .servicio-fila-top { display: flex; gap: 8px; align-items: center; }
+    .servicio-fila-top input { flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; }
+    .servicio-fila-top button { background: #fff0f0; border: none; color: #e63946; border-radius: 6px; padding: 8px 10px; cursor: pointer; flex-shrink: 0; }
+    .servicio-fila input[type=number], .servicio-fila input[type=date], .servicio-fila select { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 8px; font-size: 12px; }
+
+    /* Items simples */
+    .item-fila { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+    .item-fila input, .item-fila select { flex: 1; min-width: 80px; padding: 8px; border: 1px solid #ddd; border-radius: 8px; font-size: 12px; }
+    .item-fila button { background: #fff0f0; border: none; color: #e63946; border-radius: 6px; padding: 8px 10px; cursor: pointer; }
+
+    .footer-btns { position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 1px solid #eee; padding: 12px 16px; display: flex; gap: 8px; z-index: 100; }
+    .btn-guardar-mes { flex: 2; background: #1a1a2e; color: white; border: none; border-radius: 10px; padding: 13px; font-size: 14px; font-weight: 700; cursor: pointer; }
+    .btn-ver-cf { flex: 1; background: #f0fff4; color: #2a9d5c; border: 1px solid #c3e6cb; border-radius: 10px; padding: 13px; font-size: 12px; font-weight: 600; cursor: pointer; }
+
+    /* CASHFLOW */
+    .kpi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 12px 16px 0; }
+    .kpi-card { background: white; border-radius: 10px; padding: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); text-align: center; }
+    .kpi-label { font-size: 10px; color: #999; text-transform: uppercase; font-weight: 700; margin-bottom: 4px; }
+    .kpi-valor { font-size: 15px; font-weight: 800; }
+    .kpi-pos { color: #2a9d5c; }
+    .kpi-neg { color: #e63946; }
+    .kpi-neu { color: #1a1a2e; }
+    .cf-tabla { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .cf-tabla td { padding: 8px 6px; border-bottom: 1px solid #f5f5f5; }
+    .cf-tabla td:last-child { text-align: right; font-weight: 600; }
+    .cf-subtotal td { background: #f8f9ff; font-weight: 700; color: #1a1a2e; border-top: 1px solid #e0e0e0; }
+    .cf-total td { background: #1a1a2e; color: white; font-weight: 800; font-size: 14px; }
+    .cf-ingreso td:last-child { color: #2a9d5c; }
+    .cf-egreso td:last-child { color: #e63946; }
+    .cf-header td { background: #f0f2f5; font-weight: 700; font-size: 11px; text-transform: uppercase; color: #666; letter-spacing: 0.5px; }
+
+    /* HISTORIAL */
+    .historial-item { background: white; margin: 8px 16px 0; border-radius: 12px; padding: 14px 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+    .hist-info h4 { font-size: 14px; font-weight: 700; }
+    .hist-info p { font-size: 12px; color: #999; margin-top: 2px; }
+    .btn-eliminar-hist { background: none; border: none; color: #ccc; cursor: pointer; font-size: 16px; }
+    .sin-historial { text-align: center; padding: 40px 20px; color: #bbb; font-size: 14px; }
+    .comp-selector { display: flex; gap: 8px; margin: 12px 16px 0; }
+    .comp-selector select { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; }
+    .comp-tabla { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .comp-tabla th { padding: 8px 6px; font-size: 10px; color: #999; font-weight: 700; text-transform: uppercase; border-bottom: 2px solid #f0f2f5; text-align: right; }
+    .comp-tabla th:first-child { text-align: left; }
+    .comp-tabla td { padding: 7px 6px; border-bottom: 1px solid #f8f8f8; text-align: right; }
+    .comp-tabla td:first-child { text-align: left; font-weight: 600; }
+    .comp-pos { color: #2a9d5c; font-weight: 700; }
+    .comp-neg { color: #e63946; font-weight: 700; }
+    .mes-selector { margin: 12px 16px 0; display: flex; gap: 8px; align-items: center; }
+    .mes-selector select { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; }
+    .mes-selector label { font-size: 12px; color: #666; font-weight: 600; white-space: nowrap; }
+    .seccion-titulo { padding: 12px 16px 4px; font-size: 11px; font-weight: 700; color: #999; text-transform: uppercase; letter-spacing: 1px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <button class="btn-volver" onclick="window.location.href='index.html'">←</button>
+  <h1>💰 Cashflow</h1>
+</header>
+
+<div class="tabs">
+  <div class="tab activo" onclick="cambiarTab('carga')">📥 Carga</div>
+  <div class="tab" onclick="cambiarTab('cashflow')">📊 Cashflow</div>
+  <div class="tab" onclick="cambiarTab('historial')">📋 Historial</div>
+</div>
+
+<!-- TAB CARGA -->
+<div class="seccion activa" id="tab-carga">
+
+  <div class="card" style="margin-top:12px;">
+    <h3>Mes</h3>
+    <div class="campo"><input type="month" id="inp-mes"></div>
+  </div>
+
+  <!-- VENTAS DIARIAS -->
+  <div class="card">
+    <h3>📈 Ventas diarias</h3>
+    <div style="overflow-x:auto;">
+      <table class="ventas-tabla">
+        <thead>
+          <tr>
+            <th>Día</th>
+            <th style="color:#1F4E79">SW Ramos</th>
+            <th style="color:#843C0C">SW Morón</th>
+            <th style="color:#1F4E79">BC Ramos</th>
+            <th style="color:#843C0C">BC Morón</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-ventas"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- MERCADERÍA -->
+  <div class="card">
+    <h3>📦 Mercadería por proveedor</h3>
+    <p style="font-size:12px;color:#999;margin-bottom:12px;">Podés cargar múltiples facturas por proveedor</p>
+    <div id="bloques-mercaderia"></div>
+  </div>
+
+  <!-- SUELDOS -->
+  <div class="card">
+    <h3>👥 Sueldos</h3>
+    <div class="campo">
+      <label>Total sueldos del mes ($)</label>
+      <input type="number" id="sueldos-total" placeholder="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'">
+    </div>
+  </div>
+
+  <!-- SERVICIOS -->
+  <div class="card">
+    <h3>⚡ Servicios</h3>
+    <div id="lista-servicios"></div>
+    <button class="btn-agregar" onclick="agregarServicio()">+ Agregar servicio</button>
+  </div>
+
+  <!-- TARJETAS -->
+  <div class="card">
+    <h3>💳 Comisiones tarjetas</h3>
+    <div class="campo">
+      <label>Total comisiones del mes ($)</label>
+      <input type="number" id="tarj-total" placeholder="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'">
+    </div>
+  </div>
+
+  <!-- REGALÍAS -->
+  <div class="card">
+    <h3>📋 Regalías y Publicidad</h3>
+    <div class="grid-2">
+      <div>
+        <p style="font-size:11px;font-weight:700;color:#666;margin-bottom:8px;text-transform:uppercase;">Regalías</p>
+        <div class="campo"><label>Sem 1 ($)</label><input type="number" id="reg-s1" placeholder="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'"></div>
+        <div class="campo"><label>Sem 2 ($)</label><input type="number" id="reg-s2" placeholder="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'"></div>
+        <div class="campo"><label>Sem 3 ($)</label><input type="number" id="reg-s3" placeholder="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'"></div>
+        <div class="campo"><label>Sem 4 ($)</label><input type="number" id="reg-s4" placeholder="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'"></div>
+      </div>
+      <div>
+        <p style="font-size:11px;font-weight:700;color:#666;margin-bottom:8px;text-transform:uppercase;">Publicidad</p>
+        <div class="campo"><label>Sem 1 ($)</label><input type="number" id="pub-s1" placeholder="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'"></div>
+        <div class="campo"><label>Sem 2 ($)</label><input type="number" id="pub-s2" placeholder="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'"></div>
+        <div class="campo"><label>Sem 3 ($)</label><input type="number" id="pub-s3" placeholder="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'"></div>
+        <div class="campo"><label>Sem 4 ($)</label><input type="number" id="pub-s4" placeholder="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- IMPUESTOS -->
+  <div class="card">
+    <h3>🏛️ Impuestos</h3>
+    <div class="grid-2">
+      <div class="campo"><label>IVA ($)</label><input type="number" id="imp-iva" placeholder="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'"></div>
+      <div class="campo"><label>IBB ($)</label><input type="number" id="imp-ibb" placeholder="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'"></div>
+      <div class="campo"><label>Autónomos ($)</label><input type="number" id="imp-autonomos" placeholder="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'"></div>
+    </div>
+  </div>
+
+  <!-- GASTOS EXTRAORDINARIOS -->
+  <div class="card">
+    <h3>⚠️ Gastos extraordinarios</h3>
+    <div id="lista-extraordinarios"></div>
+    <button class="btn-agregar" onclick="agregarExtraordinario()">+ Agregar gasto</button>
+  </div>
+
+</div>
+
+<!-- TAB CASHFLOW -->
+<div class="seccion" id="tab-cashflow">
+  <div class="mes-selector">
+    <label>Ver mes:</label>
+    <select id="sel-mes-cf" onchange="cargarCashflow()"></select>
+  </div>
+  <div id="cf-contenido"><div style="text-align:center;padding:40px;color:#bbb;">Guardá datos de un mes para ver el cashflow</div></div>
+</div>
+
+<!-- TAB HISTORIAL -->
+<div class="seccion" id="tab-historial">
+  <div class="seccion-titulo">Comparar dos meses</div>
+  <div class="comp-selector">
+    <select id="comp-mes1" onchange="renderComparacion()"><option value="">— Mes 1 —</option></select>
+    <select id="comp-mes2" onchange="renderComparacion()"><option value="">— Mes 2 —</option></select>
+  </div>
+  <div id="comp-contenido"></div>
+  <div class="seccion-titulo" style="margin-top:16px;">Todos los meses</div>
+  <div id="lista-historial" style="padding-bottom:20px;"></div>
+</div>
+
+<div class="footer-btns">
+  <button class="btn-guardar-mes" onclick="guardarMes()">💾 Guardar mes</button>
+  <button class="btn-ver-cf" onclick="cambiarTab('cashflow')">📊 Ver cashflow</button>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getFirestore, collection, getDocs, deleteDoc, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAB2-btgFqGiCe1YdZSDv4EShV601N-uQs",
+    authDomain: "waysub-web.firebaseapp.com",
+    projectId: "waysub-web",
+    storageBucket: "waysub-web.firebasestorage.app",
+    messagingSenderId: "219825581217",
+    appId: "1:219825581217:web:6f752ee27a5446400114e0"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  const LOCALES = ['SW Ramos', 'SW Morón', 'BC Ramos', 'BC Morón'];
+  const PROVEEDORES = ['Axionlog', 'FEMSA', 'Verdulería', 'Café', 'Insumos', 'Descartables', 'MTM'];
+  let historial = [];
+
+  // INIT
+  const hoy = new Date();
+  document.getElementById('inp-mes').value = hoy.toISOString().slice(0,7);
+  construirTablaVentas();
+  construirBloquesMercaderia();
+  cargarHistorialFirebase();
+
+  document.getElementById('inp-mes').addEventListener('change', construirTablaVentas);
+
+  // ── VENTAS ─────────────────────────────────────────────────────
+  function construirTablaVentas() {
+    const mes = document.getElementById('inp-mes').value;
+    const [anio, mesNum] = mes.split('-').map(Number);
+    const diasEnMes = new Date(anio, mesNum, 0).getDate();
+    const tbody = document.getElementById('tbody-ventas');
+    tbody.innerHTML = '';
+    for (let d = 1; d <= diasEnMes; d++) {
+      const tr = document.createElement('tr');
+      let cells = '<td>' + d + '</td>';
+      LOCALES.forEach(loc => {
+        cells += '<td><input type="number" min="0" value="0" data-dia="' + d + '" data-local="' + loc + '" onfocus="if(this.value==\'0\')this.value=\'\'" onblur="if(this.value==\'\')this.value=\'0\'"></td>';
+      });
+      tr.innerHTML = cells;
+      tbody.appendChild(tr);
+    }
+    const trTot = document.createElement('tr');
+    trTot.className = 'total-row';
+    let totCells = '<td>TOTAL</td>';
+    LOCALES.forEach(loc => { totCells += '<td id="tot-ventas-' + loc.replace(/ /g,'_') + '">$0</td>'; });
+    trTot.innerHTML = totCells;
+    tbody.appendChild(trTot);
+    tbody.querySelectorAll('input').forEach(inp => inp.addEventListener('input', actualizarTotalesVentas));
+  }
+
+  function actualizarTotalesVentas() {
+    LOCALES.forEach(loc => {
+      let total = 0;
+      document.querySelectorAll('input[data-local="' + loc + '"]').forEach(inp => { total += Number(inp.value) || 0; });
+      const el = document.getElementById('tot-ventas-' + loc.replace(/ /g,'_'));
+      if (el) el.textContent = '$' + total.toLocaleString('es-AR');
+    });
+  }
+
+  // ── MERCADERÍA ─────────────────────────────────────────────────
+  function construirBloquesMercaderia() {
+    const cont = document.getElementById('bloques-mercaderia');
+    cont.innerHTML = '';
+    PROVEEDORES.forEach(prov => {
+      const bloque = document.createElement('div');
+      bloque.className = 'proveedor-bloque';
+      bloque.dataset.prov = prov;
+      bloque.innerHTML = `
+        <div class="proveedor-header">
+          <span class="proveedor-nombre">📦 ${prov}</span>
+          <span class="proveedor-total" id="tot-prov-${prov}">$0</span>
+        </div>
+        <div class="proveedor-facturas" id="facturas-${prov}"></div>
+        <div style="padding:0 14px 10px;">
+          <button class="btn-add-factura" onclick="agregarFactura('${prov}')">+ Agregar factura</button>
+        </div>`;
+      cont.appendChild(bloque);
+      agregarFactura(prov); // empezar con una factura vacía
+    });
+  }
+
+  window.agregarFactura = function(prov) {
+    const cont = document.getElementById('facturas-' + prov);
+    const fila = document.createElement('div');
+    fila.className = 'factura-fila';
+    fila.innerHTML = `
+      <input type="number" placeholder="Monto $" min="0" 
+        onfocus="if(this.value=='0')this.value=''" 
+        onblur="if(this.value=='')this.value='0'"
+        oninput="actualizarTotalProv('${prov}')">
+      <input type="date">
+      <button onclick="this.parentElement.remove();actualizarTotalProv('${prov}')">×</button>`;
+    cont.appendChild(fila);
+  }
+
+  window.actualizarTotalProv = function(prov) {
+    let total = 0;
+    document.querySelectorAll('#facturas-' + prov + ' input[type=number]').forEach(inp => { total += Number(inp.value) || 0; });
+    const el = document.getElementById('tot-prov-' + prov);
+    if (el) el.textContent = '$' + total.toLocaleString('es-AR');
+  }
+
+  function getMercaderia() {
+    const result = {};
+    PROVEEDORES.forEach(prov => {
+      const facturas = [];
+      document.querySelectorAll('#facturas-' + prov + ' .factura-fila').forEach(fila => {
+        const [inpMonto, inpFecha] = fila.querySelectorAll('input');
+        const monto = Number(inpMonto.value) || 0;
+        if (monto > 0) facturas.push({ monto, fecha: inpFecha.value });
+      });
+      result[prov] = facturas;
+    });
+    return result;
+  }
+
+  // ── SERVICIOS ──────────────────────────────────────────────────
+  window.agregarServicio = function() {
+    const div = document.createElement('div');
+    div.className = 'servicio-fila';
+    div.innerHTML = `
+      <div class="servicio-fila-top">
+        <input type="text" placeholder="Descripción del servicio">
+        <button onclick="this.closest('.servicio-fila').remove()">×</button>
+      </div>
+      <div class="servicio-fila-inputs">
+        <div><label style="font-size:11px;color:#999;">Monto ($)</label>
+          <input type="number" placeholder="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'">
+        </div>
+        <div><label style="font-size:11px;color:#999;">Fecha factura</label>
+          <input type="date">
+        </div>
+        <div><label style="font-size:11px;color:#999;">Local</label>
+          <select>
+            <option>Subway Ramos</option><option>Subway Morón</option>
+            <option>Balcarce Ramos</option><option>Balcarce Morón</option>
+            <option>General</option>
+          </select>
+        </div>
+        <div><label style="font-size:11px;color:#999;">Nro. factura (opcional)</label>
+          <input type="text" placeholder="0001-00012345">
+        </div>
+      </div>`;
+    document.getElementById('lista-servicios').appendChild(div);
+  }
+
+  // ── EXTRAORDINARIOS ────────────────────────────────────────────
+  window.agregarExtraordinario = function() {
+    const div = document.createElement('div');
+    div.className = 'item-fila';
+    div.innerHTML = `
+      <input type="text" placeholder="Descripción" style="flex:2">
+      <input type="number" placeholder="Monto $" style="max-width:110px" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'">
+      <select style="max-width:130px">
+        <option>Subway Ramos</option><option>Subway Morón</option>
+        <option>Balcarce Ramos</option><option>Balcarce Morón</option><option>General</option>
+      </select>
+      <button onclick="this.parentElement.remove()">×</button>`;
+    document.getElementById('lista-extraordinarios').appendChild(div);
+  }
+
+  // ── RECOLECTAR DATOS ───────────────────────────────────────────
+  function recolectarDatos() {
+    const mes = document.getElementById('inp-mes').value;
+
+    const ventasDiarias = {};
+    LOCALES.forEach(loc => ventasDiarias[loc] = {});
+    document.querySelectorAll('#tbody-ventas input').forEach(inp => {
+      if (inp.dataset.dia) ventasDiarias[inp.dataset.local][inp.dataset.dia] = Number(inp.value) || 0;
+    });
+    const ventasTotales = {};
+    LOCALES.forEach(loc => { ventasTotales[loc] = Object.values(ventasDiarias[loc]).reduce((a,b) => a+b, 0); });
+
+    const mercaderia = getMercaderia();
+    const sueldos = Number(document.getElementById('sueldos-total').value) || 0;
+    const tarjetas = Number(document.getElementById('tarj-total').value) || 0;
+
+    const n = id => Number(document.getElementById(id)?.value) || 0;
+    const regalias = { s1: n('reg-s1'), s2: n('reg-s2'), s3: n('reg-s3'), s4: n('reg-s4') };
+    const publicidad = { s1: n('pub-s1'), s2: n('pub-s2'), s3: n('pub-s3'), s4: n('pub-s4') };
+    const impuestos = { iva: n('imp-iva'), ibb: n('imp-ibb'), autonomos: n('imp-autonomos') };
+
+    const servicios = [];
+    document.querySelectorAll('#lista-servicios .servicio-fila').forEach(fila => {
+      const desc = fila.querySelector('input[type=text]').value;
+      const inputs = fila.querySelectorAll('input');
+      const monto = Number(inputs[1]?.value) || 0;
+      const fecha = inputs[2]?.value || '';
+      const selects = fila.querySelectorAll('select, input[type=text]');
+      const local = fila.querySelector('select')?.value || '';
+      const nroFact = inputs[3]?.value || '';
+      if (desc) servicios.push({ desc, monto, fecha, local, nroFact });
+    });
+
+    const extraordinarios = [];
+    document.querySelectorAll('#lista-extraordinarios .item-fila').forEach(fila => {
+      const [desc, monto, local] = fila.querySelectorAll('input, select');
+      if (desc.value) extraordinarios.push({ desc: desc.value, monto: Number(monto.value)||0, local: local.value });
+    });
+
+    return { mes, ventasDiarias, ventasTotales, mercaderia, sueldos, tarjetas, regalias, publicidad, impuestos, servicios, extraordinarios };
+  }
+
+  // ── GUARDAR ────────────────────────────────────────────────────
+  window.guardarMes = async function() {
+    const datos = recolectarDatos();
+    const btn = document.querySelector('.btn-guardar-mes');
+    btn.disabled = true; btn.textContent = 'Guardando...';
+    try {
+      await setDoc(doc(db, "cashflow_meses", datos.mes), { ...datos, timestamp: Date.now() });
+      btn.textContent = '✅ Guardado';
+      setTimeout(() => { btn.textContent = '💾 Guardar mes'; btn.disabled = false; }, 2000);
+      cargarHistorialFirebase();
+    } catch(e) {
+      btn.textContent = '💾 Guardar mes'; btn.disabled = false;
+      alert('Error: ' + e.message);
+    }
+  }
+
+  // ── HISTORIAL ──────────────────────────────────────────────────
+  async function cargarHistorialFirebase() {
+    try {
+      const snap = await getDocs(collection(db, "cashflow_meses"));
+      historial = [];
+      snap.forEach(d => historial.push({ id: d.id, ...d.data() }));
+      historial.sort((a,b) => b.mes.localeCompare(a.mes));
+      actualizarSelectores();
+      renderHistorial();
+    } catch(e) {}
+  }
+
+  function actualizarSelectores() {
+    const opciones = historial.map(h => {
+      const [anio, mes] = h.mes.split('-');
+      const nombre = new Date(anio, mes-1, 1).toLocaleString('es-AR', { month:'long', year:'numeric' });
+      return '<option value="' + h.mes + '">' + nombre.charAt(0).toUpperCase() + nombre.slice(1) + '</option>';
+    }).join('');
+    document.getElementById('sel-mes-cf').innerHTML = '<option value="">— Seleccioná un mes —</option>' + opciones;
+    document.getElementById('comp-mes1').innerHTML = '<option value="">— Mes 1 —</option>' + opciones;
+    document.getElementById('comp-mes2').innerHTML = '<option value="">— Mes 2 —</option>' + opciones;
+  }
+
+  // ── CASHFLOW ───────────────────────────────────────────────────
+  window.cargarCashflow = function() {
+    const mes = document.getElementById('sel-mes-cf').value;
+    if (!mes) return;
+    const datos = historial.find(h => h.mes === mes);
+    if (datos) renderCashflow(datos);
+  }
+
+  function calcularTotales(datos) {
+    const totalVentas = Object.values(datos.ventasTotales || {}).reduce((a,b) => a+b, 0);
+
+    // Mercadería: suma de todas las facturas por proveedor
+    let totalMerc = 0;
+    const detalleMerc = {};
+    Object.entries(datos.mercaderia || {}).forEach(([prov, facturas]) => {
+      const subtotal = Array.isArray(facturas)
+        ? facturas.reduce((a, f) => a + (f.monto || 0), 0)
+        : (typeof facturas === 'number' ? facturas : 0); // compatibilidad con formato viejo
+      if (subtotal > 0) detalleMerc[prov] = subtotal;
+      totalMerc += subtotal;
+    });
+
+    const totalTarj = datos.tarjetas || 0;
+    const totalReg = Object.values(datos.regalias || {}).reduce((a,b) => a+b, 0);
+    const totalPub = Object.values(datos.publicidad || {}).reduce((a,b) => a+b, 0);
+    const totalImp = Object.values(datos.impuestos || {}).reduce((a,b) => a+b, 0);
+    const totalServ = (datos.servicios || []).reduce((a,s) => a + (s.monto||0), 0);
+    const totalExt = (datos.extraordinarios || []).reduce((a,s) => a + (s.monto||0), 0);
+    const totalEgresos = totalMerc + (datos.sueldos||0) + totalTarj + totalReg + totalPub + totalImp + totalServ + totalExt;
+    const resultado = totalVentas - totalEgresos;
+    return { totalVentas, totalMerc, detalleMerc, totalTarj, totalReg, totalPub, totalImp, totalServ, totalExt, totalEgresos, resultado };
+  }
+
+  function fmt(n) { return '$' + Math.round(n).toLocaleString('es-AR'); }
+  function pct(a, b) { return b > 0 ? (a/b*100).toFixed(1) + '%' : '—'; }
+
+  function renderCashflow(datos) {
+    const t = calcularTotales(datos);
+    const [anio, mes] = datos.mes.split('-');
+    const nombreMes = new Date(anio, mes-1, 1).toLocaleString('es-AR', { month:'long', year:'numeric' });
+
+    let html = `
+    <div class="kpi-grid">
+      <div class="kpi-card"><div class="kpi-label">% Mercadería</div><div class="kpi-valor kpi-neu">${pct(t.totalMerc, t.totalVentas)}</div></div>
+      <div class="kpi-card"><div class="kpi-label">% Laboral</div><div class="kpi-valor kpi-neu">${pct(datos.sueldos||0, t.totalVentas)}</div></div>
+      <div class="kpi-card"><div class="kpi-label">Resultado</div><div class="kpi-valor ${t.resultado >= 0 ? 'kpi-pos' : 'kpi-neg'}">${fmt(t.resultado)}</div></div>
+    </div>
+    <div class="card" style="margin-top:12px;">
+      <h3>Cashflow — ${nombreMes.charAt(0).toUpperCase() + nombreMes.slice(1)}</h3>
+      <table class="cf-tabla">
+        <tr class="cf-header"><td colspan="2">INGRESOS</td></tr>
+        ${LOCALES.map(loc => (datos.ventasTotales?.[loc]||0) > 0 ? `<tr class="cf-ingreso"><td>${loc}</td><td>${fmt(datos.ventasTotales[loc])}</td></tr>` : '').join('')}
+        <tr class="cf-subtotal"><td>Total Ventas</td><td>${fmt(t.totalVentas)}</td></tr>
+
+        <tr class="cf-header"><td colspan="2">MERCADERÍA</td></tr>
+        ${Object.entries(t.detalleMerc).map(([prov, v]) => `<tr class="cf-egreso"><td>${prov}</td><td>${fmt(v)}</td></tr>`).join('')}
+        <tr class="cf-subtotal"><td>Total Mercadería</td><td>${fmt(t.totalMerc)}</td></tr>
+
+        <tr class="cf-header"><td colspan="2">SUELDOS</td></tr>
+        <tr class="cf-egreso"><td>Total sueldos</td><td>${fmt(datos.sueldos||0)}</td></tr>
+
+        ${(datos.servicios||[]).length > 0 ? `
+        <tr class="cf-header"><td colspan="2">SERVICIOS</td></tr>
+        ${(datos.servicios||[]).map(s => `<tr class="cf-egreso"><td>${s.desc}${s.local ? ' <span style="font-size:10px;color:#999;">('+s.local+')</span>' : ''}${s.fecha ? ' <span style="font-size:10px;color:#bbb;">'+s.fecha+'</span>' : ''}</td><td>${fmt(s.monto)}</td></tr>`).join('')}
+        <tr class="cf-subtotal"><td>Total Servicios</td><td>${fmt(t.totalServ)}</td></tr>
+        ` : ''}
+
+        <tr class="cf-header"><td colspan="2">TARJETAS</td></tr>
+        <tr class="cf-egreso"><td>Comisiones tarjetas</td><td>${fmt(t.totalTarj)}</td></tr>
+
+        <tr class="cf-header"><td colspan="2">REGALÍAS Y PUBLICIDAD</td></tr>
+        <tr class="cf-egreso"><td>Regalías</td><td>${fmt(t.totalReg)}</td></tr>
+        <tr class="cf-egreso"><td>Publicidad</td><td>${fmt(t.totalPub)}</td></tr>
+
+        ${t.totalImp > 0 ? `
+        <tr class="cf-header"><td colspan="2">IMPUESTOS</td></tr>
+        ${(datos.impuestos?.iva||0) > 0 ? `<tr class="cf-egreso"><td>IVA</td><td>${fmt(datos.impuestos.iva)}</td></tr>` : ''}
+        ${(datos.impuestos?.ibb||0) > 0 ? `<tr class="cf-egreso"><td>IBB</td><td>${fmt(datos.impuestos.ibb)}</td></tr>` : ''}
+        ${(datos.impuestos?.autonomos||0) > 0 ? `<tr class="cf-egreso"><td>Autónomos</td><td>${fmt(datos.impuestos.autonomos)}</td></tr>` : ''}
+        <tr class="cf-subtotal"><td>Total Impuestos</td><td>${fmt(t.totalImp)}</td></tr>
+        ` : ''}
+
+        ${(datos.extraordinarios||[]).length > 0 ? `
+        <tr class="cf-header"><td colspan="2">GASTOS EXTRAORDINARIOS</td></tr>
+        ${(datos.extraordinarios||[]).map(s => `<tr class="cf-egreso"><td>${s.desc}</td><td>${fmt(s.monto)}</td></tr>`).join('')}
+        <tr class="cf-subtotal"><td>Total Extraordinarios</td><td>${fmt(t.totalExt)}</td></tr>
+        ` : ''}
+
+        <tr class="cf-subtotal"><td>Total Egresos</td><td>${fmt(t.totalEgresos)}</td></tr>
+        <tr class="cf-total"><td>RESULTADO NETO</td><td style="color:${t.resultado>=0?'#4ade80':'#f87171'}">${fmt(t.resultado)}</td></tr>
+      </table>
+    </div>`;
+
+    document.getElementById('cf-contenido').innerHTML = html;
+  }
+
+  // ── HISTORIAL ──────────────────────────────────────────────────
+  function renderHistorial() {
+    const lista = document.getElementById('lista-historial');
+    if (!historial.length) { lista.innerHTML = '<div class="sin-historial">Sin meses guardados aún</div>'; return; }
+    lista.innerHTML = '';
+    historial.forEach(h => {
+      const t = calcularTotales(h);
+      const [anio, mes] = h.mes.split('-');
+      const nombreMes = new Date(anio, mes-1, 1).toLocaleString('es-AR', { month:'long', year:'numeric' });
+      const div = document.createElement('div');
+      div.className = 'historial-item';
+      div.innerHTML = '<div class="hist-info"><h4>📅 ' + nombreMes.charAt(0).toUpperCase() + nombreMes.slice(1) + '</h4>' +
+        '<p>Ventas: ' + fmt(t.totalVentas) + ' · Resultado: <span style="color:' + (t.resultado>=0?'#2a9d5c':'#e63946') + '">' + fmt(t.resultado) + '</span></p></div>' +
+        '<button class="btn-eliminar-hist" onclick="event.stopPropagation();window.eliminarMes(\'' + h.mes + '\')">🗑</button>';
+      div.onclick = () => { document.getElementById('sel-mes-cf').value = h.mes; renderCashflow(h); cambiarTab('cashflow'); };
+      lista.appendChild(div);
+    });
+  }
+
+  // ── COMPARACIÓN ────────────────────────────────────────────────
+  window.renderComparacion = function() {
+    const m1 = document.getElementById('comp-mes1').value;
+    const m2 = document.getElementById('comp-mes2').value;
+    if (!m1 || !m2) return;
+    const d1 = historial.find(h => h.mes === m1);
+    const d2 = historial.find(h => h.mes === m2);
+    if (!d1 || !d2) return;
+    const t1 = calcularTotales(d1), t2 = calcularTotales(d2);
+    const nombre = mes => {
+      const [a,m] = mes.split('-');
+      const n = new Date(a,m-1,1).toLocaleString('es-AR',{month:'short',year:'2-digit'});
+      return n.charAt(0).toUpperCase()+n.slice(1);
+    };
+    const filas = [
+      ['Total Ventas', t1.totalVentas, t2.totalVentas],
+      ['Mercadería', t1.totalMerc, t2.totalMerc],
+      ['Sueldos', d1.sueldos||0, d2.sueldos||0],
+      ['Servicios', t1.totalServ, t2.totalServ],
+      ['Tarjetas', t1.totalTarj, t2.totalTarj],
+      ['Regalías', t1.totalReg, t2.totalReg],
+      ['Publicidad', t1.totalPub, t2.totalPub],
+      ['Impuestos', t1.totalImp, t2.totalImp],
+      ['Extraordinarios', t1.totalExt, t2.totalExt],
+      ['Total Egresos', t1.totalEgresos, t2.totalEgresos],
+      ['RESULTADO', t1.resultado, t2.resultado],
+    ];
+    let html = '<div class="card" style="margin-top:8px;"><table class="comp-tabla"><thead><tr><th>Concepto</th><th>' + nombre(m1) + '</th><th>' + nombre(m2) + '</th><th>Δ</th></tr></thead><tbody>';
+    filas.forEach(([label, v1, v2]) => {
+      const diff = v1 - v2;
+      html += '<tr><td>' + label + '</td><td>' + fmt(v1) + '</td><td>' + fmt(v2) + '</td><td class="' + (diff>=0?'comp-pos':'comp-neg') + '">' + (diff>=0?'+':'') + fmt(diff) + '</td></tr>';
+    });
+    html += '</tbody></table></div>';
+    document.getElementById('comp-contenido').innerHTML = html;
+  }
+
+  window.eliminarMes = async function(mes) {
+    if (!confirm('¿Eliminar los datos de este mes?')) return;
+    await deleteDoc(doc(db, "cashflow_meses", mes));
+    cargarHistorialFirebase();
+  }
+
+  // ── TABS ───────────────────────────────────────────────────────
+  window.cambiarTab = function(tab) {
+    document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('activo', ['carga','cashflow','historial'][i] === tab));
+    document.querySelectorAll('.seccion').forEach(s => s.classList.remove('activa'));
+    document.getElementById('tab-' + tab).classList.add('activa');
+    document.querySelector('.footer-btns').style.display = tab === 'carga' ? 'flex' : 'none';
+    if (tab === 'cashflow') cargarCashflow();
+  }
+</script>
+</body>
+</html>
