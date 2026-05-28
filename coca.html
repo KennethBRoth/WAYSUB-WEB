@@ -347,6 +347,7 @@
     const reader = new FileReader();
     reader.onload = ev => {
       fotoBase64 = ev.target.result.split(',')[1];
+      window._fotoMimeType = ev.target.result.split(',')[0].split(':')[1].split(';')[0];
       const img = document.getElementById('foto-preview-img');
       img.src = ev.target.result;
       img.style.display = 'block';
@@ -376,7 +377,7 @@
           model: "claude-sonnet-4-20250514",
           max_tokens: 1000,
           messages: [{ role: "user", content: [
-            { type: "image", source: { type: "base64", media_type: "image/jpeg", data: fotoBase64 } },
+            { type: "image", source: { type: "base64", media_type: (window._fotoMimeType || "image/jpeg"), data: fotoBase64 } },
             { type: "text", text: prompts[tipoFoto] }
           ]}]
         })
