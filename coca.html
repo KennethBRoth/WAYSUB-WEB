@@ -292,15 +292,46 @@
     } catch(e) { /* sin historial todavía, no pasa nada */ }
   }
 
+  function crearInput(tabla, prod) {
+    const inp = document.createElement('input');
+    inp.type = 'number';
+    inp.min = '0';
+    inp.value = '0';
+    inp.step = '0.1';
+    inp.dataset.tabla = tabla;
+    inp.dataset.prod = prod;
+    inp.style.cssText = 'width:64px;padding:6px;border:1px solid #ddd;border-radius:6px;font-size:13px;text-align:center;';
+    inp.addEventListener('focus', function() { if (this.value === '0') this.value = ''; });
+    inp.addEventListener('blur', function() { if (this.value === '') this.value = '0'; });
+    inp.addEventListener('input', function() { actualizarTotal(this.dataset.tabla); });
+    return inp;
+  }
+
+  function agregarFilaTotal(tbody, color) {
+    const tfila = document.createElement('tr');
+    tfila.style.cssText = 'background:' + color + ';color:white;font-weight:700;';
+    const td1 = document.createElement('td');
+    td1.style.cssText = 'padding:10px 6px;font-size:13px;';
+    td1.textContent = 'TOTAL';
+    const td2 = document.createElement('td');
+    td2.style.cssText = 'padding:10px 6px;font-size:14px;text-align:center;';
+    td2.id = 'total-' + tbody.id.replace('tabla-', '');
+    td2.textContent = '0';
+    tfila.appendChild(td1);
+    tfila.appendChild(td2);
+    tbody.appendChild(tfila);
+  }
+
   function construirTablas() {
-    // Para ventas (LINISCO), Aquarius y Cepita van agrupadas como una sola línea
     const GRUPOS_VENTAS = [
-      { grupo: "Coca-Cola", items: [{ nombre: "Coca Común", key: "Coca Común" }, { nombre: "Coca Zero", key: "Coca Zero" }, { nombre: "Coca Light", key: "Coca Light" }] },
-      { grupo: "Sprite / Fanta", items: [{ nombre: "Sprite", key: "Sprite" }, { nombre: "Sprite Zero", key: "Sprite Zero" }, { nombre: "Fanta", key: "Fanta" }] },
-      { grupo: "Aquarius", items: [{ nombre: "Aquarius (total)", key: "Aquarius Total" }] },
-      { grupo: "Agua", items: [{ nombre: "Agua Sin Gas", key: "Agua Sin Gas" }, { nombre: "Agua Con Gas", key: "Agua Con Gas" }] },
-      { grupo: "Cepita", items: [{ nombre: "Cepita (total)", key: "Cepita Total" }] },
+      { grupo: 'Coca-Cola', items: [{ nombre: 'Coca Común', key: 'Coca Común' }, { nombre: 'Coca Zero', key: 'Coca Zero' }, { nombre: 'Coca Light', key: 'Coca Light' }] },
+      { grupo: 'Sprite / Fanta', items: [{ nombre: 'Sprite', key: 'Sprite' }, { nombre: 'Sprite Zero', key: 'Sprite Zero' }, { nombre: 'Fanta', key: 'Fanta' }] },
+      { grupo: 'Aquarius', items: [{ nombre: 'Aquarius (total)', key: 'Aquarius Total' }] },
+      { grupo: 'Agua', items: [{ nombre: 'Agua Sin Gas', key: 'Agua Sin Gas' }, { nombre: 'Agua Con Gas', key: 'Agua Con Gas' }] },
+      { grupo: 'Cepita', items: [{ nombre: 'Cepita (total)', key: 'Cepita Total' }] },
     ];
+
+    const colores = { 'stock-inicial': '#1a1a2e', 'femsa': '#e63946', 'stock-actual': '#2a9d5c' };
 
     ['stock-inicial', 'femsa', 'stock-actual'].forEach(id => {
       const tbody = document.getElementById('tabla-' + id);
@@ -312,19 +343,21 @@
         tbody.appendChild(grFila);
         g.items.forEach(prod => {
           const tr = document.createElement('tr');
-          tr.innerHTML = '<td>' + prod + '</td><td><input type="number" min="0" value="0" step="0.1" data-tabla="' + id + '" data-prod="' + prod + '" oninput="actualizarTotal(\'" + id + "'\')"></td>';
+          const tdNombre = document.createElement('td');
+          tdNombre.textContent = prod;
+          const tdInput = document.createElement('td');
+          tdInput.appendChild(crearInput(id, prod));
+          tr.appendChild(tdNombre);
+          tr.appendChild(tdInput);
           tbody.appendChild(tr);
         });
       });
-      // Fila de total
-      const tfila = document.createElement('tr');
-      tfila.style.cssText = 'background:#1a1a2e;color:white;font-weight:700;';
-      tfila.innerHTML = '<td style="padding:10px 6px;font-size:13px;">TOTAL</td><td style="padding:10px 6px;font-size:14px;text-align:center;" id="total-' + id + '">0</td>';
-      tbody.appendChild(tfila);
+      agregarFilaTotal(tbody, colores[id]);
     });
 
     // Tabla ventas con Aquarius y Cepita agrupadas
     const tbodyV = document.getElementById('tabla-ventas');
+    tbodyV.id = 'tabla-ventas';
     tbodyV.innerHTML = '';
     GRUPOS_VENTAS.forEach(g => {
       const grFila = document.createElement('tr');
@@ -333,14 +366,27 @@
       tbodyV.appendChild(grFila);
       g.items.forEach(item => {
         const tr = document.createElement('tr');
-        tr.innerHTML = '<td>' + item.nombre + '</td><td><input type="number" min="0" value="0" data-tabla="ventas" data-prod="' + item.key + '" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" oninput="actualizarTotal(this.dataset.tabla)"></td>';
+        const tdNombre = document.createElement('td');
+        tdNombre.textContent = item.nombre;
+        const tdInput = document.createElement('td');
+        tdInput.appendChild(crearInput('ventas', item.key));
+        tr.appendChild(tdNombre);
+        tr.appendChild(tdInput);
         tbodyV.appendChild(tr);
       });
     });
-    // Fila total ventas
+    // Total ventas
     const tfilaV = document.createElement('tr');
     tfilaV.style.cssText = 'background:#e67e22;color:white;font-weight:700;';
-    tfilaV.innerHTML = '<td style="padding:10px 6px;font-size:13px;">TOTAL</td><td style="padding:10px 6px;font-size:14px;text-align:center;" id="total-ventas">0</td>';
+    const tdV1 = document.createElement('td');
+    tdV1.style.cssText = 'padding:10px 6px;font-size:13px;';
+    tdV1.textContent = 'TOTAL';
+    const tdV2 = document.createElement('td');
+    tdV2.style.cssText = 'padding:10px 6px;font-size:14px;text-align:center;';
+    tdV2.id = 'total-ventas';
+    tdV2.textContent = '0';
+    tfilaV.appendChild(tdV1);
+    tfilaV.appendChild(tdV2);
     tbodyV.appendChild(tfilaV);
   }
 
