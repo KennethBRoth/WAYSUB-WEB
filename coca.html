@@ -140,7 +140,7 @@
   </div>
 
   <div class="card">
-    <h3>Stock Inicial (cierre semana anterior)</h3>
+    <h3 style="font-size:15px;color:#1a1a2e;font-weight:800;text-transform:none;letter-spacing:0;border-left:4px solid #1a1a2e;padding-left:10px;">📦 Stock Inicial <span style="font-size:11px;color:#2a9d5c;font-weight:500;">(cargado automáticamente)</span></h3>
     <table class="productos-tabla">
       <thead><tr><th>Producto</th><th>Unid.</th></tr></thead>
       <tbody id="tabla-stock-inicial"></tbody>
@@ -148,7 +148,7 @@
   </div>
 
   <div class="card">
-    <h3>Ingreso FEMSA (entregado esta semana)</h3>
+    <h3 style="font-size:15px;color:#e63946;font-weight:800;text-transform:none;letter-spacing:0;border-left:4px solid #e63946;padding-left:10px;">🧾 Ingreso FEMSA</h3>
     <table class="productos-tabla">
       <thead><tr><th>Producto</th><th>Unid.</th></tr></thead>
       <tbody id="tabla-femsa"></tbody>
@@ -156,7 +156,7 @@
   </div>
 
   <div class="card">
-    <h3>Ventas Sistema (LINISCO)</h3>
+    <h3 style="font-size:15px;color:#e67e22;font-weight:800;text-transform:none;letter-spacing:0;border-left:4px solid #e67e22;padding-left:10px;">💻 Ventas Sistema (LINISCO)</h3>
     <table class="productos-tabla">
       <thead><tr><th>Producto</th><th>Unid.</th></tr></thead>
       <tbody id="tabla-ventas"></tbody>
@@ -164,7 +164,7 @@
   </div>
 
   <div class="card">
-    <h3>Stock Actual (conteo físico)</h3>
+    <h3 style="font-size:15px;color:#2a9d5c;font-weight:800;text-transform:none;letter-spacing:0;border-left:4px solid #2a9d5c;padding-left:10px;">📋 Stock Actual</h3>
     <table class="productos-tabla">
       <thead><tr><th>Producto</th><th>Unid.</th></tr></thead>
       <tbody id="tabla-stock-actual"></tbody>
@@ -172,7 +172,7 @@
   </div>
 
   <div class="card">
-    <h3>Transferencias entre locales (packs de 6u)</h3>
+    <h3 style="font-size:15px;color:#8e44ad;font-weight:800;text-transform:none;letter-spacing:0;border-left:4px solid #8e44ad;padding-left:10px;">🔄 Transferencias entre locales</h3>
     <div id="lista-transferencias"></div>
     <button class="btn-agregar-transfer" onclick="agregarTransferencia()">+ Agregar transferencia</button>
   </div>
@@ -275,8 +275,15 @@
       if (snap.empty) return;
       const ultimo = snap.docs[0].data();
       const stockAnterior = {};
-      ultimo.control.forEach(r => { stockAnterior[r.prod] = r.stockActual; });
+      // Usar stockActual guardado directamente si existe, si no reconstruir desde control
+      if (ultimo.stockActual) {
+        Object.assign(stockAnterior, ultimo.stockActual);
+      } else {
+        ultimo.control.forEach(r => { stockAnterior[r.prod] = r.stockActual; });
+      }
       llenarTabla('stock-inicial', stockAnterior);
+      // Actualizar totales después de llenar
+      setTimeout(() => actualizarTotal('stock-inicial'), 100);
       const desde = ultimo.fechaDesde || ultimo.fecha || '';
       const hasta = ultimo.fechaHasta || '';
       const banner = document.getElementById('banner-auto');
@@ -305,10 +312,15 @@
         tbody.appendChild(grFila);
         g.items.forEach(prod => {
           const tr = document.createElement('tr');
-          tr.innerHTML = '<td>' + prod + '</td><td><input type="number" min="0" value="0" step="0.1" data-tabla="' + id + '" data-prod="' + prod + '"></td>';
+          tr.innerHTML = '<td>' + prod + '</td><td><input type="number" min="0" value="0" step="0.1" data-tabla="' + id + '" data-prod="' + prod + '" oninput="actualizarTotal(\'" + id + "'\')"></td>';
           tbody.appendChild(tr);
         });
       });
+      // Fila de total
+      const tfila = document.createElement('tr');
+      tfila.style.cssText = 'background:#1a1a2e;color:white;font-weight:700;';
+      tfila.innerHTML = '<td style="padding:10px 6px;font-size:13px;">TOTAL</td><td style="padding:10px 6px;font-size:14px;text-align:center;" id="total-' + id + '">0</td>';
+      tbody.appendChild(tfila);
     });
 
     // Tabla ventas con Aquarius y Cepita agrupadas
@@ -321,10 +333,15 @@
       tbodyV.appendChild(grFila);
       g.items.forEach(item => {
         const tr = document.createElement('tr');
-        tr.innerHTML = '<td>' + item.nombre + '</td><td><input type="number" min="0" value="0" data-tabla="ventas" data-prod="' + item.key + '"></td>';
+        tr.innerHTML = '<td>' + item.nombre + '</td><td><input type="number" min="0" value="0" data-tabla="ventas" data-prod="' + item.key + '" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" oninput="actualizarTotal(this.dataset.tabla)"></td>';
         tbodyV.appendChild(tr);
       });
     });
+    // Fila total ventas
+    const tfilaV = document.createElement('tr');
+    tfilaV.style.cssText = 'background:#e67e22;color:white;font-weight:700;';
+    tfilaV.innerHTML = '<td style="padding:10px 6px;font-size:13px;">TOTAL</td><td style="padding:10px 6px;font-size:14px;text-align:center;" id="total-ventas">0</td>';
+    tbodyV.appendChild(tfilaV);
   }
 
   window.cambiarTab = function(tab) {
@@ -491,6 +508,15 @@
     return result;
   }
 
+  window.actualizarTotal = function(tablaId) {
+    let total = 0;
+    document.querySelectorAll('input[data-tabla="' + tablaId + '"]').forEach(inp => {
+      total += Number(inp.value) || 0;
+    });
+    const el = document.getElementById('total-' + tablaId);
+    if (el) el.textContent = total % 1 === 0 ? total : total.toFixed(1);
+  }
+
   window.calcular = function() {
     const stockInicial = getValores('stock-inicial');
     const femsa = getValores('femsa');
@@ -580,10 +606,16 @@
     btn.disabled = true;
     btn.textContent = 'Guardando...';
     try {
+      // Guardar stock actual para usarlo como stock inicial la semana siguiente
+      const stockActualGuardado = {};
+      document.querySelectorAll('input[data-tabla="stock-actual"]').forEach(inp => {
+        stockActualGuardado[inp.dataset.prod] = Number(inp.value) || 0;
+      });
       await addDoc(collection(db, "coca_historial"), {
         local: localActual, fechaDesde: desde, fechaHasta: hasta,
         timestamp: Date.now(), control: resultados.control,
-        pedido: resultados.pedido, alertas: resultados.alertas
+        pedido: resultados.pedido, alertas: resultados.alertas,
+        stockActual: stockActualGuardado
       });
       btn.textContent = '✅ Guardado';
       setTimeout(() => { btn.textContent = '💾 Guardar'; btn.disabled = false; }, 2000);
