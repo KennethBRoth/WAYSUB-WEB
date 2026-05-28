@@ -22,7 +22,7 @@
     .btn-cerrar-sesion { background: rgba(231,57,70,0.2); border: 2px solid rgba(231,57,70,0.4); border-radius: 16px; padding: 14px 20px; text-align: center; cursor: pointer; color: #ff8888; width: 100%; max-width: 320px; font-size: 14px; font-weight: 600; }
     header { background: #1a1a2e; color: white; padding: 16px 20px; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 10; }
     .btn-volver { background: rgba(255,255,255,0.15); border: none; color: white; border-radius: 8px; padding: 6px 12px; font-size: 18px; cursor: pointer; }
-    header h1 { font-size: 18px; flex: 1; }
+    header h1 { font-size: 18px; }
     .modulos { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 16px; }
     .modulo { background: white; border-radius: 12px; padding: 20px 12px; text-align: center; cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,0.07); transition: transform 0.15s; }
     .modulo:active { transform: scale(0.97); }
@@ -97,6 +97,7 @@
         <p>Subway · Balcarce</p>
       </div>
       <div class="btn-general" onclick="abrirCaja()">💰 Movimiento de Caja</div>
+      <div class="btn-general" onclick="window.location.href='cashflow.html'">📊 Cashflow</div>
       <div class="btn-general" id="btn-admin" onclick="window.location.href='admin.html'" style="display:none;">👤 Administrar usuarios</div>
       <div class="btn-cerrar-sesion" onclick="cerrarSesion()">🚪 Cerrar sesión</div>
     </div>
@@ -206,7 +207,6 @@
     let usuarioActual = null;
     let permisosActuales = {};
 
-    // VERIFICAR SESIÓN
     onAuthStateChanged(auth, async (user) => {
       if (!user) { window.location.href = 'login.html'; return; }
       const snap = await getDoc(doc(db, "usuarios", user.uid));
@@ -230,7 +230,6 @@
 
     window.entrarLocal = function(nombre) {
       document.getElementById('nombre-local').textContent = nombre;
-      // Aplicar permisos al panel
       const permsLocal = permisosActuales[nombre] || {};
       const esAdmin = usuarioActual && usuarioActual.rol === 'admin';
       ['axionlog', 'coca', 'horas', 'reportes'].forEach(mod => {
@@ -241,7 +240,6 @@
           if (!tieneAcceso) {
             el.onclick = () => alert('No tenés permiso para este módulo');
           } else {
-            // Restaurar onclick según módulo
             if (mod === 'axionlog') el.onclick = abrirAxionlog;
             if (mod === 'coca') el.onclick = abrirCoca;
             if (mod === 'horas') el.onclick = () => window.location.href = 'auditoria.html';
@@ -253,7 +251,6 @@
       document.getElementById('panel-local').classList.add('activa');
     }
 
-    // CAJA
     let todosLosMovimientos = [];
     let categorias = [
       { nombre: "Entrada", tipo: "entrada" },
