@@ -41,7 +41,6 @@
     .flex-between{display:flex;align-items:center;justify-content:space-between;}
     .toast{position:fixed;bottom:20px;right:20px;background:#1a1a2e;color:white;padding:10px 16px;border-radius:8px;font-size:13px;z-index:200;display:none;}
     .empty-state{text-align:center;padding:40px 20px;color:#999;}
-    .empty-state i{font-size:32px;display:block;margin-bottom:8px;}
     .results-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
     @media(max-width:600px){.results-grid{grid-template-columns:1fr;}}
     .perf-item{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #eee;font-size:13px;}
@@ -64,6 +63,32 @@
     .modal{background:white;border-radius:12px;padding:18px;width:100%;max-width:400px;margin-top:20px;}
     .modal h3{font-size:15px;font-weight:500;margin-bottom:14px;}
     .time-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+
+    /* OCUPACIÓN */
+    .ocup-controls{display:flex;gap:8px;align-items:center;margin-bottom:14px;flex-wrap:wrap;}
+    .ocup-controls select{padding:6px 10px;border:0.5px solid #ccc;border-radius:8px;font-size:13px;}
+    .ocup-dia-card{background:white;border:0.5px solid #e0e0e0;border-radius:10px;margin-bottom:8px;overflow:hidden;}
+    .ocup-dia-header{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;cursor:pointer;background:#f8f9ff;}
+    .ocup-dia-header:hover{background:#f0f2f5;}
+    .ocup-dia-titulo{font-size:13px;font-weight:600;color:#1a1a2e;}
+    .ocup-dia-resumen{font-size:12px;color:#666;}
+    .ocup-dia-body{padding:0 14px 10px;display:none;}
+    .ocup-dia-body.abierto{display:block;}
+    .ocup-emp-row{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid #f0f0f0;font-size:13px;}
+    .ocup-emp-row:last-child{border-bottom:none;}
+    .ocup-emp-nombre{font-weight:500;flex:1;}
+    .ocup-emp-horario{color:#185FA5;font-size:12px;background:#E6F1FB;padding:3px 8px;border-radius:6px;}
+    .ocup-emp-horas{font-size:12px;color:#2a9d5c;font-weight:600;min-width:50px;text-align:right;}
+    .ocup-total-dia{display:flex;justify-content:space-between;padding:8px 0 0;margin-top:6px;border-top:1px solid #eee;font-size:12px;font-weight:600;color:#1a1a2e;}
+    .ocup-vacio{color:#bbb;font-size:12px;padding:8px 0;text-align:center;}
+    .ocup-dia-badge{font-size:11px;padding:2px 8px;border-radius:20px;font-weight:600;}
+    .ocup-badge-activo{background:#E6F1FB;color:#185FA5;}
+    .ocup-badge-libre{background:#f0f2f5;color:#999;}
+    .ocup-mes-resumen{background:white;border:0.5px solid #e0e0e0;border-radius:12px;padding:14px;margin-bottom:12px;}
+    .ocup-kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px;}
+    .ocup-kpi{text-align:center;background:#f8f9ff;border-radius:8px;padding:10px;}
+    .ocup-kpi span{font-size:10px;color:#999;text-transform:uppercase;font-weight:700;display:block;}
+    .ocup-kpi strong{font-size:18px;color:#1a1a2e;display:block;margin-top:2px;}
   </style>
 </head>
 <body>
@@ -80,6 +105,7 @@
 
   <div class="tabs">
     <div class="tab active" onclick="showTab('empleados',this)">👥 Empleados</div>
+    <div class="tab" onclick="showTab('ocupacion',this)">📅 Ocupación</div>
     <div class="tab" onclick="showTab('auditoria',this)">📤 Auditoría</div>
     <div class="tab" onclick="showTab('resultados',this)">📊 Resultados</div>
   </div>
@@ -96,6 +122,25 @@
         <tbody id="tabla-empleados"></tbody>
       </table>
     </div>
+  </div>
+
+  <!-- OCUPACIÓN -->
+  <div id="screen-ocupacion" class="screen">
+    <div class="ocup-controls">
+      <select id="ocup-mes" onchange="renderOcupacion()">
+        <option value="1">Enero</option><option value="2">Febrero</option><option value="3">Marzo</option>
+        <option value="4">Abril</option><option value="5">Mayo</option><option value="6">Junio</option>
+        <option value="7">Julio</option><option value="8">Agosto</option><option value="9">Septiembre</option>
+        <option value="10">Octubre</option><option value="11">Noviembre</option><option value="12">Diciembre</option>
+      </select>
+      <select id="ocup-anio" onchange="renderOcupacion()">
+        <option value="2025">2025</option><option value="2026">2026</option>
+      </select>
+      <button class="btn btn-sm btn-primary" onclick="renderOcupacion()">🔄 Actualizar</button>
+    </div>
+
+    <div class="ocup-mes-resumen" id="ocup-resumen"></div>
+    <div id="ocup-lista"></div>
   </div>
 
   <!-- CALENDARIO -->
@@ -225,6 +270,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 const MESES_FULL=['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const DIAS_SEMANA=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
 let local='ramos';
 let empEditIdx=-1;
 let calEmpIdx=-1;
@@ -236,6 +282,22 @@ function getEmpleados(){return JSON.parse(localStorage.getItem('emp_'+local)||'[
 function setEmpleados(e){localStorage.setItem('emp_'+local,JSON.stringify(e));}
 function getTurnos(idx,mes,anio){return JSON.parse(localStorage.getItem('turnos_'+local+'_'+idx+'_'+anio+'_'+mes)||'{}');}
 function setTurnos(idx,mes,anio,data){localStorage.setItem('turnos_'+local+'_'+idx+'_'+anio+'_'+mes,JSON.stringify(data));}
+
+function calcHoras(entrada, salida) {
+  const [eh, em] = entrada.split(':').map(Number);
+  const [sh, sm] = salida.split(':').map(Number);
+  let minE = eh * 60 + em;
+  let minS = sh * 60 + sm;
+  if (minS <= minE) minS += 1440;
+  const diff = (minS - minE) / 60;
+  return diff;
+}
+
+function fmtHoras(h) {
+  const hh = Math.floor(h);
+  const mm = Math.round((h - hh) * 60);
+  return hh + 'h' + (mm > 0 ? mm + 'm' : '');
+}
 
 function seedIfEmpty(){
   if(getEmpleados().length>0)return;
@@ -258,6 +320,7 @@ function showTab(t,el){
   if(el)el.classList.add('active');
   else document.querySelectorAll('.tab')[0].classList.add('active');
   document.getElementById('screen-'+t).classList.add('active');
+  if(t==='ocupacion') renderOcupacion();
 }
 
 function renderEmpleados(){
@@ -273,6 +336,103 @@ function renderEmpleados(){
   }).join('');
 }
 
+// ── OCUPACIÓN ──────────────────────────────────────────────────────
+function renderOcupacion() {
+  const mes = parseInt(document.getElementById('ocup-mes').value);
+  const anio = parseInt(document.getElementById('ocup-anio').value);
+  const emps = getEmpleados();
+  const diasEnMes = new Date(anio, mes, 0).getDate();
+
+  // Construir mapa dia → empleados con turno
+  const mapaOcupacion = {};
+  for (let d = 1; d <= diasEnMes; d++) {
+    mapaOcupacion[d] = [];
+  }
+
+  emps.forEach((emp, idx) => {
+    const turnos = getTurnos(idx, mes, anio);
+    Object.entries(turnos).forEach(([key, t]) => {
+      const d = parseInt(key);
+      const horas = calcHoras(t.e, t.s);
+      mapaOcupacion[d].push({ nombre: emp.nombre, entrada: t.e, salida: t.s, horas });
+    });
+  });
+
+  // KPIs del mes
+  let totalHorasMes = 0;
+  let diasConPersonal = 0;
+  let maxEmpleadosDia = 0;
+  for (let d = 1; d <= diasEnMes; d++) {
+    const emp = mapaOcupacion[d];
+    if (emp.length > 0) diasConPersonal++;
+    if (emp.length > maxEmpleadosDia) maxEmpleadosDia = emp.length;
+    emp.forEach(e => totalHorasMes += e.horas);
+  }
+
+  document.getElementById('ocup-resumen').innerHTML = `
+    <div style="font-size:13px;font-weight:700;color:#1a1a2e;margin-bottom:10px;">
+      📅 ${MESES_FULL[mes]} ${anio} — ${local === 'ramos' ? 'Ramos Mejía' : 'Morón'}
+    </div>
+    <div class="ocup-kpi-grid">
+      <div class="ocup-kpi"><span>Total horas mes</span><strong>${fmtHoras(totalHorasMes)}</strong></div>
+      <div class="ocup-kpi"><span>Días con personal</span><strong>${diasConPersonal}/${diasEnMes}</strong></div>
+      <div class="ocup-kpi"><span>Máx. empleados/día</span><strong>${maxEmpleadosDia}</strong></div>
+    </div>`;
+
+  // Lista de días
+  const lista = document.getElementById('ocup-lista');
+  lista.innerHTML = '';
+
+  for (let d = 1; d <= diasEnMes; d++) {
+    const fecha = new Date(anio, mes - 1, d);
+    const diaSemana = DIAS_SEMANA[fecha.getDay()];
+    const empsDelDia = mapaOcupacion[d];
+    const tienePersonal = empsDelDia.length > 0;
+    const totalHorasDia = empsDelDia.reduce((a, e) => a + e.horas, 0);
+
+    const card = document.createElement('div');
+    card.className = 'ocup-dia-card';
+
+    const badge = tienePersonal
+      ? `<span class="ocup-dia-badge ocup-badge-activo">${empsDelDia.length} empleado${empsDelDia.length !== 1 ? 's' : ''}</span>`
+      : `<span class="ocup-dia-badge ocup-badge-libre">Sin turnos</span>`;
+
+    card.innerHTML = `
+      <div class="ocup-dia-header" onclick="toggleDia(this)">
+        <div>
+          <span class="ocup-dia-titulo">${diaSemana} ${d}/${mes}</span>
+          ${tienePersonal ? `<span class="ocup-dia-resumen" style="margin-left:8px;">· ${fmtHoras(totalHorasDia)} totales</span>` : ''}
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          ${badge}
+          <span style="color:#999;font-size:12px;">▾</span>
+        </div>
+      </div>
+      <div class="ocup-dia-body">
+        ${tienePersonal
+          ? empsDelDia.map(e => `
+            <div class="ocup-emp-row">
+              <span class="ocup-emp-nombre">👤 ${e.nombre}</span>
+              <span class="ocup-emp-horario">${e.entrada} – ${e.salida}</span>
+              <span class="ocup-emp-horas">${fmtHoras(e.horas)}</span>
+            </div>`).join('') +
+            `<div class="ocup-total-dia"><span>Total del día</span><span>${fmtHoras(totalHorasDia)}</span></div>`
+          : '<div class="ocup-vacio">Sin turnos cargados</div>'
+        }
+      </div>`;
+
+    lista.appendChild(card);
+  }
+}
+
+function toggleDia(header) {
+  const body = header.nextElementSibling;
+  const arrow = header.querySelector('span:last-child');
+  body.classList.toggle('abierto');
+  arrow.textContent = body.classList.contains('abierto') ? '▴' : '▾';
+}
+
+// ── CALENDARIO ────────────────────────────────────────────────────
 function abrirCalendario(idx){
   calEmpIdx=idx;
   const emp=getEmpleados()[idx];
@@ -455,7 +615,6 @@ function ejecutarAuditoria(){
       if(salida&&(!consolidado[key].salida||salida>consolidado[key].salida))consolidado[key].salida=salida;
     }
   });
-  const DIAS=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
   const resultados=emps.map((emp,idx)=>{
     const turnos=getTurnos(idx,mes,anio);
     const desvios=[];
@@ -465,7 +624,7 @@ function ejecutarAuditoria(){
       const fechaStr=d+'/'+mes+'/'+anio;
       const fKey=emp.nombre.toLowerCase()+'|'+fechaStr;
       const fich=consolidado[fKey];
-      const dia=DIAS[fecha.getDay()];
+      const dia=DIAS_SEMANA[fecha.getDay()];
       if(!fich){desvios.push({fecha:d+'/'+mes,dia,planif:t.e+'-'+t.s,real:'--',tipo:'D',msg:'AUSENCIA - no se presentó',sev:'alta'});return;}
       const planE=toMin(t.e);
       let planS=toMin(t.s);
@@ -484,7 +643,7 @@ function ejecutarAuditoria(){
   resultadosActuales={mes,anio,local,resultados,timestamp:Date.now()};
   renderResultados(resultados);
   document.querySelectorAll('.tab').forEach(e=>e.classList.remove('active'));
-  document.querySelectorAll('.tab')[2].classList.add('active');
+  document.querySelectorAll('.tab')[3].classList.add('active');
   document.querySelectorAll('.screen').forEach(e=>e.classList.remove('active'));
   document.getElementById('screen-resultados').classList.add('active');
 }
@@ -519,7 +678,7 @@ function verAuditoria(key){
   resultadosActuales=data;
   renderResultados(data.resultados);
   document.querySelectorAll('.tab').forEach(e=>e.classList.remove('active'));
-  document.querySelectorAll('.tab')[2].classList.add('active');
+  document.querySelectorAll('.tab')[3].classList.add('active');
   document.querySelectorAll('.screen').forEach(e=>e.classList.remove('active'));
   document.getElementById('screen-resultados').classList.add('active');
 }
@@ -542,6 +701,8 @@ renderHistorial();
 const now=new Date();
 document.getElementById('sel-mes').value=now.getMonth()+1;
 document.getElementById('inp-anio').value=now.getFullYear();
+document.getElementById('ocup-mes').value=now.getMonth()+1;
+document.getElementById('ocup-anio').value=now.getFullYear();
 </script>
 </body>
 </html>
