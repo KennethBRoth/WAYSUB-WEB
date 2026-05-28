@@ -286,7 +286,16 @@
   }
 
   function construirTablas() {
-    ['stock-inicial', 'femsa', 'ventas', 'stock-actual'].forEach(id => {
+    // Para ventas (LINISCO), Aquarius y Cepita van agrupadas como una sola línea
+    const GRUPOS_VENTAS = [
+      { grupo: "Coca-Cola", items: [{ nombre: "Coca Común", key: "Coca Común" }, { nombre: "Coca Zero", key: "Coca Zero" }, { nombre: "Coca Light", key: "Coca Light" }] },
+      { grupo: "Sprite / Fanta", items: [{ nombre: "Sprite", key: "Sprite" }, { nombre: "Sprite Zero", key: "Sprite Zero" }, { nombre: "Fanta", key: "Fanta" }] },
+      { grupo: "Aquarius", items: [{ nombre: "Aquarius (total)", key: "Aquarius Total" }] },
+      { grupo: "Agua", items: [{ nombre: "Agua Sin Gas", key: "Agua Sin Gas" }, { nombre: "Agua Con Gas", key: "Agua Con Gas" }] },
+      { grupo: "Cepita", items: [{ nombre: "Cepita (total)", key: "Cepita Total" }] },
+    ];
+
+    ['stock-inicial', 'femsa', 'stock-actual'].forEach(id => {
       const tbody = document.getElementById('tabla-' + id);
       tbody.innerHTML = '';
       GRUPOS.forEach(g => {
@@ -296,9 +305,24 @@
         tbody.appendChild(grFila);
         g.items.forEach(prod => {
           const tr = document.createElement('tr');
-          tr.innerHTML = '<td>' + prod + '</td><td><input type="number" min="0" value="0" data-tabla="' + id + '" data-prod="' + prod + '"></td>';
+          tr.innerHTML = '<td>' + prod + '</td><td><input type="number" min="0" value="0" step="0.1" data-tabla="' + id + '" data-prod="' + prod + '"></td>';
           tbody.appendChild(tr);
         });
+      });
+    });
+
+    // Tabla ventas con Aquarius y Cepita agrupadas
+    const tbodyV = document.getElementById('tabla-ventas');
+    tbodyV.innerHTML = '';
+    GRUPOS_VENTAS.forEach(g => {
+      const grFila = document.createElement('tr');
+      grFila.className = 'grupo-header';
+      grFila.innerHTML = '<td colspan="2">🔵 ' + g.grupo + '</td>';
+      tbodyV.appendChild(grFila);
+      g.items.forEach(item => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = '<td>' + item.nombre + '</td><td><input type="number" min="0" value="0" data-tabla="ventas" data-prod="' + item.key + '"></td>';
+        tbodyV.appendChild(tr);
       });
     });
   }
@@ -401,7 +425,7 @@
       spin.style.display = 'none';
       btn.disabled = false;
       btn.style.display = 'block';
-      alert('Error al analizar la imagen. Intentá de nuevo.');
+      const msg = err?.message || JSON.stringify(err) || 'Error desconocido'; alert('Error: ' + msg);
     }
   }
 
@@ -416,6 +440,33 @@
     document.querySelectorAll('input[data-tabla="' + tablaId + '"]').forEach(inp => {
       out[inp.dataset.prod] = Number(inp.value) || 0;
     });
+
+    // Para ventas: distribuir Aquarius Total y Cepita Total proporcionalmente al stock inicial
+    if (tablaId === 'ventas') {
+      const si = {};
+      document.querySelectorAll('input[data-tabla="stock-inicial"]').forEach(inp => {
+        si[inp.dataset.prod] = Number(inp.value) || 0;
+      });
+
+      // Distribuir Aquarius
+      const aqTotal = out['Aquarius Total'] || 0;
+      const aqItems = ['Aquarius Manzana', 'Aquarius Pera', 'Aquarius Pomelo'];
+      const aqSITotal = aqItems.reduce((a, p) => a + (si[p] || 0), 0);
+      aqItems.forEach(p => {
+        out[p] = aqSITotal > 0 ? Math.round(aqTotal * (si[p] || 0) / aqSITotal) : Math.round(aqTotal / 3);
+      });
+      delete out['Aquarius Total'];
+
+      // Distribuir Cepita
+      const cepTotal = out['Cepita Total'] || 0;
+      const cepItems = ['Cepita Manzana', 'Cepita Naranja', 'Cepita Multifruta'];
+      const cepSITotal = cepItems.reduce((a, p) => a + (si[p] || 0), 0);
+      cepItems.forEach(p => {
+        out[p] = cepSITotal > 0 ? Math.round(cepTotal * (si[p] || 0) / cepSITotal) : Math.round(cepTotal / 3);
+      });
+      delete out['Cepita Total'];
+    }
+
     return out;
   }
 
