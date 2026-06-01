@@ -637,7 +637,7 @@ function renderCalendario(turnos, feriados, mes, anio) {
     else if (t) cls += ' tiene-turno';
     let inner = '<div class="dia-num">' + d + '</div>';
     if (esFeriado) inner += '<span class="feriado-tag">Feriado</span>';
-    else if (esLibre) inner += '<span class="libre-tag">No trabaja</span>';
+    if (esLibre) inner += '<span class="libre-tag">No trabaja</span>';
     else if (t) inner += `<span class="turno-tag">${t.e}<br>${t.s}</span>`;
     html += `<div class="${cls}" onclick="abrirModalTurno(${d})">${inner}</div>`;
   }
