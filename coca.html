@@ -148,7 +148,7 @@
   </div>
 
   <div class="card">
-    <h3 style="font-size:15px;color:#e63946;font-weight:800;text-transform:none;letter-spacing:0;border-left:4px solid #e63946;padding-left:10px;">🧾 Ingreso FEMSA</h3>
+    <h3 style="font-size:15px;color:#e63946;font-weight:800;text-transform:none;letter-spacing:0;border-left:4px solid #e63946;padding-left:10px;">🧾 Ingreso FEMSA <span style="font-size:11px;color:#999;font-weight:500;">(cargá en packs — se multiplica ×6)</span></h3>
     <table class="productos-tabla">
       <thead><tr><th>Producto</th><th>Unid.</th></tr></thead>
       <tbody id="tabla-femsa"></tbody>
@@ -275,15 +275,16 @@
       if (snap.empty) return;
       const ultimo = snap.docs[0].data();
       const stockAnterior = {};
-      // Usar stockActual guardado directamente si existe, si no reconstruir desde control
-      if (ultimo.stockActual) {
+      // Prioridad: stockActual guardado directo > reconstruir desde control
+      if (ultimo.stockActual && Object.keys(ultimo.stockActual).length > 0) {
         Object.assign(stockAnterior, ultimo.stockActual);
-      } else {
+      } else if (ultimo.control) {
         ultimo.control.forEach(r => { stockAnterior[r.prod] = r.stockActual; });
       }
-      llenarTabla('stock-inicial', stockAnterior);
-      // Actualizar totales después de llenar
-      setTimeout(() => actualizarTotal('stock-inicial'), 100);
+      if (Object.keys(stockAnterior).length > 0) {
+        llenarTabla('stock-inicial', stockAnterior);
+        setTimeout(() => actualizarTotal('stock-inicial'), 150);
+      }
       const desde = ultimo.fechaDesde || ultimo.fecha || '';
       const hasta = ultimo.fechaHasta || '';
       const banner = document.getElementById('banner-auto');
@@ -501,7 +502,9 @@
   function getValores(tablaId) {
     const out = {};
     document.querySelectorAll('input[data-tabla="' + tablaId + '"]').forEach(inp => {
-      out[inp.dataset.prod] = Number(inp.value) || 0;
+      const val = Number(inp.value) || 0;
+      // FEMSA se carga en packs, multiplicar por 6
+      out[inp.dataset.prod] = tablaId === 'femsa' ? val * 6 : val;
     });
 
     // Para ventas: distribuir Aquarius Total y Cepita Total proporcionalmente al stock inicial
@@ -591,12 +594,21 @@
     document.getElementById('alertas-container').innerHTML = resultados.alertas.map(a =>
       '<div class="alerta alerta-' + (a.tipo === 'rojo' ? 'roja' : 'naranja') + '">' + (a.tipo === 'rojo' ? '🔴' : '🟡') + ' ' + a.msg + '</div>'
     ).join('');
-    document.getElementById('body-control').innerHTML = resultados.control.map(r => {
+    let totalDisp=0, totalVentas=0, totalConsumo=0, totalDescuadre=0, totalStockAct=0;
+    const rowsControl = resultados.control.map(r => {
+      totalDisp += r.disponible; totalVentas += r.ventas;
+      totalConsumo += r.consumo; totalDescuadre += r.descuadre;
+      totalStockAct += r.stockActual;
       let dBadge = r.descuadre < -10 ? '<span class="badge-rojo">' + r.descuadre + '</span>'
         : r.descuadre > 10 ? '<span class="badge-naranja">+' + r.descuadre + '</span>'
         : '<span class="badge-verde">' + (r.descuadre >= 0 ? '+' : '') + r.descuadre + '</span>';
       return '<tr><td>' + r.prod + '</td><td>' + r.disponible + '</td><td>' + r.ventas + '</td><td>' + r.consumo + '</td><td>' + dBadge + '</td><td>' + r.stockActual + '</td></tr>';
-    }).join('');
+    });
+    const dTotalBadge = totalDescuadre < -10 ? '<span class="badge-rojo">' + totalDescuadre + '</span>'
+      : totalDescuadre > 10 ? '<span class="badge-naranja">+' + totalDescuadre + '</span>'
+      : '<span class="badge-verde">' + (totalDescuadre >= 0 ? '+' : '') + totalDescuadre + '</span>';
+    rowsControl.push('<tr style="background:#1a1a2e;color:white;font-weight:700;"><td>TOTAL</td><td>' + totalDisp + '</td><td>' + totalVentas + '</td><td>' + totalConsumo + '</td><td>' + dTotalBadge + '</td><td>' + totalStockAct + '</td></tr>');
+    document.getElementById('body-control').innerHTML = rowsControl.join('');
     document.getElementById('body-pedido').innerHTML = resultados.pedido.map((r, i) =>
       '<tr><td>' + r.prod + '</td><td>' + r.consumo + '</td><td>' + r.stockActual + '</td><td>' + r.calculado.toFixed(0) + '</td><td><input type="number" class="pedido-input ' + (r.packsCalc > 0 ? 'tiene-pedido' : '') + '" value="' + r.packsCalc + '" min="0" data-idx="' + i + '" onchange="actualizarPedido(this)"></td></tr>'
     ).join('');
