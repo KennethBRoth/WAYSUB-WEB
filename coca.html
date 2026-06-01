@@ -157,6 +157,13 @@
 
   <div class="card">
     <h3 style="font-size:15px;color:#e67e22;font-weight:800;text-transform:none;letter-spacing:0;border-left:4px solid #e67e22;padding-left:10px;">💻 Ventas Sistema (LINISCO)</h3>
+    <div style="margin-bottom:12px;">
+      <p style="font-size:11px;color:#999;margin-bottom:6px;font-weight:600;">OPCIÓN RÁPIDA — Pegá el reporte de LINISCO:</p>
+      <textarea id="linisco-paste" rows="6" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:12px;font-family:monospace;resize:vertical;" placeholder="Botella Coca Cola 600cc&#9;48&#10;Botella Coca Zero 600cc&#9;22&#10;Agua saborizada 600 cc&#9;15&#10;..."></textarea>
+      <button onclick="interpretarLinisco()" style="width:100%;background:#e67e22;color:white;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;margin-top:6px;">🔍 Interpretar y cargar</button>
+      <div id="linisco-resultado" style="font-size:12px;color:#2a9d5c;margin-top:6px;display:none;"></div>
+    </div>
+    <p style="font-size:11px;color:#999;margin-bottom:8px;font-weight:600;">O CARGÁ MANUALMENTE:</p>
     <table class="productos-tabla">
       <thead><tr><th>Producto</th><th>Unid.</th></tr></thead>
       <tbody id="tabla-ventas"></tbody>
@@ -542,6 +549,76 @@
       result[selProd.value] += selDir.value === 'entrada' ? unidades : -unidades;
     });
     return result;
+  }
+
+  window.interpretarLinisco = function() {
+    const texto = document.getElementById('linisco-paste').value.trim();
+    if (!texto) return;
+
+    // Mapa de nombres LINISCO → productos del sistema
+    const MAPA = {
+      'coca cola': 'Coca Común',
+      'coca common': 'Coca Común',
+      'coca comun': 'Coca Común',
+      'cola 600': 'Coca Común',
+      'coca zero': 'Coca Zero',
+      'zero 600': 'Coca Zero',
+      'coca light': 'Coca Light',
+      'light 600': 'Coca Light',
+      'sprite zero': 'Sprite Zero',
+      'sprite 600': 'Sprite',
+      'sprite': 'Sprite',
+      'fanta': 'Fanta',
+      'agua saborizada': 'Aquarius Total',
+      'aquarius': 'Aquarius Total',
+      'agua s/ gas': 'Agua Sin Gas',
+      'agua sin gas': 'Agua Sin Gas',
+      'agua s/gas': 'Agua Sin Gas',
+      'agua c/ gas': 'Agua Con Gas',
+      'agua con gas': 'Agua Con Gas',
+      'agua c/gas': 'Agua Con Gas',
+      'cepita': 'Cepita Total',
+    };
+
+    const valores = {};
+    const lineas = texto.split('
+');
+    let cargados = 0;
+
+    lineas.forEach(linea => {
+      // Separar por tab o espacios múltiples
+      const partes = linea.trim().split(/	+|\s{2,}/);
+      if (partes.length < 2) return;
+      const nombre = partes[0].trim().toLowerCase();
+      const cant = parseInt(partes[partes.length - 1].trim());
+      if (isNaN(cant) || nombre === 'total') return;
+
+      // Buscar en el mapa
+      let prodEncontrado = null;
+      for (const [key, prod] of Object.entries(MAPA)) {
+        if (nombre.includes(key)) { prodEncontrado = prod; break; }
+      }
+      if (prodEncontrado) {
+        valores[prodEncontrado] = (valores[prodEncontrado] || 0) + cant;
+        cargados++;
+      }
+    });
+
+    if (Object.keys(valores).length === 0) {
+      alert('No se pudo interpretar el texto. Verificá el formato.');
+      return;
+    }
+
+    // Cargar en la tabla de ventas
+    llenarTabla('ventas', valores);
+    actualizarTotal('ventas');
+
+    const res = document.getElementById('linisco-resultado');
+    res.style.display = 'block';
+    res.textContent = '✅ ' + cargados + ' productos cargados. Revisá los valores antes de calcular.';
+
+    // Limpiar el textarea
+    document.getElementById('linisco-paste').value = '';
   }
 
   window.guardarComoStockInicial = async function() {
