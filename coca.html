@@ -165,6 +165,7 @@
 
   <div class="card">
     <h3 style="font-size:15px;color:#2a9d5c;font-weight:800;text-transform:none;letter-spacing:0;border-left:4px solid #2a9d5c;padding-left:10px;">📋 Stock Actual</h3>
+    <button onclick="guardarComoStockInicial()" style="width:100%;background:#f0fff4;color:#2a9d5c;border:1px solid #c3e6cb;border-radius:8px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;margin-bottom:12px;">💾 Guardar como Stock Inicial de la próxima semana</button>
     <table class="productos-tabla">
       <thead><tr><th>Producto</th><th>Unid.</th></tr></thead>
       <tbody id="tabla-stock-actual"></tbody>
@@ -262,35 +263,21 @@
   cargarStockInicialAutomatico();
   cargarHistorial();
 
-  // STOCK INICIAL AUTOMÁTICO desde última semana guardada
+  // STOCK INICIAL AUTOMÁTICO desde colección dedicada
   async function cargarStockInicialAutomatico() {
     try {
-      const q = query(
-        collection(db, "coca_historial"),
-        where("local", "==", localActual),
-        orderBy("timestamp", "desc"),
-        limit(1)
-      );
-      const snap = await getDocs(q);
-      if (snap.empty) return;
-      const ultimo = snap.docs[0].data();
-      const stockAnterior = {};
-      // Prioridad: stockActual guardado directo > reconstruir desde control
-      if (ultimo.stockActual && Object.keys(ultimo.stockActual).length > 0) {
-        Object.assign(stockAnterior, ultimo.stockActual);
-      } else if (ultimo.control) {
-        ultimo.control.forEach(r => { stockAnterior[r.prod] = r.stockActual; });
-      }
-      if (Object.keys(stockAnterior).length > 0) {
-        llenarTabla('stock-inicial', stockAnterior);
-        setTimeout(() => actualizarTotal('stock-inicial'), 150);
-      }
-      const desde = ultimo.fechaDesde || ultimo.fecha || '';
-      const hasta = ultimo.fechaHasta || '';
+      const { getDoc: gd, doc: fd } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+      const snap = await gd(fd(db, "coca_stock_inicial", localActual));
+      if (!snap.exists()) return;
+      const data = snap.data();
+      if (!data.stockActual || Object.keys(data.stockActual).length === 0) return;
+      llenarTabla('stock-inicial', data.stockActual);
+      setTimeout(() => actualizarTotal('stock-inicial'), 150);
+      const fecha = new Date(data.timestamp).toLocaleDateString('es-AR');
       const banner = document.getElementById('banner-auto');
       banner.style.display = 'block';
-      banner.textContent = `✅ Stock Inicial cargado automáticamente desde la semana ${desde}${hasta ? ' al ' + hasta : ''}`;
-    } catch(e) { /* sin historial todavía, no pasa nada */ }
+      banner.textContent = '✅ Stock Inicial cargado — guardado el ' + fecha;
+    } catch(e) { /* sin stock guardado todavía */ }
   }
 
   function crearInput(tabla, prod) {
@@ -555,6 +542,29 @@
       result[selProd.value] += selDir.value === 'entrada' ? unidades : -unidades;
     });
     return result;
+  }
+
+  window.guardarComoStockInicial = async function() {
+    const stockActual = {};
+    document.querySelectorAll('input[data-tabla="stock-actual"]').forEach(inp => {
+      stockActual[inp.dataset.prod] = Number(inp.value) || 0;
+    });
+    const tieneValores = Object.values(stockActual).some(v => v > 0);
+    if (!tieneValores) { alert('El Stock Actual está en cero. Cargá los valores primero.'); return; }
+    try {
+      const { setDoc, doc: firestoreDoc } = await Promise.resolve({ 
+        setDoc: (await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js")).setDoc,
+        doc: (await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js")).doc
+      });
+      await setDoc(firestoreDoc(db, "coca_stock_inicial", localActual), {
+        stockActual,
+        timestamp: Date.now(),
+        local: localActual
+      });
+      alert('✅ Stock guardado. La próxima semana se va a cargar automáticamente como Stock Inicial.');
+    } catch(e) {
+      alert('Error al guardar: ' + e.message);
+    }
   }
 
   window.actualizarTotal = function(tablaId) {
