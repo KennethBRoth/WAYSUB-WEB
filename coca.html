@@ -679,11 +679,14 @@
       document.querySelectorAll('input[data-tabla="stock-actual"]').forEach(inp => {
         stockActualGuardado[inp.dataset.prod] = Number(inp.value) || 0;
       });
+      const descuadreTotal = resultados.control.reduce((a, r) => a + r.descuadre, 0);
+      const totalPacks = resultados.pedido.reduce((a, r) => a + r.packsCalc, 0);
       await addDoc(collection(db, "coca_historial"), {
         local: localActual, fechaDesde: desde, fechaHasta: hasta,
         timestamp: Date.now(), control: resultados.control,
         pedido: resultados.pedido, alertas: resultados.alertas,
-        stockActual: stockActualGuardado
+        stockActual: stockActualGuardado,
+        descuadreTotal, totalPacks
       });
       btn.textContent = '✅ Guardado';
       setTimeout(() => { btn.textContent = '💾 Guardar'; btn.disabled = false; }, 2000);
