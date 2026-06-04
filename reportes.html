@@ -167,7 +167,7 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, setDoc, getDoc, query, where, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, query, where, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyAB2-btgFqGiCe1YdZSDv4EShV601N-uQs",
@@ -288,21 +288,19 @@
 
     document.getElementById('generando').style.display = 'block';
 
-    // Guardar en Firebase
-    const docId = 'reporte_' + localActual.replace(/\s/g,'') + '_' + mes;
+    // Guardar en Firebase — reemplazar si ya existe
     try {
-      await setDoc(doc(db, 'reportes_mensuales', docId), {
-        mes, local: localActual, timestamp: Date.now(), sw, bc
-      });
+      const snapExist = await getDocs(query(collection(db, 'reportes_mensuales'), where('local','==',localActual), where('mes','==',mes)));
+      for (const d of snapExist.docs) { await deleteDoc(doc(db, 'reportes_mensuales', d.id)); }
+      await addDoc(collection(db, 'reportes_mensuales'), { mes, local: localActual, timestamp: Date.now(), sw, bc });
     } catch(e) { document.getElementById('generando').style.display = 'none'; alert('Error al guardar: ' + e.message); return; }
 
     // Verificar si el otro local también tiene datos
     const otroLocal = localActual.includes('Ramos') ? 'Morón' : 'Ramos Mejía';
-    const otroDocId = 'reporte_' + otroLocal.replace(/\s/g,'') + '_' + mes;
     let otroData = null;
     try {
-      const otroSnap = await getDoc(doc(db, 'reportes_mensuales', otroDocId));
-      if (otroSnap.exists()) otroData = otroSnap.data();
+      const otroSnap = await getDocs(query(collection(db, 'reportes_mensuales'), where('local','==',otroLocal), where('mes','==',mes)));
+      if (!otroSnap.empty) otroData = otroSnap.docs[0].data();
     } catch(e) {}
 
     // Generar análisis IA
@@ -330,11 +328,10 @@
     const [anio, mesNum] = mes.split('-').map(Number);
     const mesPrevDate = new Date(anio, mesNum - 2, 1);
     const mesPrev = mesPrevDate.getFullYear() + '-' + String(mesPrevDate.getMonth()+1).padStart(2,'0');
-    const prevDocId = 'reporte_' + local.replace(/\s/g,'') + '_' + mesPrev;
     let dataMesAnterior = null;
     try {
-      const prevSnap = await getDoc(doc(db, 'reportes_mensuales', prevDocId));
-      if (prevSnap.exists()) dataMesAnterior = prevSnap.data();
+      const prevSnap = await getDocs(query(collection(db, 'reportes_mensuales'), where('local','==',local), where('mes','==',mesPrev)));
+      if (!prevSnap.empty) dataMesAnterior = prevSnap.docs[0].data();
     } catch(e) {}
 
     let contextoSubway = `Subway ${local}: ventas=${fmt(sw.ventas)}, tickets=${sw.totalTickets}, ticket_prom=${fmt(sw.ticketProm)}, UPT=${sw.upt.toFixed(2)}, mix_30cm=${pct(sw.mix30)}, ingreso_por_sandwich=${fmt(sw.ingXsand)}, sandwiches_total=${sw.sandwiches}`;
@@ -514,12 +511,11 @@ ${analisisHTML}`;
     const mes = document.getElementById('inp-mes').value;
     if (!mes) return;
     const otroLocal = localActual.includes('Ramos') ? 'Morón' : 'Ramos Mejía';
-    const otroDocId = 'reporte_' + otroLocal.replace(/\s/g,'') + '_' + mes;
     try {
-      const snap = await getDoc(doc(db, 'reportes_mensuales', otroDocId));
+      const snap = await getDocs(query(collection(db, 'reportes_mensuales'), where('local','==',otroLocal), where('mes','==',mes)));
       const banner = document.getElementById('banner-comparativo');
-      if (snap.exists()) {
-        datosOtroLocal = snap.data();
+      if (!snap.empty) {
+        datosOtroLocal = snap.docs[0].data();
         banner.style.display = 'block';
         banner.textContent = '📊 ' + otroLocal + ' ya tiene datos de este mes. Tocá para ver el reporte comparativo →';
       } else {
@@ -532,22 +528,19 @@ ${analisisHTML}`;
   window.verComparativo = async function() {
     const mes = document.getElementById('inp-mes').value;
     const otroLocal = localActual.includes('Ramos') ? 'Morón' : 'Ramos Mejía';
-    const miDocId = 'reporte_' + localActual.replace(/\s/g,'') + '_' + mes;
-    const otroDocId = 'reporte_' + otroLocal.replace(/\s/g,'') + '_' + mes;
-
     document.getElementById('generando').style.display = 'block';
 
     try {
       const [miSnap, otroSnap] = await Promise.all([
-        getDoc(doc(db, 'reportes_mensuales', miDocId)),
-        getDoc(doc(db, 'reportes_mensuales', otroDocId))
+        getDocs(query(collection(db, 'reportes_mensuales'), where('local','==',localActual), where('mes','==',mes))),
+        getDocs(query(collection(db, 'reportes_mensuales'), where('local','==',otroLocal), where('mes','==',mes)))
       ]);
-      if (!miSnap.exists() || !otroSnap.exists()) {
+      if (miSnap.empty || otroSnap.empty) {
         document.getElementById('generando').style.display = 'none';
         alert('Falta guardar los datos de alguno de los dos locales para este mes.');
         return;
       }
-      const miData = miSnap.data(), otroData = otroSnap.data();
+      const miData = miSnap.docs[0].data(), otroData = otroSnap.docs[0].data();
       const analisis = await generarAnalisisIA(mes, localActual, miData.sw, miData.bc, otroLocal, otroData);
       document.getElementById('generando').style.display = 'none';
       reporteActual = { ...miData, analisis, otroData, otroLocal };
