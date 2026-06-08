@@ -111,6 +111,13 @@
   <div class="card">
     <h3 style="font-size:15px;color:#2a9d5c;font-weight:800;text-transform:none;letter-spacing:0;border-left:4px solid #2a9d5c;padding-left:10px;">📋 Stock Actual</h3>
     <button onclick="guardarComoStockInicial()" style="width:100%;background:#f0fff4;color:#2a9d5c;border:1px solid #c3e6cb;border-radius:8px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;margin-bottom:12px;">💾 Guardar como Stock Inicial de la próxima semana</button>
+    <div style="margin-bottom:12px;">
+      <p style="font-size:11px;color:#999;margin-bottom:6px;font-weight:600;">PEGÁ EL REPORTE DE LINISCO (CONTEO):</p>
+      <textarea id="linisco-stock-paste" rows="4" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:12px;font-family:monospace;resize:vertical;" placeholder="Coca Cola 600cc&#9;12&#10;Coca Zero 600cc&#9;8&#10;..."></textarea>
+      <button onclick="interpretarLiniscoStock()" style="width:100%;background:#2a9d5c;color:white;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;margin-top:6px;">🔍 Interpretar y cargar</button>
+      <div id="linisco-stock-resultado" style="font-size:12px;color:#2a9d5c;margin-top:6px;display:none;"></div>
+    </div>
+    <p style="font-size:11px;color:#999;margin-bottom:8px;font-weight:600;">O CARGÁ MANUALMENTE:</p>
     <table class="productos-tabla"><thead><tr><th>Producto</th><th>Unid.</th></tr></thead><tbody id="tabla-stock-actual"></tbody></table>
   </div>
 
@@ -212,7 +219,8 @@
     inp.dataset.tabla = tabla; inp.dataset.prod = prod;
     inp.style.cssText = 'width:64px;padding:6px;border:1px solid #ddd;border-radius:6px;font-size:13px;text-align:center;';
     inp.addEventListener('focus', function() { if (this.value === '0') this.value = ''; });
-    inp.addEventListener('blur', function() { if (this.value === '') this.value = '0'; });
+    inp.addEventListener('blur', function() { if (this.value === '') this.value = '0'; actualizarTotal(this.dataset.tabla); });
+    inp.addEventListener('input', function() { actualizarTotal(this.dataset.tabla); });
     return inp;
   }
 
@@ -390,6 +398,38 @@
     document.getElementById('linisco-paste').value = '';
   }
 
+  window.interpretarLiniscoStock = function() {
+    const texto = document.getElementById('linisco-stock-paste').value.trim();
+    if (!texto) return;
+    const MAPA = {
+      'coca cola':'Coca Común','coca common':'Coca Común','coca comun':'Coca Común','cola 600':'Coca Común',
+      'coca zero':'Coca Zero','zero 600':'Coca Zero','coca light':'Coca Light','light 600':'Coca Light',
+      'sprite zero':'Sprite Zero','sprite':'Sprite','fanta':'Fanta',
+      'agua saborizada':'Aquarius Manzana','aquarius manzana':'Aquarius Manzana','aquarius pera':'Aquarius Pera','aquarius pomelo':'Aquarius Pomelo',
+      'agua s/ gas':'Agua Sin Gas','agua sin gas':'Agua Sin Gas','agua s/gas':'Agua Sin Gas',
+      'agua c/ gas':'Agua Con Gas','agua con gas':'Agua Con Gas','agua c/gas':'Agua Con Gas',
+      'cepita manzana':'Cepita Manzana','cepita naranja':'Cepita Naranja','cepita multifruta':'Cepita Multifruta','cepita':'Cepita Manzana',
+    };
+    const valores = {};
+    let cargados = 0;
+    texto.split('\n').forEach(linea => {
+      const partes = linea.trim().split(/\t+|\s{2,}/);
+      if (partes.length < 2) return;
+      const nombre = partes[0].trim().toLowerCase();
+      const cant = parseInt(partes[partes.length-1].trim());
+      if (isNaN(cant)) return;
+      for (const [key, prod] of Object.entries(MAPA)) {
+        if (nombre.includes(key)) { valores[prod] = cant; cargados++; break; }
+      }
+    });
+    if (!Object.keys(valores).length) { alert('No se pudo interpretar. Verificá el formato.'); return; }
+    llenarTabla('stock-actual', valores);
+    const res = document.getElementById('linisco-stock-resultado');
+    res.style.display = 'block';
+    res.textContent = '✅ ' + cargados + ' productos cargados.';
+    document.getElementById('linisco-stock-paste').value = '';
+  }
+
   // ─── CALCULAR ────────────────────────────────────────────────────
   window.calcular = function() {
     const stockInicial = getValores('stock-inicial');
@@ -500,11 +540,15 @@
         const rango = dat.fechaDesde ? dat.fechaDesde+' → '+(dat.fechaHasta||'') : '—';
         const div = document.createElement('div');
         div.className = 'historial-item';
-        div.innerHTML = '<div class="hist-header"><div><div class="hist-fecha">📅 '+rango+'</div><div class="hist-local">'+dat.local+'</div></div>' +
-          '<button class="btn-eliminar-hist" onclick="window.eliminarHistorial(\''+dat.id+'\')">🗑</button></div>' +
-          '<div class="hist-resumen"><div class="hist-kpi"><span>Total packs</span><strong>'+totalPacks+'</strong></div>' +
-          '<div class="hist-kpi"><span>🔴 Alertas</span><strong style="color:'+(alertasRojas>0?'#e63946':'#2a9d5c')+'">'+alertasRojas+'</strong></div>' +
-          '<div class="hist-kpi"><span>Productos</span><strong>'+dat.pedido.filter(r=>r.packsCalc>0).length+'</strong></div></div>';
+        const descuadre = dat.descuadreTotal || 0;
+        const descColor = descuadre < -10 ? '#e63946' : descuadre > 10 ? '#e67e22' : '#2a9d5c';
+        const descLabel = descuadre >= 0 ? '+'+descuadre : String(descuadre);
+        div.innerHTML = '<div class="hist-header" style="align-items:center;">'
+          + '<div class="hist-fecha">📅 '+rango+'</div>'
+          + '<div style="display:flex;align-items:center;gap:10px;">'
+          + '<span style="font-size:13px;font-weight:700;color:'+descColor+'">Descuadre: '+descLabel+'</span>'
+          + '<button class="btn-eliminar-hist" onclick="window.eliminarHistorial(\''+dat.id+'\')">🗑</button>'
+          + '</div></div>';
         lista.appendChild(div);
       });
     } catch(e) { lista.innerHTML = '<div class="sin-historial">Error al cargar</div>'; }
