@@ -202,10 +202,8 @@
   document.getElementById('fecha-desde').value = lunes.toISOString().split('T')[0];
   document.getElementById('fecha-hasta').value = domingo.toISOString().split('T')[0];
 
-  // Construir tablas primero, luego cargar datos
-  construirTablas();
-  cargarStockInicialAutomatico();
-  cargarHistorial();
+  // Construir tablas cuando el DOM esté listo
+  setTimeout(() => { construirTablas(); cargarStockInicialAutomatico(); cargarHistorial(); }, 200);
 
   // ─── CONSTRUIR TABLAS ────────────────────────────────────────────
   function crearInput(tabla, prod) {
