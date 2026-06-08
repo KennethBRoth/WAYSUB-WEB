@@ -13,25 +13,12 @@
     header h1 { font-size: 18px; flex: 1; }
     .local-badge { background: rgba(255,255,255,0.15); border-radius: 20px; padding: 4px 12px; font-size: 12px; }
     .tabs { display: flex; background: white; border-bottom: 2px solid #f0f2f5; position: sticky; top: 57px; z-index: 99; }
-    .tab { flex: 1; padding: 12px 8px; text-align: center; font-size: 12px; font-weight: 600; color: #999; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.2s; }
+    .tab { flex: 1; padding: 12px 8px; text-align: center; font-size: 12px; font-weight: 600; color: #999; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; }
     .tab.activo { color: #1a1a2e; border-bottom-color: #1a1a2e; }
     .seccion { display: none; padding-bottom: 80px; }
     .seccion.activa { display: block; }
     .card { background: white; margin: 12px 16px 0; border-radius: 12px; padding: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); }
     .card h3 { font-size: 13px; font-weight: 700; color: #999; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 14px; }
-    .metodo-selector { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 12px 16px 0; }
-    .metodo-btn { background: white; border: 2px solid #e0e0e0; border-radius: 12px; padding: 16px 10px; text-align: center; cursor: pointer; transition: all 0.2s; }
-    .metodo-btn.activo { border-color: #1a1a2e; background: #1a1a2e; color: white; }
-    .metodo-btn .metodo-emoji { font-size: 28px; display: block; margin-bottom: 6px; }
-    .metodo-btn .metodo-label { font-size: 12px; font-weight: 600; }
-    .foto-area { border: 2px dashed #ddd; border-radius: 12px; padding: 24px; text-align: center; cursor: pointer; transition: all 0.2s; background: #fafafa; }
-    .foto-area:hover { border-color: #1a1a2e; background: #f5f5f5; }
-    .foto-area input { display: none; }
-    .foto-area p { font-size: 13px; color: #999; margin-top: 8px; }
-    .foto-preview { max-width: 100%; border-radius: 8px; margin-top: 10px; display: none; }
-    .btn-analizar { width: 100%; background: #1a1a2e; color: white; border: none; border-radius: 8px; padding: 12px; font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 10px; display: none; }
-    .btn-analizar:disabled { opacity: 0.6; cursor: wait; }
-    .analizando { text-align: center; padding: 16px; color: #666; font-size: 13px; display: none; }
     .productos-tabla { width: 100%; border-collapse: collapse; font-size: 13px; }
     .productos-tabla th { text-align: left; padding: 8px 6px; font-size: 11px; color: #999; font-weight: 700; text-transform: uppercase; border-bottom: 2px solid #f0f2f5; }
     .productos-tabla td { padding: 8px 6px; border-bottom: 1px solid #f8f8f8; vertical-align: middle; }
@@ -52,7 +39,7 @@
     .badge-verde { background: #f0fff4; color: #2a9d5c; border-radius: 20px; padding: 2px 8px; font-size: 11px; font-weight: 700; }
     .pedido-input { width: 60px; padding: 5px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; text-align: center; }
     .pedido-input.tiene-pedido { border-color: #e63946; background: #fff8f8; }
-    .alerta { border-radius: 10px; padding: 12px 14px; margin: 8px 16px 0; font-size: 13px; display: flex; align-items: flex-start; gap: 10px; }
+    .alerta { border-radius: 10px; padding: 12px 14px; margin: 8px 16px 0; font-size: 13px; }
     .alerta-roja { background: #fff0f0; border: 1px solid #ffd0d0; color: #c0392b; }
     .alerta-naranja { background: #fff8ee; border: 1px solid #ffd9a0; color: #a04000; }
     .banner-auto { background: #f0fff4; border: 1px solid #c3e6cb; border-radius: 10px; padding: 10px 14px; margin: 12px 16px 0; font-size: 13px; color: #2a9d5c; display: none; }
@@ -61,16 +48,15 @@
     .btn-excel { flex: 1; background: #f0fff4; color: #2a9d5c; border: 1px solid #c3e6cb; border-radius: 10px; padding: 14px; font-size: 13px; font-weight: 600; cursor: pointer; display: none; }
     .btn-guardar-hist { flex: 1; background: #f0f4ff; color: #1a1a2e; border: 1px solid #c5cff5; border-radius: 10px; padding: 14px; font-size: 13px; font-weight: 600; cursor: pointer; display: none; }
     .historial-item { background: white; margin: 8px 16px 0; border-radius: 12px; padding: 14px 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
-    .historial-item .hist-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-    .historial-item .hist-fecha { font-size: 13px; font-weight: 700; }
-    .historial-item .hist-local { font-size: 11px; color: #999; }
+    .hist-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .hist-fecha { font-size: 13px; font-weight: 700; }
+    .hist-local { font-size: 11px; color: #999; }
     .hist-resumen { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
     .hist-kpi { background: #f8f8f8; border-radius: 8px; padding: 8px; text-align: center; }
     .hist-kpi span { font-size: 10px; color: #999; display: block; }
     .hist-kpi strong { font-size: 14px; }
     .btn-eliminar-hist { background: none; border: none; color: #ccc; cursor: pointer; font-size: 16px; }
     .sin-historial { text-align: center; padding: 40px 20px; color: #bbb; font-size: 14px; }
-    .seccion-titulo { padding: 12px 16px 4px; font-size: 11px; font-weight: 700; color: #999; text-transform: uppercase; letter-spacing: 1px; }
     .fecha-rango { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .fecha-campo label { font-size: 11px; color: #999; display: block; margin-bottom: 4px; font-weight: 600; text-transform: uppercase; }
     .fecha-campo input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; }
@@ -91,92 +77,41 @@
 </div>
 
 <div class="seccion activa" id="tab-carga">
-
   <div class="banner-auto" id="banner-auto"></div>
-
   <div class="card" style="margin-top:12px;">
     <h3>Semana</h3>
     <div class="fecha-rango">
-      <div class="fecha-campo">
-        <label>Desde</label>
-        <input type="date" id="fecha-desde">
-      </div>
-      <div class="fecha-campo">
-        <label>Hasta</label>
-        <input type="date" id="fecha-hasta">
-      </div>
-    </div>
-  </div>
-
-  <div class="seccion-titulo">Método de carga</div>
-  <div class="metodo-selector">
-    <div class="metodo-btn activo" id="btn-metodo-manual" onclick="setMetodo('manual')">
-      <span class="metodo-emoji">✏️</span>
-      <span class="metodo-label">Manual</span>
-    </div>
-    <div class="metodo-btn" id="btn-metodo-foto" onclick="setMetodo('foto')">
-      <span class="metodo-emoji">📷</span>
-      <span class="metodo-label">Por foto (IA)</span>
-    </div>
-  </div>
-
-  <div id="zona-foto" style="display:none; margin: 0 16px;">
-    <div style="margin-top:12px;">
-      <p style="font-size:12px; color:#999; margin-bottom:8px; font-weight:600; text-transform:uppercase;">¿Qué foto querés subir?</p>
-      <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:12px;">
-        <button onclick="setTipoFoto('conteo')" id="tfb-conteo" style="background:#1a1a2e;color:white;border:2px solid #1a1a2e;border-radius:10px;padding:10px 4px;font-size:11px;font-weight:600;cursor:pointer;">📝<br>Conteo</button>
-        <button onclick="setTipoFoto('linisco')" id="tfb-linisco" style="background:white;color:#333;border:2px solid #ddd;border-radius:10px;padding:10px 4px;font-size:11px;font-weight:600;cursor:pointer;">💻<br>LINISCO</button>
-        <button onclick="setTipoFoto('femsa')" id="tfb-femsa" style="background:white;color:#333;border:2px solid #ddd;border-radius:10px;padding:10px 4px;font-size:11px;font-weight:600;cursor:pointer;">🧾<br>Factura</button>
-      </div>
-      <label class="foto-area">
-        <input type="file" accept="image/*" onchange="previewFoto(event)" id="foto-input">
-        <span style="font-size:32px;">📸</span>
-        <p>Tocá para subir foto</p>
-        <img class="foto-preview" id="foto-preview-img">
-      </label>
-      <button class="btn-analizar" id="btn-analizar" onclick="analizarFoto()">🔍 Analizar con IA</button>
-      <div class="analizando" id="analizando">⏳ Analizando imagen... un momento</div>
+      <div class="fecha-campo"><label>Desde</label><input type="date" id="fecha-desde"></div>
+      <div class="fecha-campo"><label>Hasta</label><input type="date" id="fecha-hasta"></div>
     </div>
   </div>
 
   <div class="card">
-    <h3 style="font-size:15px;color:#1a1a2e;font-weight:800;text-transform:none;letter-spacing:0;border-left:4px solid #1a1a2e;padding-left:10px;">📦 Stock Inicial <span style="font-size:11px;color:#2a9d5c;font-weight:500;">(cargado automáticamente)</span></h3>
-    <table class="productos-tabla">
-      <thead><tr><th>Producto</th><th>Unid.</th></tr></thead>
-      <tbody id="tabla-stock-inicial"></tbody>
-    </table>
+    <h3 style="font-size:15px;color:#1a1a2e;font-weight:800;text-transform:none;letter-spacing:0;border-left:4px solid #1a1a2e;padding-left:10px;">📦 Stock Inicial <span style="font-size:11px;color:#2a9d5c;font-weight:400;">(cargado automáticamente)</span></h3>
+    <table class="productos-tabla"><thead><tr><th>Producto</th><th>Unid.</th></tr></thead><tbody id="tabla-stock-inicial"></tbody></table>
   </div>
 
   <div class="card">
-    <h3 style="font-size:15px;color:#e63946;font-weight:800;text-transform:none;letter-spacing:0;border-left:4px solid #e63946;padding-left:10px;">🧾 Ingreso FEMSA <span style="font-size:11px;color:#999;font-weight:500;">(cargá en packs — se multiplica ×6)</span></h3>
-    <table class="productos-tabla">
-      <thead><tr><th>Producto</th><th>Unid.</th></tr></thead>
-      <tbody id="tabla-femsa"></tbody>
-    </table>
+    <h3 style="font-size:15px;color:#e63946;font-weight:800;text-transform:none;letter-spacing:0;border-left:4px solid #e63946;padding-left:10px;">🧾 Ingreso FEMSA <span style="font-size:11px;color:#999;font-weight:400;">(cargá en packs — se multiplica ×6)</span></h3>
+    <table class="productos-tabla"><thead><tr><th>Producto</th><th>Packs</th></tr></thead><tbody id="tabla-femsa"></tbody></table>
   </div>
 
   <div class="card">
     <h3 style="font-size:15px;color:#e67e22;font-weight:800;text-transform:none;letter-spacing:0;border-left:4px solid #e67e22;padding-left:10px;">💻 Ventas Sistema (LINISCO)</h3>
     <div style="margin-bottom:12px;">
-      <p style="font-size:11px;color:#999;margin-bottom:6px;font-weight:600;">OPCIÓN RÁPIDA — Pegá el reporte de LINISCO:</p>
-      <textarea id="linisco-paste" rows="6" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:12px;font-family:monospace;resize:vertical;" placeholder="Botella Coca Cola 600cc&#9;48&#10;Botella Coca Zero 600cc&#9;22&#10;Agua saborizada 600 cc&#9;15&#10;..."></textarea>
+      <p style="font-size:11px;color:#999;margin-bottom:6px;font-weight:600;">PEGÁ EL REPORTE DE LINISCO:</p>
+      <textarea id="linisco-paste" rows="5" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:12px;font-family:monospace;resize:vertical;" placeholder="Botella Coca Cola 600cc&#9;48&#10;Botella Coca Zero 600cc&#9;22&#10;..."></textarea>
       <button onclick="interpretarLinisco()" style="width:100%;background:#e67e22;color:white;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;margin-top:6px;">🔍 Interpretar y cargar</button>
       <div id="linisco-resultado" style="font-size:12px;color:#2a9d5c;margin-top:6px;display:none;"></div>
     </div>
     <p style="font-size:11px;color:#999;margin-bottom:8px;font-weight:600;">O CARGÁ MANUALMENTE:</p>
-    <table class="productos-tabla">
-      <thead><tr><th>Producto</th><th>Unid.</th></tr></thead>
-      <tbody id="tabla-ventas"></tbody>
-    </table>
+    <table class="productos-tabla"><thead><tr><th>Producto</th><th>Unid.</th></tr></thead><tbody id="tabla-ventas"></tbody></table>
   </div>
 
   <div class="card">
     <h3 style="font-size:15px;color:#2a9d5c;font-weight:800;text-transform:none;letter-spacing:0;border-left:4px solid #2a9d5c;padding-left:10px;">📋 Stock Actual</h3>
     <button onclick="guardarComoStockInicial()" style="width:100%;background:#f0fff4;color:#2a9d5c;border:1px solid #c3e6cb;border-radius:8px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;margin-bottom:12px;">💾 Guardar como Stock Inicial de la próxima semana</button>
-    <table class="productos-tabla">
-      <thead><tr><th>Producto</th><th>Unid.</th></tr></thead>
-      <tbody id="tabla-stock-actual"></tbody>
-    </table>
+    <table class="productos-tabla"><thead><tr><th>Producto</th><th>Unid.</th></tr></thead><tbody id="tabla-stock-actual"></tbody></table>
   </div>
 
   <div class="card">
@@ -184,7 +119,6 @@
     <div id="lista-transferencias"></div>
     <button class="btn-agregar-transfer" onclick="agregarTransferencia()">+ Agregar transferencia</button>
   </div>
-
 </div>
 
 <div class="seccion" id="tab-resultados">
@@ -210,7 +144,7 @@
 </div>
 
 <div class="seccion" id="tab-historial">
-  <div id="lista-historial" style="padding-bottom: 20px;"></div>
+  <div id="lista-historial" style="padding-bottom:20px;"></div>
 </div>
 
 <div class="footer-btns">
@@ -221,7 +155,7 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, query, where, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyAB2-btgFqGiCe1YdZSDv4EShV601N-uQs",
@@ -242,22 +176,24 @@
     { grupo: "Agua", items: ["Agua Sin Gas", "Agua Con Gas"] },
     { grupo: "Cepita", items: ["Cepita Manzana", "Cepita Naranja", "Cepita Multifruta"] },
   ];
+  const GRUPOS_VENTAS = [
+    { grupo: 'Coca-Cola', items: [{ nombre: 'Coca Común', key: 'Coca Común' }, { nombre: 'Coca Zero', key: 'Coca Zero' }, { nombre: 'Coca Light', key: 'Coca Light' }] },
+    { grupo: 'Sprite / Fanta', items: [{ nombre: 'Sprite', key: 'Sprite' }, { nombre: 'Sprite Zero', key: 'Sprite Zero' }, { nombre: 'Fanta', key: 'Fanta' }] },
+    { grupo: 'Aquarius', items: [{ nombre: 'Aquarius (total)', key: 'Aquarius Total' }] },
+    { grupo: 'Agua', items: [{ nombre: 'Agua Sin Gas', key: 'Agua Sin Gas' }, { nombre: 'Agua Con Gas', key: 'Agua Con Gas' }] },
+    { grupo: 'Cepita', items: [{ nombre: 'Cepita (total)', key: 'Cepita Total' }] },
+  ];
   const TODOS_PRODUCTOS = GRUPOS.flatMap(g => g.items);
   const PACK = 6;
   const MULTIPLICADOR = 2.2;
 
   let localActual = '';
-  let metodo = 'manual';
-  let tipoFoto = 'conteo';
-  let fotoBase64 = null;
   let resultados = null;
 
-  // INIT
   const params = new URLSearchParams(window.location.search);
   localActual = params.get('local') || 'Desconocido';
   document.getElementById('local-nombre').textContent = localActual;
 
-  // Fechas por defecto: lunes a domingo de la semana actual
   const hoy = new Date();
   const lunes = new Date(hoy);
   lunes.setDate(hoy.getDate() - ((hoy.getDay() + 6) % 7));
@@ -266,68 +202,24 @@
   document.getElementById('fecha-desde').value = lunes.toISOString().split('T')[0];
   document.getElementById('fecha-hasta').value = domingo.toISOString().split('T')[0];
 
+  // Construir tablas primero, luego cargar datos
   construirTablas();
   cargarStockInicialAutomatico();
   cargarHistorial();
 
-  // STOCK INICIAL AUTOMÁTICO desde colección dedicada
-  async function cargarStockInicialAutomatico() {
-    try {
-      const { getDoc: gd, doc: fd } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
-      const snap = await gd(fd(db, "coca_stock_inicial", localActual));
-      if (!snap.exists()) return;
-      const data = snap.data();
-      if (!data.stockActual || Object.keys(data.stockActual).length === 0) return;
-      llenarTabla('stock-inicial', data.stockActual);
-      setTimeout(() => actualizarTotal('stock-inicial'), 150);
-      const fecha = new Date(data.timestamp).toLocaleDateString('es-AR');
-      const banner = document.getElementById('banner-auto');
-      banner.style.display = 'block';
-      banner.textContent = '✅ Stock Inicial cargado — guardado el ' + fecha;
-    } catch(e) { /* sin stock guardado todavía */ }
-  }
-
+  // ─── CONSTRUIR TABLAS ────────────────────────────────────────────
   function crearInput(tabla, prod) {
     const inp = document.createElement('input');
-    inp.type = 'number';
-    inp.min = '0';
-    inp.value = '0';
-    inp.step = '0.1';
-    inp.dataset.tabla = tabla;
-    inp.dataset.prod = prod;
+    inp.type = 'number'; inp.min = '0'; inp.value = '0'; inp.step = '0.1';
+    inp.dataset.tabla = tabla; inp.dataset.prod = prod;
     inp.style.cssText = 'width:64px;padding:6px;border:1px solid #ddd;border-radius:6px;font-size:13px;text-align:center;';
     inp.addEventListener('focus', function() { if (this.value === '0') this.value = ''; });
     inp.addEventListener('blur', function() { if (this.value === '') this.value = '0'; });
-    inp.addEventListener('input', function() { actualizarTotal(this.dataset.tabla); });
     return inp;
   }
 
-  function agregarFilaTotal(tbody, color) {
-    const tfila = document.createElement('tr');
-    tfila.style.cssText = 'background:' + color + ';color:white;font-weight:700;';
-    const td1 = document.createElement('td');
-    td1.style.cssText = 'padding:10px 6px;font-size:13px;';
-    td1.textContent = 'TOTAL';
-    const td2 = document.createElement('td');
-    td2.style.cssText = 'padding:10px 6px;font-size:14px;text-align:center;';
-    td2.id = 'total-' + tbody.id.replace('tabla-', '');
-    td2.textContent = '0';
-    tfila.appendChild(td1);
-    tfila.appendChild(td2);
-    tbody.appendChild(tfila);
-  }
-
   function construirTablas() {
-    const GRUPOS_VENTAS = [
-      { grupo: 'Coca-Cola', items: [{ nombre: 'Coca Común', key: 'Coca Común' }, { nombre: 'Coca Zero', key: 'Coca Zero' }, { nombre: 'Coca Light', key: 'Coca Light' }] },
-      { grupo: 'Sprite / Fanta', items: [{ nombre: 'Sprite', key: 'Sprite' }, { nombre: 'Sprite Zero', key: 'Sprite Zero' }, { nombre: 'Fanta', key: 'Fanta' }] },
-      { grupo: 'Aquarius', items: [{ nombre: 'Aquarius (total)', key: 'Aquarius Total' }] },
-      { grupo: 'Agua', items: [{ nombre: 'Agua Sin Gas', key: 'Agua Sin Gas' }, { nombre: 'Agua Con Gas', key: 'Agua Con Gas' }] },
-      { grupo: 'Cepita', items: [{ nombre: 'Cepita (total)', key: 'Cepita Total' }] },
-    ];
-
     const colores = { 'stock-inicial': '#1a1a2e', 'femsa': '#e63946', 'stock-actual': '#2a9d5c' };
-
     ['stock-inicial', 'femsa', 'stock-actual'].forEach(id => {
       const tbody = document.getElementById('tabla-' + id);
       tbody.innerHTML = '';
@@ -338,21 +230,20 @@
         tbody.appendChild(grFila);
         g.items.forEach(prod => {
           const tr = document.createElement('tr');
-          const tdNombre = document.createElement('td');
-          tdNombre.textContent = prod;
-          const tdInput = document.createElement('td');
-          tdInput.appendChild(crearInput(id, prod));
-          tr.appendChild(tdNombre);
-          tr.appendChild(tdInput);
-          tbody.appendChild(tr);
+          const td1 = document.createElement('td'); td1.textContent = prod;
+          const td2 = document.createElement('td'); td2.appendChild(crearInput(id, prod));
+          tr.appendChild(td1); tr.appendChild(td2); tbody.appendChild(tr);
         });
       });
-      agregarFilaTotal(tbody, colores[id]);
+      // Fila total
+      const tf = document.createElement('tr');
+      tf.style.cssText = 'background:' + colores[id] + ';color:white;font-weight:700;';
+      tf.innerHTML = '<td style="padding:10px 6px;">TOTAL</td><td style="padding:10px 6px;text-align:center;" id="total-' + id + '">0</td>';
+      tbody.appendChild(tf);
     });
 
-    // Tabla ventas con Aquarius y Cepita agrupadas
+    // Tabla ventas
     const tbodyV = document.getElementById('tabla-ventas');
-    tbodyV.id = 'tabla-ventas';
     tbodyV.innerHTML = '';
     GRUPOS_VENTAS.forEach(g => {
       const grFila = document.createElement('tr');
@@ -361,34 +252,47 @@
       tbodyV.appendChild(grFila);
       g.items.forEach(item => {
         const tr = document.createElement('tr');
-        const tdNombre = document.createElement('td');
-        tdNombre.textContent = item.nombre;
-        const tdInput = document.createElement('td');
-        tdInput.appendChild(crearInput('ventas', item.key));
-        tr.appendChild(tdNombre);
-        tr.appendChild(tdInput);
-        tbodyV.appendChild(tr);
+        const td1 = document.createElement('td'); td1.textContent = item.nombre;
+        const td2 = document.createElement('td'); td2.appendChild(crearInput('ventas', item.key));
+        tr.appendChild(td1); tr.appendChild(td2); tbodyV.appendChild(tr);
       });
     });
-    // Total ventas
-    const tfilaV = document.createElement('tr');
-    tfilaV.style.cssText = 'background:#e67e22;color:white;font-weight:700;';
-    const tdV1 = document.createElement('td');
-    tdV1.style.cssText = 'padding:10px 6px;font-size:13px;';
-    tdV1.textContent = 'TOTAL';
-    const tdV2 = document.createElement('td');
-    tdV2.style.cssText = 'padding:10px 6px;font-size:14px;text-align:center;';
-    tdV2.id = 'total-ventas';
-    tdV2.textContent = '0';
-    tfilaV.appendChild(tdV1);
-    tfilaV.appendChild(tdV2);
-    tbodyV.appendChild(tfilaV);
+    const tfV = document.createElement('tr');
+    tfV.style.cssText = 'background:#e67e22;color:white;font-weight:700;';
+    tfV.innerHTML = '<td style="padding:10px 6px;">TOTAL</td><td style="padding:10px 6px;text-align:center;" id="total-ventas">0</td>';
+    tbodyV.appendChild(tfV);
   }
 
-  window.cambiarTab = function(tab) {
-    document.querySelectorAll('.tab').forEach((t, i) => {
-      t.classList.toggle('activo', ['carga','resultados','historial'][i] === tab);
+  // ─── STOCK INICIAL AUTOMÁTICO ────────────────────────────────────
+  async function cargarStockInicialAutomatico() {
+    try {
+      const snap = await getDoc(doc(db, "coca_stock_inicial", localActual));
+      if (!snap.exists()) return;
+      const data = snap.data();
+      if (!data.stockActual || Object.keys(data.stockActual).length === 0) return;
+      llenarTabla('stock-inicial', data.stockActual);
+      const fecha = new Date(data.timestamp).toLocaleDateString('es-AR');
+      const banner = document.getElementById('banner-auto');
+      banner.style.display = 'block';
+      banner.textContent = '✅ Stock Inicial cargado — guardado el ' + fecha;
+    } catch(e) {}
+  }
+
+  window.guardarComoStockInicial = async function() {
+    const stockActual = {};
+    document.querySelectorAll('input[data-tabla="stock-actual"]').forEach(inp => {
+      stockActual[inp.dataset.prod] = Number(inp.value) || 0;
     });
+    if (!Object.values(stockActual).some(v => v > 0)) { alert('El Stock Actual está en cero. Cargá los valores primero.'); return; }
+    try {
+      await setDoc(doc(db, "coca_stock_inicial", localActual), { stockActual, timestamp: Date.now(), local: localActual });
+      alert('✅ Stock guardado. La próxima semana se carga automáticamente.');
+    } catch(e) { alert('Error al guardar: ' + e.message); }
+  }
+
+  // ─── TABS ────────────────────────────────────────────────────────
+  window.cambiarTab = function(tab) {
+    document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('activo', ['carga','resultados','historial'][i] === tab));
     document.querySelectorAll('.seccion').forEach(s => s.classList.remove('activa'));
     document.getElementById('tab-' + tab).classList.add('activa');
     const btnCalc = document.querySelector('.btn-calcular');
@@ -407,86 +311,7 @@
     }
   }
 
-  window.setMetodo = function(m) {
-    metodo = m;
-    document.getElementById('btn-metodo-manual').classList.toggle('activo', m === 'manual');
-    document.getElementById('btn-metodo-foto').classList.toggle('activo', m === 'foto');
-    document.getElementById('zona-foto').style.display = m === 'foto' ? 'block' : 'none';
-  }
-
-  window.setTipoFoto = function(t) {
-    tipoFoto = t;
-    ['conteo','linisco','femsa'].forEach(x => {
-      const btn = document.getElementById('tfb-' + x);
-      if (x === t) { btn.style.background = '#1a1a2e'; btn.style.color = 'white'; btn.style.borderColor = '#1a1a2e'; }
-      else { btn.style.background = 'white'; btn.style.color = '#333'; btn.style.borderColor = '#ddd'; }
-    });
-  }
-
-  window.previewFoto = function(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = ev => {
-      fotoBase64 = ev.target.result.split(',')[1];
-      window._fotoMimeType = ev.target.result.split(',')[0].split(':')[1].split(';')[0];
-      const img = document.getElementById('foto-preview-img');
-      img.src = ev.target.result;
-      img.style.display = 'block';
-      document.getElementById('btn-analizar').style.display = 'block';
-    };
-    reader.readAsDataURL(file);
-  }
-
-  window.analizarFoto = async function() {
-    if (!fotoBase64) return;
-    const btn = document.getElementById('btn-analizar');
-    const spin = document.getElementById('analizando');
-    btn.disabled = true;
-    btn.style.display = 'none';
-    spin.style.display = 'block';
-    const jsonBase = '{"Coca Común": 0, "Coca Zero": 0, "Coca Light": 0, "Sprite": 0, "Sprite Zero": 0, "Fanta": 0, "Aquarius Manzana": 0, "Aquarius Pera": 0, "Aquarius Pomelo": 0, "Agua Sin Gas": 0, "Agua Con Gas": 0, "Cepita Manzana": 0, "Cepita Naranja": 0, "Cepita Multifruta": 0}';
-    const prompts = {
-      conteo: 'Sos un asistente que lee conteos de stock de bebidas. Extraé los valores de cada producto. Respondé SOLO con JSON válido, sin texto extra ni backticks, en este formato: ' + jsonBase + ' Si un producto no aparece, ponele 0. Solo números enteros.',
-      linisco: 'Sos un asistente que lee capturas del sistema LINISCO de Subway Argentina. Extraé las unidades vendidas. Mapeá: "Agua saborizada 600cc" = distribuir entre Aquarius Manzana/Pera/Pomelo. "Cepita" = distribuir entre Cepita Manzana/Naranja/Multifruta. Respondé SOLO con JSON válido sin texto extra ni backticks: ' + jsonBase,
-      femsa: 'Sos un asistente que lee facturas de Coca-Cola FEMSA Argentina. Códigos: Agua s/g=84819, Agua c/g=84820, Coca Zero=48, Sprite Zero=197, Coca Común=2843, Coca Light=2845, Aq.Manzana=84440, Aq.Pera=84441, Aq.Pomelo=84442, Fanta=99794, Sprite=101218, Cepita Manzana=100222, Cepita Multifruta=100224, Cepita Naranja=100908. Respondé SOLO con JSON válido sin texto extra ni backticks: ' + jsonBase
-    };
-    try {
-      const resp = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
-          max_tokens: 1000,
-          messages: [{ role: "user", content: [
-            { type: "image", source: { type: "base64", media_type: (window._fotoMimeType || "image/jpeg"), data: fotoBase64 } },
-            { type: "text", text: prompts[tipoFoto] }
-          ]}]
-        })
-      });
-      const data = await resp.json();
-      const texto = data.content.find(b => b.type === 'text')?.text || '{}';
-      const valores = JSON.parse(texto);
-      const mapaTabla = { conteo: 'stock-actual', linisco: 'ventas', femsa: 'femsa' };
-      llenarTabla(mapaTabla[tipoFoto], valores);
-      if (tipoFoto === 'conteo' && confirm('¿También cargamos este conteo como Stock Inicial?')) {
-        llenarTabla('stock-inicial', valores);
-        document.getElementById('banner-auto').style.display = 'none';
-      }
-      spin.style.display = 'none';
-      btn.disabled = false;
-      btn.style.display = 'block';
-      btn.textContent = '✅ Analizado — subir otra foto';
-      fotoBase64 = null;
-      document.getElementById('foto-preview-img').style.display = 'none';
-    } catch (err) {
-      spin.style.display = 'none';
-      btn.disabled = false;
-      btn.style.display = 'block';
-      const msg = err?.message || JSON.stringify(err) || 'Error desconocido'; alert('Error: ' + msg);
-    }
-  }
-
+  // ─── HELPERS ─────────────────────────────────────────────────────
   function llenarTabla(tablaId, valores) {
     document.querySelectorAll('input[data-tabla="' + tablaId + '"]').forEach(inp => {
       if (valores[inp.dataset.prod] !== undefined) inp.value = valores[inp.dataset.prod];
@@ -496,44 +321,29 @@
   function getValores(tablaId) {
     const out = {};
     document.querySelectorAll('input[data-tabla="' + tablaId + '"]').forEach(inp => {
-      const val = Number(inp.value) || 0;
-      // FEMSA se carga en packs, multiplicar por 6
-      out[inp.dataset.prod] = tablaId === 'femsa' ? val * 6 : val;
+      out[inp.dataset.prod] = tablaId === 'femsa' ? (Number(inp.value)||0) * 6 : (Number(inp.value)||0);
     });
-
-    // Para ventas: distribuir Aquarius Total y Cepita Total proporcionalmente al stock inicial
     if (tablaId === 'ventas') {
       const si = {};
-      document.querySelectorAll('input[data-tabla="stock-inicial"]').forEach(inp => {
-        si[inp.dataset.prod] = Number(inp.value) || 0;
-      });
-
-      // Distribuir Aquarius
-      const aqTotal = out['Aquarius Total'] || 0;
-      const aqItems = ['Aquarius Manzana', 'Aquarius Pera', 'Aquarius Pomelo'];
-      const aqSITotal = aqItems.reduce((a, p) => a + (si[p] || 0), 0);
-      aqItems.forEach(p => {
-        out[p] = aqSITotal > 0 ? Math.round(aqTotal * (si[p] || 0) / aqSITotal) : Math.round(aqTotal / 3);
-      });
+      document.querySelectorAll('input[data-tabla="stock-inicial"]').forEach(inp => { si[inp.dataset.prod] = Number(inp.value)||0; });
+      const aqTotal = out['Aquarius Total']||0;
+      const aqItems = ['Aquarius Manzana','Aquarius Pera','Aquarius Pomelo'];
+      const aqSI = aqItems.reduce((a,p) => a+(si[p]||0), 0);
+      aqItems.forEach(p => { out[p] = aqSI > 0 ? Math.round(aqTotal*(si[p]||0)/aqSI) : Math.round(aqTotal/3); });
       delete out['Aquarius Total'];
-
-      // Distribuir Cepita
-      const cepTotal = out['Cepita Total'] || 0;
-      const cepItems = ['Cepita Manzana', 'Cepita Naranja', 'Cepita Multifruta'];
-      const cepSITotal = cepItems.reduce((a, p) => a + (si[p] || 0), 0);
-      cepItems.forEach(p => {
-        out[p] = cepSITotal > 0 ? Math.round(cepTotal * (si[p] || 0) / cepSITotal) : Math.round(cepTotal / 3);
-      });
+      const cepTotal = out['Cepita Total']||0;
+      const cepItems = ['Cepita Manzana','Cepita Naranja','Cepita Multifruta'];
+      const cepSI = cepItems.reduce((a,p) => a+(si[p]||0), 0);
+      cepItems.forEach(p => { out[p] = cepSI > 0 ? Math.round(cepTotal*(si[p]||0)/cepSI) : Math.round(cepTotal/3); });
       delete out['Cepita Total'];
     }
-
     return out;
   }
 
   window.agregarTransferencia = function() {
     const div = document.createElement('div');
     div.className = 'transfer-fila';
-    div.innerHTML = '<select style="flex:1.5">' + TODOS_PRODUCTOS.map(p => '<option>' + p + '</option>').join('') + '</select>' +
+    div.innerHTML = '<select style="flex:1.5">' + TODOS_PRODUCTOS.map(p => '<option>'+p+'</option>').join('') + '</select>' +
       '<select><option value="entrada">← Recibido</option><option value="salida">→ Enviado</option></select>' +
       '<input type="number" min="0" value="0" placeholder="packs" style="max-width:70px">' +
       '<button onclick="this.parentElement.remove()">×</button>';
@@ -541,12 +351,11 @@
   }
 
   function getTransferencias() {
-    const result = {};
-    TODOS_PRODUCTOS.forEach(p => result[p] = 0);
+    const result = {}; TODOS_PRODUCTOS.forEach(p => result[p] = 0);
     document.querySelectorAll('#lista-transferencias .transfer-fila').forEach(fila => {
       const [selProd, selDir, inpPacks] = fila.querySelectorAll('select, input');
-      const unidades = (Number(inpPacks.value) || 0) * PACK;
-      result[selProd.value] += selDir.value === 'entrada' ? unidades : -unidades;
+      const u = (Number(inpPacks.value)||0) * PACK;
+      result[selProd.value] += selDir.value === 'entrada' ? u : -u;
     });
     return result;
   }
@@ -554,105 +363,36 @@
   window.interpretarLinisco = function() {
     const texto = document.getElementById('linisco-paste').value.trim();
     if (!texto) return;
-
-    // Mapa de nombres LINISCO → productos del sistema
     const MAPA = {
-      'coca cola': 'Coca Común',
-      'coca common': 'Coca Común',
-      'coca comun': 'Coca Común',
-      'cola 600': 'Coca Común',
-      'coca zero': 'Coca Zero',
-      'zero 600': 'Coca Zero',
-      'coca light': 'Coca Light',
-      'light 600': 'Coca Light',
-      'sprite zero': 'Sprite Zero',
-      'sprite 600': 'Sprite',
-      'sprite': 'Sprite',
-      'fanta': 'Fanta',
-      'agua saborizada': 'Aquarius Total',
-      'aquarius': 'Aquarius Total',
-      'agua s/ gas': 'Agua Sin Gas',
-      'agua sin gas': 'Agua Sin Gas',
-      'agua s/gas': 'Agua Sin Gas',
-      'agua c/ gas': 'Agua Con Gas',
-      'agua con gas': 'Agua Con Gas',
-      'agua c/gas': 'Agua Con Gas',
-      'cepita': 'Cepita Total',
+      'coca cola':'Coca Común','coca common':'Coca Común','coca comun':'Coca Común','cola 600':'Coca Común',
+      'coca zero':'Coca Zero','zero 600':'Coca Zero','coca light':'Coca Light','light 600':'Coca Light',
+      'sprite zero':'Sprite Zero','sprite':'Sprite','fanta':'Fanta',
+      'agua saborizada':'Aquarius Total','aquarius':'Aquarius Total',
+      'agua s/ gas':'Agua Sin Gas','agua sin gas':'Agua Sin Gas','agua s/gas':'Agua Sin Gas',
+      'agua c/ gas':'Agua Con Gas','agua con gas':'Agua Con Gas','agua c/gas':'Agua Con Gas',
+      'cepita':'Cepita Total',
     };
-
     const valores = {};
-    const lineas = texto.split('
-');
     let cargados = 0;
-
-    lineas.forEach(linea => {
-      // Separar por tab o espacios múltiples
-      const partes = linea.trim().split(/	+|\s{2,}/);
+    texto.split('\n').forEach(linea => {
+      const partes = linea.trim().split(/\t+|\s{2,}/);
       if (partes.length < 2) return;
       const nombre = partes[0].trim().toLowerCase();
-      const cant = parseInt(partes[partes.length - 1].trim());
+      const cant = parseInt(partes[partes.length-1].trim());
       if (isNaN(cant) || nombre === 'total') return;
-
-      // Buscar en el mapa
-      let prodEncontrado = null;
       for (const [key, prod] of Object.entries(MAPA)) {
-        if (nombre.includes(key)) { prodEncontrado = prod; break; }
-      }
-      if (prodEncontrado) {
-        valores[prodEncontrado] = (valores[prodEncontrado] || 0) + cant;
-        cargados++;
+        if (nombre.includes(key)) { valores[prod] = (valores[prod]||0) + cant; cargados++; break; }
       }
     });
-
-    if (Object.keys(valores).length === 0) {
-      alert('No se pudo interpretar el texto. Verificá el formato.');
-      return;
-    }
-
-    // Cargar en la tabla de ventas
+    if (!Object.keys(valores).length) { alert('No se pudo interpretar. Verificá el formato.'); return; }
     llenarTabla('ventas', valores);
-    actualizarTotal('ventas');
-
     const res = document.getElementById('linisco-resultado');
     res.style.display = 'block';
-    res.textContent = '✅ ' + cargados + ' productos cargados. Revisá los valores antes de calcular.';
-
-    // Limpiar el textarea
+    res.textContent = '✅ ' + cargados + ' productos cargados.';
     document.getElementById('linisco-paste').value = '';
   }
 
-  window.guardarComoStockInicial = async function() {
-    const stockActual = {};
-    document.querySelectorAll('input[data-tabla="stock-actual"]').forEach(inp => {
-      stockActual[inp.dataset.prod] = Number(inp.value) || 0;
-    });
-    const tieneValores = Object.values(stockActual).some(v => v > 0);
-    if (!tieneValores) { alert('El Stock Actual está en cero. Cargá los valores primero.'); return; }
-    try {
-      const { setDoc, doc: firestoreDoc } = await Promise.resolve({ 
-        setDoc: (await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js")).setDoc,
-        doc: (await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js")).doc
-      });
-      await setDoc(firestoreDoc(db, "coca_stock_inicial", localActual), {
-        stockActual,
-        timestamp: Date.now(),
-        local: localActual
-      });
-      alert('✅ Stock guardado. La próxima semana se va a cargar automáticamente como Stock Inicial.');
-    } catch(e) {
-      alert('Error al guardar: ' + e.message);
-    }
-  }
-
-  window.actualizarTotal = function(tablaId) {
-    let total = 0;
-    document.querySelectorAll('input[data-tabla="' + tablaId + '"]').forEach(inp => {
-      total += Number(inp.value) || 0;
-    });
-    const el = document.getElementById('total-' + tablaId);
-    if (el) el.textContent = total % 1 === 0 ? total : total.toFixed(1);
-  }
-
+  // ─── CALCULAR ────────────────────────────────────────────────────
   window.calcular = function() {
     const stockInicial = getValores('stock-inicial');
     const femsa = getValores('femsa');
@@ -667,8 +407,8 @@
       const base = Math.max(consumo, 0);
       const calculado = (base * MULTIPLICADOR) - stockActual[prod];
       const packsCalc = Math.max(0, Math.ceil(calculado / PACK));
-      if (descuadre < -10) resultados.alertas.push({ tipo: 'rojo', msg: prod + ': descuadre negativo de ' + descuadre + ' unidades — faltan bebidas (robo, merma o consumo interno)' });
-      else if (descuadre > 10) resultados.alertas.push({ tipo: 'naranja', msg: prod + ': descuadre positivo de +' + descuadre + ' unidades — el sistema registró más de lo físico' });
+      if (descuadre < -10) resultados.alertas.push({ tipo:'rojo', msg: prod+': descuadre -'+Math.abs(descuadre)+' u' });
+      else if (descuadre > 10) resultados.alertas.push({ tipo:'naranja', msg: prod+': descuadre +'+descuadre+' u' });
       resultados.control.push({ prod, disponible, ventas: ventas[prod], consumo, descuadre, stockActual: stockActual[prod] });
       resultados.pedido.push({ prod, consumo: base, stockActual: stockActual[prod], calculado: Math.max(0, calculado), packsCalc });
     });
@@ -677,27 +417,20 @@
   }
 
   function renderResultados() {
-    if (!resultados) return;
     document.getElementById('alertas-container').innerHTML = resultados.alertas.map(a =>
-      '<div class="alerta alerta-' + (a.tipo === 'rojo' ? 'roja' : 'naranja') + '">' + (a.tipo === 'rojo' ? '🔴' : '🟡') + ' ' + a.msg + '</div>'
+      '<div class="alerta alerta-'+(a.tipo==='rojo'?'roja':'naranja')+'">'+(a.tipo==='rojo'?'🔴':'🟡')+' '+a.msg+'</div>'
     ).join('');
-    let totalDisp=0, totalVentas=0, totalConsumo=0, totalDescuadre=0, totalStockAct=0;
-    const rowsControl = resultados.control.map(r => {
-      totalDisp += r.disponible; totalVentas += r.ventas;
-      totalConsumo += r.consumo; totalDescuadre += r.descuadre;
-      totalStockAct += r.stockActual;
-      let dBadge = r.descuadre < -10 ? '<span class="badge-rojo">' + r.descuadre + '</span>'
-        : r.descuadre > 10 ? '<span class="badge-naranja">+' + r.descuadre + '</span>'
-        : '<span class="badge-verde">' + (r.descuadre >= 0 ? '+' : '') + r.descuadre + '</span>';
-      return '<tr><td>' + r.prod + '</td><td>' + r.disponible + '</td><td>' + r.ventas + '</td><td>' + r.consumo + '</td><td>' + dBadge + '</td><td>' + r.stockActual + '</td></tr>';
+    let td=0,tv=0,tc=0,tdc=0,tsa=0;
+    const rows = resultados.control.map(r => {
+      td+=r.disponible; tv+=r.ventas; tc+=r.consumo; tdc+=r.descuadre; tsa+=r.stockActual;
+      const dB = r.descuadre<-10?'<span class="badge-rojo">'+r.descuadre+'</span>':r.descuadre>10?'<span class="badge-naranja">+'+r.descuadre+'</span>':'<span class="badge-verde">'+(r.descuadre>=0?'+':'')+r.descuadre+'</span>';
+      return '<tr><td>'+r.prod+'</td><td>'+r.disponible+'</td><td>'+r.ventas+'</td><td>'+r.consumo+'</td><td>'+dB+'</td><td>'+r.stockActual+'</td></tr>';
     });
-    const dTotalBadge = totalDescuadre < -10 ? '<span class="badge-rojo">' + totalDescuadre + '</span>'
-      : totalDescuadre > 10 ? '<span class="badge-naranja">+' + totalDescuadre + '</span>'
-      : '<span class="badge-verde">' + (totalDescuadre >= 0 ? '+' : '') + totalDescuadre + '</span>';
-    rowsControl.push('<tr style="background:#1a1a2e;color:white;font-weight:700;"><td>TOTAL</td><td>' + totalDisp + '</td><td>' + totalVentas + '</td><td>' + totalConsumo + '</td><td>' + dTotalBadge + '</td><td>' + totalStockAct + '</td></tr>');
-    document.getElementById('body-control').innerHTML = rowsControl.join('');
-    document.getElementById('body-pedido').innerHTML = resultados.pedido.map((r, i) =>
-      '<tr><td>' + r.prod + '</td><td>' + r.consumo + '</td><td>' + r.stockActual + '</td><td>' + r.calculado.toFixed(0) + '</td><td><input type="number" class="pedido-input ' + (r.packsCalc > 0 ? 'tiene-pedido' : '') + '" value="' + r.packsCalc + '" min="0" data-idx="' + i + '" onchange="actualizarPedido(this)"></td></tr>'
+    const dTB = tdc<-10?'<span class="badge-rojo">'+tdc+'</span>':tdc>10?'<span class="badge-naranja">+'+tdc+'</span>':'<span class="badge-verde">'+(tdc>=0?'+':'')+tdc+'</span>';
+    rows.push('<tr style="background:#1a1a2e;color:white;font-weight:700;"><td>TOTAL</td><td>'+td+'</td><td>'+tv+'</td><td>'+tc+'</td><td>'+dTB+'</td><td>'+tsa+'</td></tr>');
+    document.getElementById('body-control').innerHTML = rows.join('');
+    document.getElementById('body-pedido').innerHTML = resultados.pedido.map((r,i) =>
+      '<tr><td>'+r.prod+'</td><td>'+r.consumo+'</td><td>'+r.stockActual+'</td><td>'+r.calculado.toFixed(0)+'</td><td><input type="number" class="pedido-input '+(r.packsCalc>0?'tiene-pedido':'')+'" value="'+r.packsCalc+'" min="0" data-idx="'+i+'" onchange="actualizarPedido(this)"></td></tr>'
     ).join('');
     document.getElementById('btn-excel').style.display = 'block';
     document.getElementById('btn-guardar').style.display = 'block';
@@ -706,96 +439,77 @@
   window.actualizarPedido = function(inp) {
     const idx = Number(inp.dataset.idx);
     resultados.pedido[idx].packsCalc = Number(inp.value);
-    inp.className = 'pedido-input ' + (Number(inp.value) > 0 ? 'tiene-pedido' : '');
+    inp.className = 'pedido-input '+(Number(inp.value)>0?'tiene-pedido':'');
   }
 
+  // ─── EXCEL ───────────────────────────────────────────────────────
   window.exportarExcel = function() {
     if (!resultados) return;
     const wb = XLSX.utils.book_new();
     const desde = document.getElementById('fecha-desde').value;
     const hasta = document.getElementById('fecha-hasta').value;
-    const rangoLabel = desde + ' al ' + hasta;
     const ws1 = XLSX.utils.aoa_to_sheet([
-      ['Producto', 'Stock Disponible', 'Ventas Sistema', 'Consumo Real', 'Descuadre', 'Stock Actual'],
-      ...resultados.control.map(r => [r.prod, r.disponible, r.ventas, r.consumo, r.descuadre, r.stockActual])
+      ['Producto','Stock Disponible','Ventas Sistema','Consumo Real','Descuadre','Stock Actual'],
+      ...resultados.control.map(r => [r.prod,r.disponible,r.ventas,r.consumo,r.descuadre,r.stockActual])
     ]);
-    ws1['!cols'] = [{wch:22},{wch:16},{wch:16},{wch:14},{wch:12},{wch:12}];
-    XLSX.utils.book_append_sheet(wb, ws1, '1. Control Inventario');
+    XLSX.utils.book_append_sheet(wb, ws1, '1. Control');
     const ws2 = XLSX.utils.aoa_to_sheet([
-      ['Producto', 'Consumo Real', 'Stock Actual', 'Calculado (u)', 'Packs a Pedir'],
-      ...resultados.pedido.map(r => [r.prod, r.consumo, r.stockActual, Math.round(r.calculado), r.packsCalc])
+      ['Producto','Consumo Real','Stock Actual','Calculado (u)','Packs a Pedir'],
+      ...resultados.pedido.map(r => [r.prod,r.consumo,r.stockActual,Math.round(r.calculado),r.packsCalc])
     ]);
-    ws2['!cols'] = [{wch:22},{wch:14},{wch:14},{wch:14},{wch:14}];
-    XLSX.utils.book_append_sheet(wb, ws2, '2. Pedido Sugerido');
-    const totalPacks = resultados.pedido.reduce((a, r) => a + r.packsCalc, 0);
-    const ws3 = XLSX.utils.aoa_to_sheet([
-      ['RESUMEN EJECUTIVO', ''], ['Local', localActual], ['Semana', rangoLabel],
-      ['Total packs a pedir', totalPacks],
-      ['Alertas rojas', resultados.alertas.filter(a => a.tipo === 'rojo').length],
-      ['Alertas naranjas', resultados.alertas.filter(a => a.tipo === 'naranja').length],
-      ['', ''], ['DETALLE PEDIDO', ''],
-      ...resultados.pedido.filter(r => r.packsCalc > 0).map(r => [r.prod, r.packsCalc + ' packs (' + (r.packsCalc * 6) + ' u)']),
-      ['', ''], ['ALERTAS', ''],
-      ...resultados.alertas.map(a => [a.tipo === 'rojo' ? '🔴' : '🟡', a.msg])
-    ]);
-    ws3['!cols'] = [{wch:30},{wch:30}];
-    XLSX.utils.book_append_sheet(wb, ws3, '3. Resumen Ejecutivo');
-    XLSX.writeFile(wb, 'Pedido-Coca-' + localActual + '-' + desde + '.xlsx');
+    XLSX.utils.book_append_sheet(wb, ws2, '2. Pedido');
+    XLSX.writeFile(wb, 'Coca-'+localActual+'-'+desde+'.xlsx');
   }
 
+  // ─── FIREBASE ────────────────────────────────────────────────────
   window.guardarEnFirebase = async function() {
     if (!resultados) return;
     const desde = document.getElementById('fecha-desde').value;
     const hasta = document.getElementById('fecha-hasta').value;
     const btn = document.getElementById('btn-guardar');
-    btn.disabled = true;
-    btn.textContent = 'Guardando...';
+    btn.disabled = true; btn.textContent = 'Guardando...';
     try {
-      // Guardar stock actual para usarlo como stock inicial la semana siguiente
       const stockActualGuardado = {};
       document.querySelectorAll('input[data-tabla="stock-actual"]').forEach(inp => {
-        stockActualGuardado[inp.dataset.prod] = Number(inp.value) || 0;
+        stockActualGuardado[inp.dataset.prod] = Number(inp.value)||0;
       });
-      const descuadreTotal = resultados.control.reduce((a, r) => a + r.descuadre, 0);
-      const totalPacks = resultados.pedido.reduce((a, r) => a + r.packsCalc, 0);
       await addDoc(collection(db, "coca_historial"), {
-        local: localActual, fechaDesde: desde, fechaHasta: hasta,
-        timestamp: Date.now(), control: resultados.control,
-        pedido: resultados.pedido, alertas: resultados.alertas,
+        local: localActual, fechaDesde: desde, fechaHasta: hasta, timestamp: Date.now(),
+        control: resultados.control, pedido: resultados.pedido, alertas: resultados.alertas,
         stockActual: stockActualGuardado,
-        descuadreTotal, totalPacks
+        descuadreTotal: resultados.control.reduce((a,r)=>a+r.descuadre,0),
+        totalPacks: resultados.pedido.reduce((a,r)=>a+r.packsCalc,0)
       });
       btn.textContent = '✅ Guardado';
       setTimeout(() => { btn.textContent = '💾 Guardar'; btn.disabled = false; }, 2000);
       cargarHistorial();
-    } catch (e) {
-      btn.textContent = '💾 Guardar'; btn.disabled = false;
-      alert('Error al guardar. Revisá la conexión.');
-    }
+    } catch(e) { btn.textContent = '💾 Guardar'; btn.disabled = false; alert('Error al guardar.'); }
   }
 
   async function cargarHistorial() {
     const lista = document.getElementById('lista-historial');
     lista.innerHTML = '<div class="sin-historial">Cargando...</div>';
     try {
-      const q = query(collection(db, "coca_historial"), where("local", "==", localActual), orderBy("timestamp", "desc"));
-      const snap = await getDocs(q);
-      if (snap.empty) { lista.innerHTML = '<div class="sin-historial">Sin historial guardado aún</div>'; return; }
+      const snap = await getDocs(collection(db, "coca_historial"));
+      const items = [];
+      snap.forEach(d => { const dat = d.data(); if (dat.local === localActual) items.push({ id: d.id, ...dat }); });
+      items.sort((a,b) => b.timestamp - a.timestamp);
+      if (!items.length) { lista.innerHTML = '<div class="sin-historial">Sin historial guardado aún</div>'; return; }
       lista.innerHTML = '';
-      snap.forEach(d => {
-        const dat = d.data();
-        const totalPacks = dat.pedido.reduce((a, r) => a + r.packsCalc, 0);
-        const alertasRojas = dat.alertas.filter(a => a.tipo === 'rojo').length;
-        const rangoFecha = dat.fechaDesde ? dat.fechaDesde + ' → ' + (dat.fechaHasta || '') : (dat.fecha || '—');
+      items.forEach(dat => {
+        const totalPacks = dat.pedido.reduce((a,r)=>a+r.packsCalc,0);
+        const alertasRojas = dat.alertas.filter(a=>a.tipo==='rojo').length;
+        const rango = dat.fechaDesde ? dat.fechaDesde+' → '+(dat.fechaHasta||'') : '—';
         const div = document.createElement('div');
         div.className = 'historial-item';
-        div.innerHTML = '<div class="hist-header"><div><div class="hist-fecha">📅 ' + rangoFecha + '</div><div class="hist-local">' + dat.local + '</div></div><button class="btn-eliminar-hist" onclick="window.eliminarHistorial(\'' + d.id + '\')">🗑</button></div>' +
-          '<div class="hist-resumen"><div class="hist-kpi"><span>Total packs</span><strong>' + totalPacks + '</strong></div>' +
-          '<div class="hist-kpi"><span>🔴 Alertas</span><strong style="color:' + (alertasRojas > 0 ? '#e63946' : '#2a9d5c') + '">' + alertasRojas + '</strong></div>' +
-          '<div class="hist-kpi"><span>Productos</span><strong>' + dat.pedido.filter(r => r.packsCalc > 0).length + '</strong></div></div>';
+        div.innerHTML = '<div class="hist-header"><div><div class="hist-fecha">📅 '+rango+'</div><div class="hist-local">'+dat.local+'</div></div>' +
+          '<button class="btn-eliminar-hist" onclick="window.eliminarHistorial(\''+dat.id+'\')">🗑</button></div>' +
+          '<div class="hist-resumen"><div class="hist-kpi"><span>Total packs</span><strong>'+totalPacks+'</strong></div>' +
+          '<div class="hist-kpi"><span>🔴 Alertas</span><strong style="color:'+(alertasRojas>0?'#e63946':'#2a9d5c')+'">'+alertasRojas+'</strong></div>' +
+          '<div class="hist-kpi"><span>Productos</span><strong>'+dat.pedido.filter(r=>r.packsCalc>0).length+'</strong></div></div>';
         lista.appendChild(div);
       });
-    } catch (e) { lista.innerHTML = '<div class="sin-historial">Error al cargar historial</div>'; }
+    } catch(e) { lista.innerHTML = '<div class="sin-historial">Error al cargar</div>'; }
   }
 
   window.eliminarHistorial = async function(id) {
