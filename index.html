@@ -138,10 +138,16 @@
     <div class="totales-detalle"><h4>Por categoría</h4><div id="detalle-categorias"></div></div>
     <div class="totales-detalle"><h4>Por local</h4><div id="detalle-locales"></div></div>
 
-    <!-- FILTROS — ahora incluye filtro por mes -->
+    <!-- FILTROS -->
     <div class="filtros">
+      <select class="filtro-select" id="filtro-periodo" onchange="aplicarFiltros()">
+        <option value="todo">📅 Todo</option>
+        <option value="hoy">Hoy</option>
+        <option value="semana">Esta semana</option>
+        <option value="mes">Este mes</option>
+      </select>
       <select class="filtro-select" id="filtro-mes" onchange="aplicarFiltros()" style="min-width:140px;">
-        <option value="todos">📅 Todos los meses</option>
+        <option value="todos">Todos los meses</option>
       </select>
       <select class="filtro-select" id="filtro-local" onchange="aplicarFiltros()">
         <option value="todos">🏪 Todos los locales</option>
@@ -340,13 +346,21 @@
     }
 
     window.aplicarFiltros = function() {
+      const periodo = document.getElementById('filtro-periodo').value;
       const mesFiltro = document.getElementById('filtro-mes').value;
       const localFiltro = document.getElementById('filtro-local').value;
       const catFiltro = document.getElementById('filtro-categoria').value;
+      const hoy = new Date().toISOString().split('T')[0];
+      const lunes = (() => { const d = new Date(); d.setDate(d.getDate() - ((d.getDay()+6)%7)); return d.toISOString().split('T')[0]; })();
+      const primeroDeMes = hoy.substring(0,7) + '-01';
 
       let filtrados = todosLosMovimientos.filter(m => {
-        // Filtro por mes
-        if (mesFiltro !== 'todos' && (!m.fecha || m.fecha.substring(0,7) !== mesFiltro)) return false;
+        // Filtro por período
+        if (periodo === 'hoy' && m.fecha !== hoy) return false;
+        if (periodo === 'semana' && m.fecha < lunes) return false;
+        if (periodo === 'mes' && m.fecha < primeroDeMes) return false;
+        // Filtro por mes específico (solo si período = todo)
+        if (periodo === 'todo' && mesFiltro !== 'todos' && (!m.fecha || m.fecha.substring(0,7) !== mesFiltro)) return false;
 
         // Filtro por local:
         // - Si filtro = "todos": mostrar TODOS incluyendo General
