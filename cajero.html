@@ -22,13 +22,20 @@
   .error-box { background: white; border-radius: 16px; padding: 40px; text-align: center; max-width: 400px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
   .error-box .icon { font-size: 48px; margin-bottom: 16px; }
   .error-box h2 { font-size: 20px; margin-bottom: 8px; }
-  .error-box p { color: #666; font-size: 14px; }
+  .error-box p { color: #666; font-size: 14px; margin-bottom: 20px; }
+
+  /* SELECTOR DE LOCAL (para admin/multi-local) */
+  .selector-screen { background: #1a1a2e; flex-direction: column; gap: 24px; padding: 40px 24px; }
+  .selector-screen h2 { color: white; font-size: 22px; text-align: center; }
+  .selector-screen p { color: #aaa; font-size: 14px; text-align: center; margin-top: -16px; }
+  .locales-lista { display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 320px; }
+  .local-btn { background: rgba(255,255,255,0.08); border: 2px solid rgba(255,255,255,0.15); border-radius: 16px; padding: 20px; text-align: center; cursor: pointer; color: white; font-size: 16px; font-weight: 600; transition: background 0.2s; }
+  .local-btn:hover { background: rgba(255,255,255,0.15); }
+  .local-btn span { display: block; font-size: 12px; color: #aaa; font-weight: 400; margin-top: 4px; }
 
   #app { display: none; }
   #app.active { display: block; }
-
   .container { max-width: 680px; margin: 0 auto; padding: 24px 16px 60px; }
-
   .meta-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
 
   .section { background: white; border-radius: 16px; padding: 20px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
@@ -73,8 +80,8 @@
   .btn-save { width: 100%; padding: 18px; background: #1a1a2e; color: white; border: none; border-radius: 14px; font-size: 16px; font-weight: 700; cursor: pointer; transition: background 0.2s; margin-top: 8px; }
   .btn-save:hover { background: #2a2a4e; }
   .btn-save:disabled { background: #ccc; cursor: not-allowed; }
+  .btn-cambiar-local { width: 100%; padding: 14px; background: white; color: #1a1a2e; border: 1.5px solid #e8e8e8; border-radius: 14px; font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 10px; }
   .btn-historial { width: 100%; padding: 14px; background: white; color: #1a1a2e; border: 1.5px solid #e8e8e8; border-radius: 14px; font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 10px; }
-  .btn-historial:hover { background: #f5f5f5; }
 
   .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); background: #1a1a2e; color: white; padding: 14px 24px; border-radius: 12px; font-size: 14px; font-weight: 600; transition: transform 0.3s ease; z-index: 999; white-space: nowrap; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
   .toast.show { transform: translateX(-50%) translateY(0); }
@@ -103,20 +110,29 @@
 </head>
 <body>
 
+<!-- CARGANDO -->
 <div id="screen-loading" class="screen active">
   <div class="loading-box"><div class="spinner"></div><p>Verificando sesión...</p></div>
 </div>
 
+<!-- SIN ACCESO -->
 <div id="screen-error" class="screen">
   <div class="error-box">
     <div class="icon">🔒</div>
     <h2>Sin acceso</h2>
     <p>Tu usuario no tiene permiso para este módulo. Contactá al administrador.</p>
-    <br>
     <button style="background:#1a1a2e;color:white;padding:12px 24px;border-radius:10px;font-size:14px;border:none;cursor:pointer;" onclick="window.location.href='index.html'">Volver al inicio</button>
   </div>
 </div>
 
+<!-- SELECTOR DE LOCAL (admin/multi-local) -->
+<div id="screen-selector" class="screen selector-screen">
+  <h2>🧾 Cierre de Caja</h2>
+  <p>Seleccioná el local</p>
+  <div class="locales-lista" id="locales-lista"></div>
+</div>
+
+<!-- APP PRINCIPAL -->
 <div id="app">
   <div class="header">
     <div class="header-left">
@@ -133,7 +149,6 @@
       <div class="field"><label>Cajero</label><input type="text" id="campo-cajero" readonly></div>
     </div>
 
-    <!-- CAJA -->
     <div class="section">
       <div class="section-title">💵 Caja</div>
       <div class="two-col">
@@ -156,7 +171,6 @@
       </div>
     </div>
 
-    <!-- DELIVERY -->
     <div class="section">
       <div class="section-title">🛵 Delivery</div>
       <table class="delivery-table">
@@ -171,7 +185,6 @@
       </table>
     </div>
 
-    <!-- PANES (solo Subway) -->
     <div class="section" id="seccion-panes" style="display:none;">
       <div class="section-title">🍞 Conteo de Panes</div>
       <div class="panes-grid">
@@ -197,6 +210,7 @@
 
     <button class="btn-save" id="btn-guardar" onclick="guardarCierre()">Guardar cierre del día</button>
     <button class="btn-historial" onclick="abrirHistorial()">📋 Ver historial de cierres</button>
+    <button class="btn-cambiar-local" id="btn-cambiar" style="display:none;" onclick="volverSelector()">🔄 Cambiar local</button>
   </div>
 </div>
 
@@ -231,60 +245,54 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+const CAJERO_LOCALES = {
+  cajero_subway_ramos:   { nombre: 'Subway Ramos Mejía', subway: true },
+  cajero_subway_moron:   { nombre: 'Subway Morón',       subway: true },
+  cajero_balcarce_ramos: { nombre: 'Balcarce Ramos Mejía', subway: false },
+  cajero_balcarce_moron: { nombre: 'Balcarce Morón',       subway: false }
+};
+
 let localUsuario = null;
 let nombreUsuario = null;
 let esSubway = false;
-
-// Mapa de key de permiso → nombre de local para mostrar
-const CAJERO_LOCALES = {
-  cajero_subway_ramos:   'Subway Ramos Mejía',
-  cajero_subway_moron:   'Subway Morón',
-  cajero_balcarce_ramos: 'Balcarce Ramos Mejía',
-  cajero_balcarce_moron: 'Balcarce Morón'
-};
+let esMultiLocal = false;
+let localesDisponibles = [];
 
 onAuthStateChanged(auth, async (user) => {
   if (!user) { window.location.href = 'login.html'; return; }
 
   try {
-    // Buscar por UID (igual que el resto del sistema)
     const snap = await getDoc(doc(db, 'usuarios', user.uid));
     if (!snap.exists() || !snap.data().aprobado) {
       window.location.href = 'login.html'; return;
     }
 
     const userData = snap.data();
+    nombreUsuario = userData.nombre || user.email;
     const cajeros = userData.cajeros || {};
-
-    // Buscar qué local cajero tiene asignado
-    const localKey = Object.keys(cajeros).find(k => cajeros[k] === true);
-
-    // Admin puede entrar sin permiso cajero específico
     const esAdmin = userData.rol === 'admin';
 
-    if (!localKey && !esAdmin) {
+    // Armar lista de locales disponibles
+    if (esAdmin) {
+      // Admin ve todos
+      localesDisponibles = Object.keys(CAJERO_LOCALES);
+    } else {
+      // Usuario normal: solo los que tiene en true
+      localesDisponibles = Object.keys(cajeros).filter(k => cajeros[k] === true && CAJERO_LOCALES[k]);
+    }
+
+    if (localesDisponibles.length === 0) {
       mostrarPantalla('screen-error'); return;
     }
 
-    // Determinar local
-    if (esAdmin) {
-      localUsuario = 'Admin';
-      esSubway = false;
+    if (localesDisponibles.length === 1) {
+      // Un solo local → entra directo
+      entrarALocal(localesDisponibles[0]);
     } else {
-      localUsuario = CAJERO_LOCALES[localKey];
-      esSubway = localKey.includes('subway');
+      // Múltiples locales → mostrar selector
+      esMultiLocal = true;
+      mostrarSelector();
     }
-
-    nombreUsuario = userData.nombre || user.email;
-
-    document.getElementById('header-local').textContent = localUsuario;
-    document.getElementById('header-user').textContent = nombreUsuario;
-    document.getElementById('campo-cajero').value = nombreUsuario;
-    document.getElementById('campo-fecha').value = new Date().toISOString().split('T')[0];
-    document.getElementById('seccion-panes').style.display = esSubway ? 'block' : 'none';
-
-    mostrarApp();
-    iniciarListeners();
 
   } catch (err) {
     console.error(err);
@@ -292,32 +300,81 @@ onAuthStateChanged(auth, async (user) => {
   }
 });
 
+function mostrarSelector() {
+  const lista = document.getElementById('locales-lista');
+  lista.innerHTML = localesDisponibles.map(key => {
+    const local = CAJERO_LOCALES[key];
+    const emoji = local.subway ? '🥖' : '🍰';
+    return `<div class="local-btn" onclick="window.elegirLocal('${key}')">
+      ${emoji} ${local.nombre}
+    </div>`;
+  }).join('');
+  mostrarPantalla('screen-selector');
+}
+
+window.elegirLocal = function(key) {
+  entrarALocal(key);
+};
+
+window.volverSelector = function() {
+  document.getElementById('app').style.display = 'none';
+  mostrarSelector();
+};
+
+function entrarALocal(key) {
+  const local = CAJERO_LOCALES[key];
+  localUsuario = local.nombre;
+  esSubway = local.subway;
+
+  document.getElementById('header-local').textContent = localUsuario;
+  document.getElementById('header-user').textContent = nombreUsuario;
+  document.getElementById('campo-cajero').value = nombreUsuario;
+  document.getElementById('campo-fecha').value = new Date().toISOString().split('T')[0];
+  document.getElementById('seccion-panes').style.display = esSubway ? 'block' : 'none';
+  document.getElementById('btn-cambiar').style.display = esMultiLocal ? 'block' : 'none';
+
+  // Limpiar formulario
+  ['apertura','cierre-contado','importe-tarjetas','cantidad-tarjetas','deposito-banco',
+   'gastos-diarios','ventas-iva','mp','md','rappi','pedidosya',
+   'panes-sistema','tostados','sobrantes-anterior','retardador','panes-egresados','desperdicios','sobrantes-dia'
+  ].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+  document.getElementById('descripcion-gastos').value = '';
+  document.getElementById('dif-caja').textContent = '$0';
+  document.getElementById('dif-caja').className = 'diff-value neutral';
+  document.getElementById('total-delivery').value = '';
+
+  // Ocultar todas las pantallas y mostrar app
+  document.getElementById('screen-loading').classList.remove('active');
+  document.getElementById('screen-error').classList.remove('active');
+  document.getElementById('screen-selector').classList.remove('active');
+  document.getElementById('app').style.display = 'block';
+
+  iniciarListeners();
+}
+
 function mostrarPantalla(id) {
   document.getElementById('screen-loading').classList.remove('active');
   document.getElementById('screen-error').classList.remove('active');
+  document.getElementById('screen-selector').classList.remove('active');
+  document.getElementById('app').style.display = 'none';
   document.getElementById(id).classList.add('active');
 }
 
-function mostrarApp() {
-  document.getElementById('screen-loading').classList.remove('active');
-  document.getElementById('app').style.display = 'block';
-}
-
 function iniciarListeners() {
-  ['cierre-contado', 'ventas-iva'].forEach(id => {
-    document.getElementById(id).addEventListener('input', calcDifCaja);
+  ['cierre-contado','ventas-iva'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.removeEventListener('input', calcDifCaja); el.addEventListener('input', calcDifCaja); }
   });
-  ['mp', 'md', 'rappi', 'pedidosya'].forEach(id => {
-    document.getElementById(id).addEventListener('input', calcDelivery);
+  ['mp','md','rappi','pedidosya'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.removeEventListener('input', calcDelivery); el.addEventListener('input', calcDelivery); }
   });
   if (esSubway) {
     ['panes-sistema','tostados','sobrantes-anterior','retardador','panes-egresados','desperdicios','sobrantes-dia'].forEach(id => {
-      document.getElementById(id).addEventListener('input', calcPanes);
+      const el = document.getElementById(id);
+      if (el) { el.removeEventListener('input', calcPanes); el.addEventListener('input', calcPanes); }
     });
   }
-  document.querySelectorAll('input[type="number"]').forEach(input => {
-    input.addEventListener('focus', () => { if (input.value === '0') input.value = ''; });
-  });
 }
 
 function getNum(id) { return parseFloat(document.getElementById(id)?.value) || 0; }
@@ -339,7 +396,6 @@ function calcPanes() {
   const cuentaReal = getNum('sobrantes-anterior') + getNum('retardador') + getNum('panes-sistema')
     - getNum('tostados') - getNum('panes-egresados') - getNum('desperdicios');
   const difPanes = cuentaReal - getNum('sobrantes-dia');
-
   document.getElementById('val-cuenta-real').textContent = cuentaReal;
   document.getElementById('val-dif-panes').textContent = difPanes;
   document.getElementById('card-cuenta-real').className = 'result-card ' + (cuentaReal < 0 ? 'warn' : 'ok');
