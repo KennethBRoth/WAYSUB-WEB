@@ -99,6 +99,7 @@
       </div>
       <div class="btn-general" onclick="abrirCaja()">💰 Movimiento de Caja</div>
       <div class="btn-general" onclick="window.location.href='cashflow.html'">📊 Cashflow</div>
+      <div class="btn-general" onclick="window.location.href='cajero.html'">🧾 Cierre de Caja</div>
       <div class="btn-general" id="btn-admin" onclick="window.location.href='admin.html'" style="display:none;">👤 Administrar usuarios</div>
       <div class="btn-cerrar-sesion" onclick="cerrarSesion()">🚪 Cerrar sesión</div>
     </div>
@@ -327,11 +328,10 @@
       aplicarFiltros();
     }
 
-    // Genera las opciones de mes dinámicamente según los movimientos existentes
     function actualizarFiltroMeses() {
       const meses = new Set();
       todosLosMovimientos.forEach(m => {
-        if (m.fecha) meses.add(m.fecha.substring(0, 7)); // YYYY-MM
+        if (m.fecha) meses.add(m.fecha.substring(0, 7));
       });
       const sel = document.getElementById('filtro-mes');
       const valorActual = sel.value;
@@ -355,22 +355,12 @@
       const primeroDeMes = hoy.substring(0,7) + '-01';
 
       let filtrados = todosLosMovimientos.filter(m => {
-        // Filtro por período
         if (periodo === 'hoy' && m.fecha !== hoy) return false;
         if (periodo === 'semana' && m.fecha < lunes) return false;
         if (periodo === 'mes' && m.fecha < primeroDeMes) return false;
-        // Filtro por mes específico (solo si período = todo)
         if (periodo === 'todo' && mesFiltro !== 'todos' && (!m.fecha || m.fecha.substring(0,7) !== mesFiltro)) return false;
-
-        // Filtro por local:
-        // - Si filtro = "todos": mostrar TODOS incluyendo General
-        // - Si filtro = un local específico: mostrar solo ese local, NO General
-        // - Si filtro = "General": mostrar solo los General
         if (localFiltro !== 'todos' && m.local !== localFiltro) return false;
-
-        // Filtro por categoría
         if (catFiltro !== 'todas' && m.tipo !== catFiltro) return false;
-
         return true;
       });
 
