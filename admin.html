@@ -18,7 +18,6 @@
     .usuario-info p { font-size: 12px; color: #999; margin-top: 2px; }
     .badge-pendiente { background: #fff8ee; color: #e67e22; border-radius: 20px; padding: 3px 10px; font-size: 11px; font-weight: 700; }
     .badge-aprobado { background: #f0fff4; color: #2a9d5c; border-radius: 20px; padding: 3px 10px; font-size: 11px; font-weight: 700; }
-    .badge-rechazado { background: #fff0f0; color: #e63946; border-radius: 20px; padding: 3px 10px; font-size: 11px; font-weight: 700; }
     .btns-aprobacion { display: flex; gap: 8px; margin-bottom: 14px; }
     .btn-aprobar { flex: 1; background: #f0fff4; color: #2a9d5c; border: 1px solid #c3e6cb; border-radius: 8px; padding: 8px; font-size: 12px; font-weight: 700; cursor: pointer; }
     .btn-rechazar { flex: 1; background: #fff0f0; color: #e63946; border: 1px solid #ffd0d0; border-radius: 8px; padding: 8px; font-size: 12px; font-weight: 700; cursor: pointer; }
@@ -35,6 +34,11 @@
     .toggle-slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: 0.3s; }
     .toggle input:checked + .toggle-slider { background: #2a9d5c; }
     .toggle input:checked + .toggle-slider:before { transform: translateX(16px); }
+    .cajero-seccion { border-top: 1px solid #f0f0f0; padding-top: 12px; margin-top: 4px; }
+    .cajero-seccion h5 { font-size: 12px; font-weight: 700; color: #1a1a2e; margin-bottom: 10px; }
+    .cajero-locales { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
+    .cajero-toggle { display: flex; align-items: center; justify-content: space-between; background: #f8f9fa; border-radius: 8px; padding: 8px 10px; }
+    .cajero-toggle span { font-size: 11px; font-weight: 600; color: #555; }
     .sin-usuarios { text-align: center; padding: 40px 20px; color: #bbb; font-size: 14px; }
     .cargando { text-align: center; padding: 40px 20px; color: #999; font-size: 14px; }
     .btn-eliminar-usuario { background: none; border: none; color: #ddd; cursor: pointer; font-size: 16px; padding: 4px; }
@@ -59,7 +63,7 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getFirestore, collection, getDocs, doc, updateDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getFirestore, collection, doc, updateDoc, deleteDoc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
   import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
   const firebaseConfig = {
@@ -78,15 +82,20 @@
   const LOCALES = ['Ramos Mejía', 'Morón'];
   const MODULOS = [
     { key: 'axionlog', label: '📦 Axionlog' },
-    { key: 'coca', label: '🥤 Coca' },
-    { key: 'horas', label: '⏰ Horas' },
+    { key: 'coca',     label: '🥤 Coca' },
+    { key: 'horas',    label: '⏰ Horas' },
     { key: 'reportes', label: '📊 Reportes' }
   ];
 
-  // Verificar que el usuario actual es admin
+  const CAJERO_LOCALES = [
+    { key: 'cajero_subway_ramos',   label: '🥖 Subway Ramos' },
+    { key: 'cajero_subway_moron',   label: '🥖 Subway Morón' },
+    { key: 'cajero_balcarce_ramos', label: '🍰 Balcarce Ramos' },
+    { key: 'cajero_balcarce_moron', label: '🍰 Balcarce Morón' }
+  ];
+
   onAuthStateChanged(auth, async (user) => {
     if (!user) { window.location.href = 'login.html'; return; }
-    const { getDoc } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
     const snap = await getDoc(doc(db, "usuarios", user.uid));
     if (!snap.exists() || snap.data().rol !== 'admin') {
       window.location.href = 'index.html'; return;
@@ -125,6 +134,7 @@
       'Ramos Mejía': { axionlog: false, coca: false, horas: false, reportes: false },
       'Morón': { axionlog: false, coca: false, horas: false, reportes: false }
     };
+    const cajeros = u.cajeros || {};
 
     const badgeRol = u.rol === 'admin'
       ? '<span class="badge-admin">ADMIN</span>'
@@ -145,13 +155,16 @@
       </div>
       <div class="btns-aprobacion">
         ${!u.aprobado ? `<button class="btn-aprobar" onclick="window.aprobar('${u.id}')">✅ Aprobar</button>` : ''}
-        ${u.aprobado ? `<button class="btn-rechazar" onclick="window.revocar('${u.id}')">🚫 Revocar acceso</button>` : `<button class="btn-rechazar" onclick="window.eliminarUsuario('${u.id}')">❌ Rechazar</button>`}
+        ${u.aprobado
+          ? `<button class="btn-rechazar" onclick="window.revocar('${u.id}')">🚫 Revocar acceso</button>`
+          : `<button class="btn-rechazar" onclick="window.eliminarUsuario('${u.id}')">❌ Rechazar</button>`}
         <button class="btn-admin-toggle" onclick="window.toggleAdmin('${u.id}', '${u.rol}')">
           ${u.rol === 'admin' ? '👤 Quitar admin' : '⭐ Hacer admin'}
         </button>
       </div>`;
 
     if (u.aprobado) {
+      // Permisos por módulo/local
       html += '<div class="permisos-grid">';
       LOCALES.forEach(local => {
         const permLocal = permisos[local] || { axionlog: false, coca: false, horas: false, reportes: false };
@@ -169,6 +182,22 @@
         html += '</div></div>';
       });
       html += '</div>';
+
+      // Permisos cajero por local
+      html += `<div class="cajero-seccion">
+        <h5>🧾 Acceso Cierre de Caja</h5>
+        <div class="cajero-locales">`;
+      CAJERO_LOCALES.forEach(cl => {
+        const checked = cajeros[cl.key] ? 'checked' : '';
+        html += `<div class="cajero-toggle">
+          <span>${cl.label}</span>
+          <label class="toggle">
+            <input type="checkbox" ${checked} onchange="window.toggleCajero('${u.id}', '${cl.key}', this.checked)">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>`;
+      });
+      html += '</div></div>';
     }
 
     card.innerHTML = html;
@@ -176,10 +205,7 @@
   }
 
   window.aprobar = async function(uid) {
-    await updateDoc(doc(db, "usuarios", uid), {
-      aprobado: true,
-      rol: 'usuario'
-    });
+    await updateDoc(doc(db, "usuarios", uid), { aprobado: true, rol: 'usuario' });
   }
 
   window.revocar = async function(uid) {
@@ -194,6 +220,11 @@
 
   window.togglePermiso = async function(uid, local, modulo, valor) {
     const campo = 'permisos.' + local + '.' + modulo;
+    await updateDoc(doc(db, "usuarios", uid), { [campo]: valor });
+  }
+
+  window.toggleCajero = async function(uid, localKey, valor) {
+    const campo = 'cajeros.' + localKey;
     await updateDoc(doc(db, "usuarios", uid), { [campo]: valor });
   }
 
