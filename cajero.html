@@ -6,402 +6,117 @@
 <title>Cierre de Caja — Waysub Panel</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-
-  body {
-    font-family: 'Segoe UI', system-ui, sans-serif;
-    background: #f0f2f5;
-    color: #1a1a2e;
-    min-height: 100vh;
-  }
-
-  /* HEADER */
-  .header {
-    background: #1a1a2e;
-    color: white;
-    padding: 16px 20px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-  }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f0f2f5; color: #1a1a2e; min-height: 100vh; }
+  .header { background: #1a1a2e; color: white; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
   .header-left { display: flex; align-items: center; gap: 12px; }
-  .btn-back {
-    background: rgba(255,255,255,0.1);
-    border: none;
-    color: white;
-    padding: 8px 12px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 14px;
-    transition: background 0.2s;
-  }
-  .btn-back:hover { background: rgba(255,255,255,0.2); }
+  .btn-back { background: rgba(255,255,255,0.1); border: none; color: white; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 14px; }
   .header h1 { font-size: 18px; font-weight: 600; }
-  .local-badge {
-    background: #e8b84b;
-    color: #1a1a2e;
-    padding: 4px 10px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 700;
-  }
+  .local-badge { background: #e8b84b; color: #1a1a2e; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; }
   .user-info { font-size: 13px; color: rgba(255,255,255,0.7); }
 
-  /* LOADING / AUTH */
-  .screen {
-    display: none;
-    min-height: 100vh;
-    align-items: center;
-    justify-content: center;
-  }
+  .screen { display: none; min-height: 100vh; align-items: center; justify-content: center; }
   .screen.active { display: flex; }
-
-  .loading-box {
-    text-align: center;
-    color: #666;
-  }
-  .spinner {
-    width: 40px; height: 40px;
-    border: 3px solid #ddd;
-    border-top-color: #1a1a2e;
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-    margin: 0 auto 16px;
-  }
+  .loading-box { text-align: center; color: #666; }
+  .spinner { width: 40px; height: 40px; border: 3px solid #ddd; border-top-color: #1a1a2e; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
   @keyframes spin { to { transform: rotate(360deg); } }
-
-  .error-box {
-    background: white;
-    border-radius: 16px;
-    padding: 40px;
-    text-align: center;
-    max-width: 400px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-  }
+  .error-box { background: white; border-radius: 16px; padding: 40px; text-align: center; max-width: 400px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
   .error-box .icon { font-size: 48px; margin-bottom: 16px; }
-  .error-box h2 { font-size: 20px; margin-bottom: 8px; color: #1a1a2e; }
+  .error-box h2 { font-size: 20px; margin-bottom: 8px; }
   .error-box p { color: #666; font-size: 14px; }
 
-  /* MAIN CONTENT */
   #app { display: none; }
   #app.active { display: block; }
 
-  .container {
-    max-width: 680px;
-    margin: 0 auto;
-    padding: 24px 16px 60px;
-  }
+  .container { max-width: 680px; margin: 0 auto; padding: 24px 16px 60px; }
 
-  /* FECHA Y CAJERO */
-  .meta-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    margin-bottom: 20px;
-  }
+  .meta-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
 
-  /* SECCIONES */
-  .section {
-    background: white;
-    border-radius: 16px;
-    padding: 20px;
-    margin-bottom: 16px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-  }
-  .section-title {
-    font-size: 13px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: #888;
-    margin-bottom: 16px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid #f0f0f0;
-  }
+  .section { background: white; border-radius: 16px; padding: 20px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+  .section-title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #888; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid #f0f0f0; }
 
-  /* CAMPOS */
   .field { margin-bottom: 14px; }
   .field:last-child { margin-bottom: 0; }
-  .field label {
-    display: block;
-    font-size: 13px;
-    font-weight: 600;
-    color: #555;
-    margin-bottom: 6px;
-  }
-  .field input, .field textarea {
-    width: 100%;
-    padding: 12px 14px;
-    border: 1.5px solid #e8e8e8;
-    border-radius: 10px;
-    font-size: 15px;
-    color: #1a1a2e;
-    background: #fafafa;
-    transition: border-color 0.2s, background 0.2s;
-    outline: none;
-    font-family: inherit;
-  }
-  .field input:focus, .field textarea:focus {
-    border-color: #1a1a2e;
-    background: white;
-  }
-  .field input[readonly] {
-    background: #f0f2f5;
-    color: #888;
-    cursor: default;
-  }
-  .field textarea {
-    resize: vertical;
-    min-height: 72px;
-  }
+  .field label { display: block; font-size: 13px; font-weight: 600; color: #555; margin-bottom: 6px; }
+  .field input, .field textarea { width: 100%; padding: 12px 14px; border: 1.5px solid #e8e8e8; border-radius: 10px; font-size: 15px; color: #1a1a2e; background: #fafafa; transition: border-color 0.2s; outline: none; font-family: inherit; }
+  .field input:focus, .field textarea:focus { border-color: #1a1a2e; background: white; }
+  .field input[readonly] { background: #f0f2f5; color: #888; cursor: default; }
+  .field textarea { resize: vertical; min-height: 72px; }
   .field input[type="number"] { appearance: textfield; }
-  .field input[type="number"]::-webkit-inner-spin-button,
-  .field input[type="number"]::-webkit-outer-spin-button { display: none; }
+  .field input[type="number"]::-webkit-inner-spin-button, .field input[type="number"]::-webkit-outer-spin-button { display: none; }
 
-  /* DIFERENCIA destacada */
-  .diff-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background: #f8f9fa;
-    border-radius: 10px;
-    padding: 14px 16px;
-    margin-top: 4px;
-  }
+  .diff-row { display: flex; align-items: center; justify-content: space-between; background: #f8f9fa; border-radius: 10px; padding: 14px 16px; margin-top: 4px; }
   .diff-label { font-size: 13px; font-weight: 700; color: #555; }
-  .diff-value {
-    font-size: 20px;
-    font-weight: 800;
-    transition: color 0.3s;
-  }
+  .diff-value { font-size: 20px; font-weight: 800; transition: color 0.3s; }
   .diff-value.ok { color: #2ecc71; }
   .diff-value.warn { color: #e74c3c; }
   .diff-value.neutral { color: #888; }
 
-  /* FILA 2 columnas */
-  .two-col {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-  }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
-  /* TABLA DELIVERY */
   .delivery-table { width: 100%; border-collapse: collapse; }
-  .delivery-table th {
-    font-size: 12px;
-    font-weight: 700;
-    color: #888;
-    text-align: left;
-    padding: 0 0 8px;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-  }
+  .delivery-table th { font-size: 12px; font-weight: 700; color: #888; text-align: left; padding: 0 0 8px; text-transform: uppercase; letter-spacing: 0.05em; }
   .delivery-table td { padding: 5px 0; }
-  .delivery-table td:first-child {
-    font-size: 14px;
-    font-weight: 600;
-    color: #1a1a2e;
-    width: 160px;
-  }
-  .delivery-table input {
-    width: 100%;
-    padding: 10px 12px;
-    border: 1.5px solid #e8e8e8;
-    border-radius: 8px;
-    font-size: 14px;
-    background: #fafafa;
-    outline: none;
-    font-family: inherit;
-    color: #1a1a2e;
-    transition: border-color 0.2s, background 0.2s;
-  }
-  .delivery-table input:focus {
-    border-color: #1a1a2e;
-    background: white;
-  }
-  .delivery-total-row td {
-    padding-top: 12px;
-    font-weight: 700;
-    font-size: 14px;
-    color: #1a1a2e;
-    border-top: 1px solid #f0f0f0;
-  }
+  .delivery-table td:first-child { font-size: 14px; font-weight: 600; color: #1a1a2e; width: 160px; }
+  .delivery-table input { width: 100%; padding: 10px 12px; border: 1.5px solid #e8e8e8; border-radius: 8px; font-size: 14px; background: #fafafa; outline: none; font-family: inherit; color: #1a1a2e; transition: border-color 0.2s; }
+  .delivery-table input:focus { border-color: #1a1a2e; background: white; }
+  .delivery-total-row td { padding-top: 12px; font-weight: 700; font-size: 14px; border-top: 1px solid #f0f0f0; }
 
-  /* PANES */
-  .panes-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-  }
-
-  /* RESULTADO PANES */
-  .panes-result {
-    grid-column: 1 / -1;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    margin-top: 4px;
-  }
-  .result-card {
-    background: #f8f9fa;
-    border-radius: 10px;
-    padding: 14px 16px;
-    text-align: center;
-  }
+  .panes-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .panes-result { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 4px; }
+  .result-card { background: #f8f9fa; border-radius: 10px; padding: 14px 16px; text-align: center; }
   .result-card .r-label { font-size: 12px; color: #888; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
   .result-card .r-value { font-size: 22px; font-weight: 800; }
   .result-card.ok .r-value { color: #2ecc71; }
   .result-card.warn .r-value { color: #e74c3c; }
   .result-card.neutral .r-value { color: #888; }
 
-  /* BOTÓN GUARDAR */
-  .btn-save {
-    width: 100%;
-    padding: 18px;
-    background: #1a1a2e;
-    color: white;
-    border: none;
-    border-radius: 14px;
-    font-size: 16px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: background 0.2s, transform 0.1s;
-    margin-top: 8px;
-    letter-spacing: 0.02em;
-  }
+  .btn-save { width: 100%; padding: 18px; background: #1a1a2e; color: white; border: none; border-radius: 14px; font-size: 16px; font-weight: 700; cursor: pointer; transition: background 0.2s; margin-top: 8px; }
   .btn-save:hover { background: #2a2a4e; }
-  .btn-save:active { transform: scale(0.99); }
   .btn-save:disabled { background: #ccc; cursor: not-allowed; }
-
-  /* HISTORIAL */
-  .btn-historial {
-    width: 100%;
-    padding: 14px;
-    background: white;
-    color: #1a1a2e;
-    border: 1.5px solid #e8e8e8;
-    border-radius: 14px;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.2s;
-    margin-top: 10px;
-  }
+  .btn-historial { width: 100%; padding: 14px; background: white; color: #1a1a2e; border: 1.5px solid #e8e8e8; border-radius: 14px; font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 10px; }
   .btn-historial:hover { background: #f5f5f5; }
 
-  /* TOAST */
-  .toast {
-    position: fixed;
-    bottom: 24px;
-    left: 50%;
-    transform: translateX(-50%) translateY(80px);
-    background: #1a1a2e;
-    color: white;
-    padding: 14px 24px;
-    border-radius: 12px;
-    font-size: 14px;
-    font-weight: 600;
-    transition: transform 0.3s ease;
-    z-index: 999;
-    white-space: nowrap;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-  }
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); background: #1a1a2e; color: white; padding: 14px 24px; border-radius: 12px; font-size: 14px; font-weight: 600; transition: transform 0.3s ease; z-index: 999; white-space: nowrap; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
   .toast.show { transform: translateX(-50%) translateY(0); }
   .toast.error { background: #e74c3c; }
   .toast.success { background: #2ecc71; color: #1a1a2e; }
 
-  /* MODAL HISTORIAL */
-  .modal-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.5);
-    z-index: 200;
-    align-items: flex-end;
-    justify-content: center;
-  }
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; align-items: flex-end; justify-content: center; }
   .modal-overlay.active { display: flex; }
-  .modal {
-    background: white;
-    border-radius: 20px 20px 0 0;
-    width: 100%;
-    max-width: 680px;
-    max-height: 80vh;
-    overflow-y: auto;
-    padding: 24px;
-  }
-  .modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-  }
+  .modal { background: white; border-radius: 20px 20px 0 0; width: 100%; max-width: 680px; max-height: 80vh; overflow-y: auto; padding: 24px; }
+  .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
   .modal-header h2 { font-size: 18px; font-weight: 700; }
-  .btn-close-modal {
-    background: #f0f2f5;
-    border: none;
-    width: 32px; height: 32px;
-    border-radius: 50%;
-    cursor: pointer;
-    font-size: 16px;
-    display: flex; align-items: center; justify-content: center;
-  }
-
-  .historial-item {
-    border: 1.5px solid #f0f0f0;
-    border-radius: 12px;
-    padding: 14px 16px;
-    margin-bottom: 10px;
-  }
-  .historial-item-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 8px;
-  }
+  .btn-close-modal { background: #f0f2f5; border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-size: 16px; }
+  .historial-item { border: 1.5px solid #f0f0f0; border-radius: 12px; padding: 14px 16px; margin-bottom: 10px; }
+  .historial-item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
   .historial-fecha { font-weight: 700; font-size: 15px; }
   .historial-cajero { font-size: 12px; color: #888; }
-  .historial-dif {
-    font-size: 18px;
-    font-weight: 800;
-  }
+  .historial-dif { font-size: 18px; font-weight: 800; }
   .historial-dif.ok { color: #2ecc71; }
   .historial-dif.warn { color: #e74c3c; }
-  .historial-meta { font-size: 12px; color: #888; display: flex; gap: 16px; }
+  .historial-meta { font-size: 12px; color: #888; display: flex; gap: 16px; flex-wrap: wrap; }
 
   @media (max-width: 480px) {
-    .two-col { grid-template-columns: 1fr; }
-    .panes-grid { grid-template-columns: 1fr; }
-    .panes-result { grid-template-columns: 1fr; }
-    .meta-row { grid-template-columns: 1fr; }
+    .two-col, .panes-grid, .panes-result, .meta-row { grid-template-columns: 1fr; }
   }
 </style>
 </head>
 <body>
 
-<!-- PANTALLA CARGANDO -->
 <div id="screen-loading" class="screen active">
-  <div class="loading-box">
-    <div class="spinner"></div>
-    <p>Verificando sesión...</p>
-  </div>
+  <div class="loading-box"><div class="spinner"></div><p>Verificando sesión...</p></div>
 </div>
 
-<!-- PANTALLA SIN PERMISO -->
 <div id="screen-error" class="screen">
   <div class="error-box">
     <div class="icon">🔒</div>
     <h2>Sin acceso</h2>
-    <p>Tu usuario no tiene permiso para acceder al módulo de cajero. Contactá al administrador.</p>
+    <p>Tu usuario no tiene permiso para este módulo. Contactá al administrador.</p>
     <br>
-    <button class="btn-back" style="background:#1a1a2e;color:white;padding:12px 24px;border-radius:10px;font-size:14px;" onclick="window.location.href='index.html'">Volver al inicio</button>
+    <button style="background:#1a1a2e;color:white;padding:12px 24px;border-radius:10px;font-size:14px;border:none;cursor:pointer;" onclick="window.location.href='index.html'">Volver al inicio</button>
   </div>
 </div>
 
-<!-- APP PRINCIPAL -->
 <div id="app">
   <div class="header">
     <div class="header-left">
@@ -413,140 +128,60 @@
   </div>
 
   <div class="container">
-
-    <!-- FECHA Y CAJERO -->
     <div class="meta-row">
-      <div class="field">
-        <label>Fecha</label>
-        <input type="date" id="campo-fecha" readonly>
-      </div>
-      <div class="field">
-        <label>Cajero</label>
-        <input type="text" id="campo-cajero" readonly>
-      </div>
+      <div class="field"><label>Fecha</label><input type="date" id="campo-fecha" readonly></div>
+      <div class="field"><label>Cajero</label><input type="text" id="campo-cajero" readonly></div>
     </div>
 
-    <!-- SECCIÓN CAJA -->
+    <!-- CAJA -->
     <div class="section">
       <div class="section-title">💵 Caja</div>
-
       <div class="two-col">
-        <div class="field">
-          <label>Apertura ($)</label>
-          <input type="number" id="apertura" placeholder="0" inputmode="decimal">
-        </div>
-        <div class="field">
-          <label>Cierre contado ($)</label>
-          <input type="number" id="cierre-contado" placeholder="0" inputmode="decimal">
-        </div>
+        <div class="field"><label>Apertura ($)</label><input type="number" id="apertura" placeholder="0" inputmode="decimal"></div>
+        <div class="field"><label>Cierre contado ($)</label><input type="number" id="cierre-contado" placeholder="0" inputmode="decimal"></div>
       </div>
-
       <div class="two-col">
-        <div class="field">
-          <label>Importe tarjetas ($)</label>
-          <input type="number" id="importe-tarjetas" placeholder="0" inputmode="decimal">
-        </div>
-        <div class="field">
-          <label>Cantidad de tarjetas</label>
-          <input type="number" id="cantidad-tarjetas" placeholder="0" inputmode="numeric">
-        </div>
+        <div class="field"><label>Importe tarjetas ($)</label><input type="number" id="importe-tarjetas" placeholder="0" inputmode="decimal"></div>
+        <div class="field"><label>Cantidad de tarjetas</label><input type="number" id="cantidad-tarjetas" placeholder="0" inputmode="numeric"></div>
       </div>
-
       <div class="two-col">
-        <div class="field">
-          <label>Depósito en banco ($)</label>
-          <input type="number" id="deposito-banco" placeholder="0" inputmode="decimal">
-        </div>
-        <div class="field">
-          <label>Gastos diarios ($)</label>
-          <input type="number" id="gastos-diarios" placeholder="0" inputmode="decimal">
-        </div>
+        <div class="field"><label>Depósito en banco ($)</label><input type="number" id="deposito-banco" placeholder="0" inputmode="decimal"></div>
+        <div class="field"><label>Gastos diarios ($)</label><input type="number" id="gastos-diarios" placeholder="0" inputmode="decimal"></div>
       </div>
-
-      <div class="field">
-        <label>Descripción de gastos</label>
-        <textarea id="descripcion-gastos" placeholder="Detallar gastos si los hay..."></textarea>
-      </div>
-
-      <div class="field">
-        <label>Reporte de ventas IVA ($)</label>
-        <input type="number" id="ventas-iva" placeholder="0" inputmode="decimal">
-      </div>
-
+      <div class="field"><label>Descripción de gastos</label><textarea id="descripcion-gastos" placeholder="Detallar gastos si los hay..."></textarea></div>
+      <div class="field"><label>Reporte de ventas IVA ($)</label><input type="number" id="ventas-iva" placeholder="0" inputmode="decimal"></div>
       <div class="diff-row">
         <span class="diff-label">Diferencia de caja</span>
         <span class="diff-value neutral" id="dif-caja">$0</span>
       </div>
     </div>
 
-    <!-- SECCIÓN DELIVERY -->
+    <!-- DELIVERY -->
     <div class="section">
       <div class="section-title">🛵 Delivery</div>
       <table class="delivery-table">
-        <thead>
-          <tr>
-            <th>Canal</th>
-            <th>Importe ($)</th>
-          </tr>
-        </thead>
+        <thead><tr><th>Canal</th><th>Importe ($)</th></tr></thead>
         <tbody>
-          <tr>
-            <td>Mercado Pago</td>
-            <td><input type="number" id="mp" placeholder="0" inputmode="decimal"></td>
-          </tr>
-          <tr>
-            <td>Mercado Delivery</td>
-            <td><input type="number" id="md" placeholder="0" inputmode="decimal"></td>
-          </tr>
-          <tr>
-            <td>Rappi</td>
-            <td><input type="number" id="rappi" placeholder="0" inputmode="decimal"></td>
-          </tr>
-          <tr>
-            <td>Pedidos Ya</td>
-            <td><input type="number" id="pedidosya" placeholder="0" inputmode="decimal"></td>
-          </tr>
-          <tr class="delivery-total-row">
-            <td>Total delivery</td>
-            <td><input type="text" id="total-delivery" readonly placeholder="$0"></td>
-          </tr>
+          <tr><td>Mercado Pago</td><td><input type="number" id="mp" placeholder="0" inputmode="decimal"></td></tr>
+          <tr><td>Mercado Delivery</td><td><input type="number" id="md" placeholder="0" inputmode="decimal"></td></tr>
+          <tr><td>Rappi</td><td><input type="number" id="rappi" placeholder="0" inputmode="decimal"></td></tr>
+          <tr><td>Pedidos Ya</td><td><input type="number" id="pedidosya" placeholder="0" inputmode="decimal"></td></tr>
+          <tr class="delivery-total-row"><td>Total delivery</td><td><input type="text" id="total-delivery" readonly placeholder="$0"></td></tr>
         </tbody>
       </table>
     </div>
 
-    <!-- SECCIÓN PANES (solo Subway) -->
-    <div class="section" id="seccion-panes">
+    <!-- PANES (solo Subway) -->
+    <div class="section" id="seccion-panes" style="display:none;">
       <div class="section-title">🍞 Conteo de Panes</div>
       <div class="panes-grid">
-        <div class="field">
-          <label>Panes registrados sistema</label>
-          <input type="number" id="panes-sistema" placeholder="0" inputmode="numeric">
-        </div>
-        <div class="field">
-          <label>Tostados vendidos</label>
-          <input type="number" id="tostados" placeholder="0" inputmode="numeric">
-        </div>
-        <div class="field">
-          <label>Sobrantes día anterior</label>
-          <input type="number" id="sobrantes-anterior" placeholder="0" inputmode="numeric">
-        </div>
-        <div class="field">
-          <label>Panes en retardador</label>
-          <input type="number" id="retardador" placeholder="0" inputmode="numeric">
-        </div>
-        <div class="field">
-          <label>Panes egresados</label>
-          <input type="number" id="panes-egresados" placeholder="0" inputmode="numeric">
-        </div>
-        <div class="field">
-          <label>Desperdicios / vouchers</label>
-          <input type="number" id="desperdicios" placeholder="0" inputmode="numeric">
-        </div>
-        <div class="field">
-          <label>Sobrantes del día</label>
-          <input type="number" id="sobrantes-dia" placeholder="0" inputmode="numeric">
-        </div>
-
+        <div class="field"><label>Panes registrados sistema</label><input type="number" id="panes-sistema" placeholder="0" inputmode="numeric"></div>
+        <div class="field"><label>Tostados vendidos</label><input type="number" id="tostados" placeholder="0" inputmode="numeric"></div>
+        <div class="field"><label>Sobrantes día anterior</label><input type="number" id="sobrantes-anterior" placeholder="0" inputmode="numeric"></div>
+        <div class="field"><label>Panes en retardador</label><input type="number" id="retardador" placeholder="0" inputmode="numeric"></div>
+        <div class="field"><label>Panes egresados</label><input type="number" id="panes-egresados" placeholder="0" inputmode="numeric"></div>
+        <div class="field"><label>Desperdicios / vouchers</label><input type="number" id="desperdicios" placeholder="0" inputmode="numeric"></div>
+        <div class="field"><label>Sobrantes del día</label><input type="number" id="sobrantes-dia" placeholder="0" inputmode="numeric"></div>
         <div class="panes-result">
           <div class="result-card neutral" id="card-cuenta-real">
             <div class="r-label">Cuenta real</div>
@@ -560,10 +195,8 @@
       </div>
     </div>
 
-    <!-- BOTONES -->
     <button class="btn-save" id="btn-guardar" onclick="guardarCierre()">Guardar cierre del día</button>
     <button class="btn-historial" onclick="abrirHistorial()">📋 Ver historial de cierres</button>
-
   </div>
 </div>
 
@@ -574,23 +207,16 @@
       <h2>Historial de cierres</h2>
       <button class="btn-close-modal" onclick="cerrarHistorial()">✕</button>
     </div>
-    <div id="historial-lista">
-      <div class="loading-box" style="padding:40px 0;">
-        <div class="spinner"></div>
-        <p>Cargando...</p>
-      </div>
-    </div>
+    <div id="historial-lista"></div>
   </div>
 </div>
 
-<!-- TOAST -->
 <div class="toast" id="toast"></div>
 
-<!-- FIREBASE -->
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, collection, addDoc, getDocs, doc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAB2-btgFqGiCe1YdZSDv4EShV601N-uQs",
@@ -605,53 +231,56 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// Estado global
 let localUsuario = null;
 let nombreUsuario = null;
 let esSubway = false;
 
-// ─── AUTH ───────────────────────────────────────────────
+// Mapa de key de permiso → nombre de local para mostrar
+const CAJERO_LOCALES = {
+  cajero_subway_ramos:   'Subway Ramos Mejía',
+  cajero_subway_moron:   'Subway Morón',
+  cajero_balcarce_ramos: 'Balcarce Ramos Mejía',
+  cajero_balcarce_moron: 'Balcarce Morón'
+};
+
 onAuthStateChanged(auth, async (user) => {
-  if (!user) {
-    window.location.href = 'login.html';
-    return;
-  }
+  if (!user) { window.location.href = 'login.html'; return; }
 
   try {
-    // Buscar usuario en Firebase
-    const snap = await getDocs(collection(db, 'usuarios'));
-    let userData = null;
-    snap.forEach(doc => {
-      if (doc.data().email === user.email) userData = doc.data();
-    });
-
-    if (!userData) throw new Error('Usuario no encontrado');
-
-    // Verificar permiso de cajero
-    const permisos = userData.permisos || {};
-    const tieneCajero = permisos.cajero === true;
-
-    if (!tieneCajero) {
-      mostrarPantalla('screen-error');
-      return;
+    // Buscar por UID (igual que el resto del sistema)
+    const snap = await getDoc(doc(db, 'usuarios', user.uid));
+    if (!snap.exists() || !snap.data().aprobado) {
+      window.location.href = 'login.html'; return;
     }
 
-    // Configurar local
-    localUsuario = userData.local || userData.locals?.[0] || 'Sin asignar';
-    nombreUsuario = userData.nombre || user.email;
-    esSubway = localUsuario.toLowerCase().includes('subway');
+    const userData = snap.data();
+    const cajeros = userData.cajeros || {};
 
-    // UI
+    // Buscar qué local cajero tiene asignado
+    const localKey = Object.keys(cajeros).find(k => cajeros[k] === true);
+
+    // Admin puede entrar sin permiso cajero específico
+    const esAdmin = userData.rol === 'admin';
+
+    if (!localKey && !esAdmin) {
+      mostrarPantalla('screen-error'); return;
+    }
+
+    // Determinar local
+    if (esAdmin) {
+      localUsuario = 'Admin';
+      esSubway = false;
+    } else {
+      localUsuario = CAJERO_LOCALES[localKey];
+      esSubway = localKey.includes('subway');
+    }
+
+    nombreUsuario = userData.nombre || user.email;
+
     document.getElementById('header-local').textContent = localUsuario;
     document.getElementById('header-user').textContent = nombreUsuario;
     document.getElementById('campo-cajero').value = nombreUsuario;
-
-    // Fecha de hoy
-    const hoy = new Date();
-    const fechaStr = hoy.toISOString().split('T')[0];
-    document.getElementById('campo-fecha').value = fechaStr;
-
-    // Mostrar/ocultar sección panes
+    document.getElementById('campo-fecha').value = new Date().toISOString().split('T')[0];
     document.getElementById('seccion-panes').style.display = esSubway ? 'block' : 'none';
 
     mostrarApp();
@@ -666,59 +295,39 @@ onAuthStateChanged(auth, async (user) => {
 function mostrarPantalla(id) {
   document.getElementById('screen-loading').classList.remove('active');
   document.getElementById('screen-error').classList.remove('active');
-  const el = document.getElementById(id);
-  if (el) el.classList.add('active');
+  document.getElementById(id).classList.add('active');
 }
 
 function mostrarApp() {
   document.getElementById('screen-loading').classList.remove('active');
-  document.getElementById('app').classList.add('active');
+  document.getElementById('app').style.display = 'block';
 }
 
-// ─── CÁLCULOS EN TIEMPO REAL ───────────────────────────
 function iniciarListeners() {
-  // Diferencia de caja
   ['cierre-contado', 'ventas-iva'].forEach(id => {
     document.getElementById(id).addEventListener('input', calcDifCaja);
   });
-
-  // Total delivery
   ['mp', 'md', 'rappi', 'pedidosya'].forEach(id => {
     document.getElementById(id).addEventListener('input', calcDelivery);
   });
-
-  // Panes
   if (esSubway) {
-    ['panes-sistema', 'tostados', 'sobrantes-anterior', 'retardador',
-     'panes-egresados', 'desperdicios', 'sobrantes-dia'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.addEventListener('input', calcPanes);
+    ['panes-sistema','tostados','sobrantes-anterior','retardador','panes-egresados','desperdicios','sobrantes-dia'].forEach(id => {
+      document.getElementById(id).addEventListener('input', calcPanes);
     });
   }
-
-  // Limpiar ceros al foco
   document.querySelectorAll('input[type="number"]').forEach(input => {
     input.addEventListener('focus', () => { if (input.value === '0') input.value = ''; });
-    input.addEventListener('blur', () => { if (input.value === '') input.value = ''; });
   });
 }
 
-function getNum(id) {
-  return parseFloat(document.getElementById(id)?.value) || 0;
-}
-
-function formatPeso(n) {
-  return '$' + n.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
-}
+function getNum(id) { return parseFloat(document.getElementById(id)?.value) || 0; }
+function formatPeso(n) { return '$' + n.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 }); }
 
 function calcDifCaja() {
-  const ventas = getNum('ventas-iva');
-  const cierre = getNum('cierre-contado');
-  const dif = cierre - ventas;
+  const dif = getNum('cierre-contado') - getNum('ventas-iva');
   const el = document.getElementById('dif-caja');
   el.textContent = formatPeso(dif);
-  el.className = 'diff-value ' + (dif === 0 ? 'ok' : dif > 0 ? 'warn' : 'warn');
-  if (ventas === 0 && cierre === 0) el.className = 'diff-value neutral';
+  el.className = 'diff-value ' + (getNum('ventas-iva') === 0 ? 'neutral' : dif === 0 ? 'ok' : 'warn');
 }
 
 function calcDelivery() {
@@ -727,160 +336,97 @@ function calcDelivery() {
 }
 
 function calcPanes() {
-  // Cuenta real = sobrantes anterior + panes sistema - tostados - egresados - desperdicios - sobrantes dia
-  const sistema = getNum('panes-sistema');
-  const tostados = getNum('tostados');
-  const sobrantesAnt = getNum('sobrantes-anterior');
-  const retardador = getNum('retardador');
-  const egresados = getNum('panes-egresados');
-  const desperdicios = getNum('desperdicios');
-  const sobrantesDia = getNum('sobrantes-dia');
+  const cuentaReal = getNum('sobrantes-anterior') + getNum('retardador') + getNum('panes-sistema')
+    - getNum('tostados') - getNum('panes-egresados') - getNum('desperdicios');
+  const difPanes = cuentaReal - getNum('sobrantes-dia');
 
-  const cuentaReal = sobrantesAnt + retardador + sistema - tostados - egresados - desperdicios;
-  const difPanes = cuentaReal - sobrantesDia;
-
-  const elReal = document.getElementById('val-cuenta-real');
-  const elDif = document.getElementById('val-dif-panes');
-  const cardReal = document.getElementById('card-cuenta-real');
-  const cardDif = document.getElementById('card-dif-panes');
-
-  elReal.textContent = cuentaReal;
-  elDif.textContent = difPanes;
-
-  cardReal.className = 'result-card ' + (cuentaReal < 0 ? 'warn' : 'ok');
-  cardDif.className = 'result-card ' + (difPanes === 0 ? 'ok' : 'warn');
+  document.getElementById('val-cuenta-real').textContent = cuentaReal;
+  document.getElementById('val-dif-panes').textContent = difPanes;
+  document.getElementById('card-cuenta-real').className = 'result-card ' + (cuentaReal < 0 ? 'warn' : 'ok');
+  document.getElementById('card-dif-panes').className = 'result-card ' + (difPanes === 0 ? 'ok' : 'warn');
 }
 
-// ─── GUARDAR ────────────────────────────────────────────
 window.guardarCierre = async function() {
   const btn = document.getElementById('btn-guardar');
-  btn.disabled = true;
-  btn.textContent = 'Guardando...';
-
+  btn.disabled = true; btn.textContent = 'Guardando...';
   try {
     const datos = {
       fecha: document.getElementById('campo-fecha').value,
-      cajero: nombreUsuario,
-      local: localUsuario,
+      cajero: nombreUsuario, local: localUsuario,
       timestamp: serverTimestamp(),
-
-      // Caja
-      apertura: getNum('apertura'),
-      cierreContado: getNum('cierre-contado'),
-      importeTarjetas: getNum('importe-tarjetas'),
-      cantidadTarjetas: getNum('cantidad-tarjetas'),
-      depositoBanco: getNum('deposito-banco'),
-      gastosDiarios: getNum('gastos-diarios'),
+      apertura: getNum('apertura'), cierreContado: getNum('cierre-contado'),
+      importeTarjetas: getNum('importe-tarjetas'), cantidadTarjetas: getNum('cantidad-tarjetas'),
+      depositoBanco: getNum('deposito-banco'), gastosDiarios: getNum('gastos-diarios'),
       descripcionGastos: document.getElementById('descripcion-gastos').value,
       ventasIva: getNum('ventas-iva'),
       diferenciaCaja: getNum('cierre-contado') - getNum('ventas-iva'),
-
-      // Delivery
-      mercadoPago: getNum('mp'),
-      mercadoDelivery: getNum('md'),
-      rappi: getNum('rappi'),
-      pedidosYa: getNum('pedidosya'),
-      totalDelivery: getNum('mp') + getNum('md') + getNum('rappi') + getNum('pedidosya'),
+      mercadoPago: getNum('mp'), mercadoDelivery: getNum('md'),
+      rappi: getNum('rappi'), pedidosYa: getNum('pedidosya'),
+      totalDelivery: getNum('mp') + getNum('md') + getNum('rappi') + getNum('pedidosya')
     };
-
-    // Panes (solo Subway)
     if (esSubway) {
-      const sobrantesAnt = getNum('sobrantes-anterior');
-      const retardador = getNum('retardador');
-      const sistema = getNum('panes-sistema');
-      const tostados = getNum('tostados');
-      const egresados = getNum('panes-egresados');
-      const desperdicios = getNum('desperdicios');
-      const sobrantesDia = getNum('sobrantes-dia');
-      const cuentaReal = sobrantesAnt + retardador + sistema - tostados - egresados - desperdicios;
-
+      const cuentaReal = getNum('sobrantes-anterior') + getNum('retardador') + getNum('panes-sistema')
+        - getNum('tostados') - getNum('panes-egresados') - getNum('desperdicios');
       datos.panes = {
-        sistema, tostados, sobrantesAnt, retardador,
-        egresados, desperdicios, sobrantesDia,
-        cuentaReal,
-        diferencia: cuentaReal - sobrantesDia
+        sistema: getNum('panes-sistema'), tostados: getNum('tostados'),
+        sobrantesAnt: getNum('sobrantes-anterior'), retardador: getNum('retardador'),
+        egresados: getNum('panes-egresados'), desperdicios: getNum('desperdicios'),
+        sobrantesDia: getNum('sobrantes-dia'), cuentaReal,
+        diferencia: cuentaReal - getNum('sobrantes-dia')
       };
     }
-
     await addDoc(collection(db, 'cajero_cierres'), datos);
     mostrarToast('✅ Cierre guardado correctamente', 'success');
     setTimeout(() => { btn.disabled = false; btn.textContent = 'Guardar cierre del día'; }, 2000);
-
   } catch (err) {
     console.error(err);
     mostrarToast('❌ Error al guardar. Intentá de nuevo.', 'error');
-    btn.disabled = false;
-    btn.textContent = 'Guardar cierre del día';
+    btn.disabled = false; btn.textContent = 'Guardar cierre del día';
   }
 };
 
-// ─── HISTORIAL ──────────────────────────────────────────
 window.abrirHistorial = async function() {
   document.getElementById('modal-historial').classList.add('active');
   const lista = document.getElementById('historial-lista');
   lista.innerHTML = '<div class="loading-box" style="padding:40px 0;"><div class="spinner"></div><p>Cargando...</p></div>';
-
   try {
     const snap = await getDocs(collection(db, 'cajero_cierres'));
     const cierres = [];
-    snap.forEach(doc => {
-      const d = doc.data();
-      if (d.local === localUsuario) cierres.push(d);
-    });
-
-    // Ordenar por fecha desc
+    snap.forEach(d => { const data = d.data(); if (data.local === localUsuario) cierres.push(data); });
     cierres.sort((a, b) => b.fecha.localeCompare(a.fecha));
-
-    if (cierres.length === 0) {
-      lista.innerHTML = '<p style="text-align:center;color:#888;padding:40px 0;">Sin cierres registrados aún.</p>';
-      return;
-    }
-
+    if (!cierres.length) { lista.innerHTML = '<p style="text-align:center;color:#888;padding:40px 0;">Sin cierres registrados aún.</p>'; return; }
     lista.innerHTML = cierres.slice(0, 30).map(c => {
       const dif = c.diferenciaCaja || 0;
-      const difClass = dif === 0 ? 'ok' : 'warn';
-      const difStr = formatPeso(dif);
-      return `
-        <div class="historial-item">
-          <div class="historial-item-header">
-            <div>
-              <div class="historial-fecha">${formatearFecha(c.fecha)}</div>
-              <div class="historial-cajero">${c.cajero || '—'}</div>
-            </div>
-            <div class="historial-dif ${difClass}">${difStr}</div>
-          </div>
-          <div class="historial-meta">
-            <span>Ventas: ${formatPeso(c.ventasIva || 0)}</span>
-            <span>Contado: ${formatPeso(c.cierreContado || 0)}</span>
-            <span>Delivery: ${formatPeso(c.totalDelivery || 0)}</span>
-            ${c.panes ? `<span>Dif. panes: ${c.panes.diferencia}</span>` : ''}
-          </div>
+      return `<div class="historial-item">
+        <div class="historial-item-header">
+          <div><div class="historial-fecha">${formatFecha(c.fecha)}</div><div class="historial-cajero">${c.cajero || '—'}</div></div>
+          <div class="historial-dif ${dif === 0 ? 'ok' : 'warn'}">${formatPeso(dif)}</div>
         </div>
-      `;
+        <div class="historial-meta">
+          <span>Ventas: ${formatPeso(c.ventasIva || 0)}</span>
+          <span>Contado: ${formatPeso(c.cierreContado || 0)}</span>
+          <span>Delivery: ${formatPeso(c.totalDelivery || 0)}</span>
+          ${c.panes ? `<span>Dif. panes: ${c.panes.diferencia}</span>` : ''}
+        </div>
+      </div>`;
     }).join('');
-
   } catch (err) {
-    console.error(err);
-    lista.innerHTML = '<p style="text-align:center;color:#e74c3c;padding:40px 0;">Error al cargar el historial.</p>';
+    lista.innerHTML = '<p style="text-align:center;color:#e74c3c;padding:40px 0;">Error al cargar.</p>';
   }
 };
 
-window.cerrarHistorial = function() {
-  document.getElementById('modal-historial').classList.remove('active');
-};
+window.cerrarHistorial = function() { document.getElementById('modal-historial').classList.remove('active'); };
 
-function formatearFecha(str) {
+function formatFecha(str) {
   if (!str) return '—';
   const [y, m, d] = str.split('-');
   const meses = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
   return `${d} ${meses[parseInt(m)-1]} ${y}`;
 }
 
-// ─── TOAST ──────────────────────────────────────────────
 function mostrarToast(msg, tipo = '') {
   const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = 'toast ' + tipo;
+  t.textContent = msg; t.className = 'toast ' + tipo;
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 3000);
 }
