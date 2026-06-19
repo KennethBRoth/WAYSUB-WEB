@@ -189,8 +189,8 @@
     <!-- SELECTOR FECHA -->
     <div class="fecha-nav">
       <label>📅 Día</label>
-      <input type="date" id="campo-fecha">
-      <button class="btn-cargar-dia" onclick="cargarDia()">Ver / Editar</button>
+      <input type="date" id="campo-fecha" onchange="cargarDia()">
+
     </div>
 
     <!-- INFO CAJERO -->
@@ -472,19 +472,18 @@ window.recalcular = function() {
   const mp          = getNum('mercado-pago');
   const iva         = getNum('ventas-iva');
   const vouchers    = getNum('vouchers');
-
   const totalGastos = gastosActuales.reduce((acc, g) => acc + (parseFloat(g.monto) || 0), 0);
 
-  // Resultado = Cierre + Tarjetas + MP + Gastos - Apertura - IVA
-  const resultado = cierre + tarjetas + mp + totalGastos - apertura - iva;
-
-  // Delivery
+  // Delivery primero (necesario para el resultado)
   const md       = getNum('md');
   const rappi    = getNum('rappi');
   const pedidos  = getNum('pedidosya');
   const uber     = getNum('ubereats');
   const totalDel = md + rappi + pedidos + uber;
   const difDel   = totalDel - iva;
+
+  // Resultado = Cierre + Tarjetas + MP + Gastos + Delivery - Apertura - IVA
+  const resultado = cierre + tarjetas + mp + totalGastos + totalDel - apertura - iva;
 
   // Actualizar resultado principal
   const elRes = document.getElementById('res-total');
