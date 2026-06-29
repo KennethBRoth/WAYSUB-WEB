@@ -254,6 +254,8 @@ let resultados = null;
 // ── INIT ─────────────────────────────────────────────────
 const params = new URLSearchParams(window.location.search);
 localActual = params.get('local') || 'Desconocido';
+// Sanitize for Firestore doc ID (no spaces or special chars)
+function docId(s) { return s.replace(/[^a-zA-Z0-9_-]/g, '_'); }
 document.getElementById('local-nombre').textContent = localActual;
 
 const hoy = new Date();
@@ -355,7 +357,7 @@ function actualizarTotal(prefijo) {
 // ── STOCK INICIAL AUTOMÁTICO ─────────────────────────────
 async function cargarStockInicial() {
   try {
-    const snap = await getDoc(doc(db, 'coca_stock_inicial', localActual));
+    const snap = await getDoc(doc(db, 'coca_stock_inicial', docId(localActual)));
     if (!snap.exists()) return;
     const data = snap.data();
     const stock = data.stockActual || {};
@@ -391,7 +393,7 @@ window.guardarComoStockInicial = async function() {
     return;
   }
   try {
-    await setDoc(doc(db, 'coca_stock_inicial', localActual), {
+    await setDoc(doc(db, 'coca_stock_inicial', docId(localActual)), {
       stockActual,
       timestamp: Date.now(),
       local: localActual
@@ -409,59 +411,121 @@ window.interpretarLinisco = function(tipo) {
   const textareaId = esStock ? 'linisco-stock-paste' : 'linisco-ventas-paste';
   const resultadoId = esStock ? 'res-linisco-stock' : 'res-linisco-ventas';
   const tablaId     = esStock ? 'sa' : 'ventas';
-  const mapa        = esStock ? MAPA_STOCK : MAPA_VENTAS;
 
   const texto = document.getElementById(textareaId).value.trim();
-  if (!texto) { toast('Pegá el texto primero', 'err'); return; }
+  if (!texto) { toast('Pega el texto primero', 'err'); return; }
+
+  function norm(s) {
+    return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+  }
 
   const valores = {};
   let cargados = 0;
 
-  texto.split('\n').forEach(linea => {
-    linea = linea.trim();
-    if (!linea) return;
-    // Separar por tab o espacios múltiples
-    const partes = linea.split(/\t+|\s{2,}/);
-    if (partes.length < 2) return;
-    const nombreRaw = partes[0].trim().toLowerCase()
-      .normalize('NFD').replace(/[\u0300-\u036f]/g, ''); // quitar acentos
-    const cantRaw = partes[partes.length - 1].trim().replace(/[^\d]/g, '');
-    const cant = parseInt(cantRaw);
-    if (isNaN(cant) || nombreRaw === 'total' || nombreRaw === 'producto') return;
+  if (esStock) {
+    // FORMATO CONTEO STOCK: encabezados de grupo + "Nombre:cantidad"
+    const MAPA_S = {
+      'comun': 'Coca Comun_SI', 'coca comun': 'Coca Comun_SI',
+      'coca cola comun': 'Coca Comun_SI',
+      'zero': 'Coca Zero', 'coca zero': 'Coca Zero', 'coca cola zero': 'Coca Zero',
+      'light': 'Coca Light', 'coca light': 'Coca Light', 'coca cola light': 'Coca Light',
+      'sprite zero': 'Sprite Zero', 'sprite': 'Sprite', 'fanta': 'Fanta',
+      'aquarius manzana': 'Aquarius Manzana', 'aquarius pera': 'Aquarius Pera',
+      'aquarius pomelo': 'Aquarius Pomelo', 'aquarius': 'Aquarius Manzana',
+      'manzana': 'Aquarius Manzana', 'pera': 'Aquarius Pera', 'pomelo': 'Aquarius Pomelo',
+      'agua sin gas': 'Agua Sin Gas', 'sin gas': 'Agua Sin Gas',
+      'agua con gas': 'Agua Con Gas', 'con gas': 'Agua Con Gas',
+      'cepita manzana': 'Cepita Manzana', 'cepita naranja': 'Cepita Naranja',
+      'cepita multifruta': 'Cepita Multifruta',
+      'multifruta': 'Cepita Multifruta', 'naranja': 'Cepita Naranja',
+    };
+    // Fix Coca Comun key after map definition
+    MAPA_S['comun'] = 'Coca Comun';
+    MAPA_S['coca comun'] = 'Coca Comun';
+    MAPA_S['coca cola comun'] = 'Coca Comun';
+    const NOMBRE_REAL = { 'Coca Comun': 'Coca Común' };
 
-    // Buscar match en el mapa — primero exact, luego contains
-    // Ordenar claves por longitud desc para matchear primero las más específicas
-    const claves = Object.keys(mapa).sort((a,b) => b.length - a.length);
-    for (const clave of claves) {
-      const claveNorm = clave.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-      if (nombreRaw.includes(claveNorm)) {
-        const prod = mapa[clave];
-        valores[prod] = (valores[prod] || 0) + cant;
-        cargados++;
-        break;
+    let grupoActual = '';
+    texto.split('\n').forEach(linea => {
+      linea = linea.trim();
+      if (!linea) { grupoActual = ''; return; }
+      const m = linea.match(/^(.+?)[:|\t]\s*(\d+)\s*$/);
+      if (m) {
+        const nombreParte = norm(m[1]);
+        const cant = parseInt(m[2]);
+        const conGrupo = grupoActual ? norm(grupoActual + ' ' + nombreParte) : '';
+        const claves = Object.keys(MAPA_S).sort((a,b) => b.length - a.length);
+        let prod = null;
+        if (conGrupo && MAPA_S[conGrupo]) prod = MAPA_S[conGrupo];
+        if (!prod && MAPA_S[nombreParte]) prod = MAPA_S[nombreParte];
+        if (!prod) {
+          for (const clave of claves) {
+            if (conGrupo && conGrupo.includes(norm(clave))) { prod = MAPA_S[clave]; break; }
+            if (nombreParte.includes(norm(clave))) { prod = MAPA_S[clave]; break; }
+          }
+        }
+        if (prod) {
+          const prodFinal = NOMBRE_REAL[prod] || prod;
+          valores[prodFinal] = (valores[prodFinal]||0) + cant;
+          cargados++;
+        }
+      } else {
+        grupoActual = linea.replace(/[^\w\s]/g,'').trim();
       }
-    }
-  });
+    });
+
+  } else {
+    // FORMATO VENTAS LINISCO: "Botella Coca Cola 600cc\t85"
+    const MAPA_V = {
+      'coca cola': 'Coca Comun', 'coca comun': 'Coca Comun', 'coca common': 'Coca Comun',
+      'coca zero': 'Coca Zero',
+      'coca light': 'Coca Light',
+      'sprite zero': 'Sprite Zero',
+      'sprite': 'Sprite',
+      'fanta': 'Fanta',
+      'agua saborizada': 'Aquarius Total', 'aquarius': 'Aquarius Total',
+      'agua s/ gas': 'Agua Sin Gas', 'agua sin gas': 'Agua Sin Gas', 'agua s/gas': 'Agua Sin Gas',
+      'agua c/ gas': 'Agua Con Gas', 'agua con gas': 'Agua Con Gas', 'agua c/gas': 'Agua Con Gas',
+      'cepita': 'Cepita Total',
+    };
+    const NOMBRE_REAL_V = { 'Coca Comun': 'Coca Común' };
+
+    texto.split('\n').forEach(linea => {
+      linea = linea.trim();
+      if (!linea) return;
+      const partes = linea.split(/\t+|  +/);
+      if (partes.length < 2) return;
+      const nombreRaw = norm(partes[0]);
+      const cant = parseInt(partes[partes.length-1].replace(/[^\d]/g,''));
+      if (isNaN(cant) || nombreRaw === 'total' || nombreRaw === 'producto') return;
+      const claves = Object.keys(MAPA_V).sort((a,b) => b.length - a.length);
+      for (const clave of claves) {
+        if (nombreRaw.includes(norm(clave))) {
+          const prod = NOMBRE_REAL_V[MAPA_V[clave]] || MAPA_V[clave];
+          valores[prod] = (valores[prod]||0) + cant;
+          cargados++;
+          break;
+        }
+      }
+    });
+  }
 
   if (!cargados) {
-    toast('No se pudo interpretar. Verificá el formato (nombre TAB cantidad).', 'err');
+    toast('No se pudo interpretar. Verifica el formato.', 'err');
     return;
   }
 
-  // Llenar tabla
   document.querySelectorAll('input[data-tabla="' + tablaId + '"]').forEach(inp => {
-    if (valores[inp.dataset.prod] !== undefined) {
-      inp.value = valores[inp.dataset.prod];
-    }
+    if (valores[inp.dataset.prod] !== undefined) inp.value = valores[inp.dataset.prod];
   });
   actualizarTotal(tablaId);
 
   const el = document.getElementById(resultadoId);
   el.style.display = 'block';
-  el.textContent = '✅ ' + cargados + ' productos cargados desde LINISCO.';
+  el.textContent = String.fromCodePoint(0x2705) + ' ' + cargados + ' productos cargados.';
   document.getElementById(textareaId).value = '';
-  toast('✅ ' + cargados + ' productos cargados', 'ok');
-};
+  toast(String.fromCodePoint(0x2705) + ' ' + cargados + ' productos cargados', 'ok');
+}
 
 // ── TABS ─────────────────────────────────────────────────
 window.cambiarTab = function(tab) {
