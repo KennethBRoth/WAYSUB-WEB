@@ -75,7 +75,6 @@
     .turno-opcion.seleccionada{border-color:#1a1a2e;background:#f0f1ff;}
     .turno-opcion input[type=radio]{accent-color:#1a1a2e;}
     .loading-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(255,255,255,0.8);z-index:300;display:flex;align-items:center;justify-content:center;font-size:14px;color:#666;}
-    /* OCUPACIÓN */
     .ocup-controls{display:flex;gap:8px;align-items:center;margin-bottom:14px;flex-wrap:wrap;}
     .ocup-controls select{padding:6px 10px;border:0.5px solid #ccc;border-radius:8px;font-size:13px;}
     .ocup-dia-card{background:white;border:0.5px solid #e0e0e0;border-radius:10px;margin-bottom:8px;overflow:hidden;}
@@ -108,19 +107,19 @@
 <div class="app">
 
   <div class="topbar">
-    <button class="btn-volver" onclick="window.location.href='index.html'">←</button>
-    <h1>⏰ Auditoría de asistencia</h1>
+    <button class="btn-volver" onclick="window.location.href='index.html'">&#8592;</button>
+    <h1>&#9200; Auditor&iacute;a de asistencia</h1>
     <select class="local-select" id="sel-local" onchange="cambiarLocal()">
-      <option value="ramos">Ramos Mejía</option>
-      <option value="moron">Morón</option>
+      <option value="ramos">Ramos Mej&iacute;a</option>
+      <option value="moron">Mor&oacute;n</option>
     </select>
   </div>
 
   <div class="tabs">
-    <div class="tab active" onclick="showTab('empleados',this)">👥 Empleados</div>
-    <div class="tab" onclick="showTab('ocupacion',this)">📅 Ocupación</div>
-    <div class="tab" onclick="showTab('auditoria',this)">📤 Auditoría</div>
-    <div class="tab" onclick="showTab('resultados',this)">📊 Resultados</div>
+    <div class="tab active" onclick="showTab('empleados',this)">&#128101; Empleados</div>
+    <div class="tab" onclick="showTab('ocupacion',this)">&#128197; Ocupaci&oacute;n</div>
+    <div class="tab" onclick="showTab('auditoria',this)">&#128228; Auditor&iacute;a</div>
+    <div class="tab" onclick="showTab('resultados',this)">&#128202; Resultados</div>
   </div>
 
   <!-- EMPLEADOS -->
@@ -131,13 +130,13 @@
     </div>
     <div class="card" style="padding:0;overflow:hidden;">
       <table>
-        <thead><tr><th>Nombre</th><th>Excepción</th><th>Turnos este mes</th><th></th></tr></thead>
+        <thead><tr><th>Nombre</th><th>Excepci&oacute;n</th><th>Turnos este mes</th><th></th></tr></thead>
         <tbody id="tabla-empleados"></tbody>
       </table>
     </div>
   </div>
 
-  <!-- OCUPACIÓN -->
+  <!-- OCUPACION -->
   <div id="screen-ocupacion" class="screen">
     <div class="ocup-controls">
       <select id="ocup-mes" onchange="renderOcupacion()">
@@ -149,7 +148,7 @@
       <select id="ocup-anio" onchange="renderOcupacion()">
         <option value="2025">2025</option><option value="2026">2026</option><option value="2027">2027</option>
       </select>
-      <button class="btn btn-sm btn-primary" onclick="renderOcupacion()">🔄 Actualizar</button>
+      <button class="btn btn-sm btn-primary" onclick="renderOcupacion()">&#128260; Actualizar</button>
     </div>
     <div class="ocup-mes-resumen" id="ocup-resumen"></div>
     <div id="ocup-lista"></div>
@@ -158,7 +157,7 @@
   <!-- CALENDARIO -->
   <div id="screen-calendario" class="screen">
     <div class="flex-between" style="margin-bottom:10px;">
-      <button class="btn btn-sm" onclick="showTab('empleados',null)">← Volver</button>
+      <button class="btn btn-sm" onclick="showTab('empleados',null)">&#8592; Volver</button>
       <span style="font-size:14px;font-weight:500;" id="cal-emp-nombre"></span>
       <div style="display:flex;gap:6px;align-items:center;">
         <select id="cal-mes" onchange="cargarYRenderCalendario()" style="padding:5px 8px;border:0.5px solid #ccc;border-radius:8px;font-size:12px;">
@@ -169,47 +168,45 @@
         </select>
       </div>
     </div>
-
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:6px;">
       <div style="display:flex;gap:10px;font-size:11px;color:#666;flex-wrap:wrap;">
         <span style="display:flex;align-items:center;gap:4px;"><span style="width:12px;height:12px;background:#E6F1FB;border:1px solid #185FA5;border-radius:3px;display:inline-block;"></span> Turno</span>
         <span style="display:flex;align-items:center;gap:4px;"><span style="width:12px;height:12px;background:#f0f0f0;border:1px solid #ccc;border-radius:3px;display:inline-block;"></span> No trabaja</span>
         <span style="display:flex;align-items:center;gap:4px;"><span style="width:12px;height:12px;background:#fff4e6;border:1px solid #f4a261;border-radius:3px;display:inline-block;"></span> Feriado</span>
       </div>
-      <button class="btn btn-sm" style="font-size:11px;" onclick="abrirModalFeriados()">🗓 Gestionar feriados</button>
+      <button class="btn btn-sm" style="font-size:11px;" onclick="abrirModalFeriados()">&#128197; Gestionar feriados</button>
     </div>
-
     <div class="card">
       <div class="cal-grid" style="margin-bottom:6px;">
-        <div class="cal-day-label">Lun</div><div class="cal-day-label">Mar</div><div class="cal-day-label">Mié</div>
-        <div class="cal-day-label">Jue</div><div class="cal-day-label">Vie</div><div class="cal-day-label">Sáb</div><div class="cal-day-label">Dom</div>
+        <div class="cal-day-label">Lun</div><div class="cal-day-label">Mar</div><div class="cal-day-label">Mi&eacute;</div>
+        <div class="cal-day-label">Jue</div><div class="cal-day-label">Vie</div><div class="cal-day-label">S&aacute;b</div><div class="cal-day-label">Dom</div>
       </div>
       <div class="cal-grid" id="cal-grid"></div>
     </div>
-    <p style="font-size:12px;color:#999;text-align:center;margin-top:-4px;">Tocá un día para agregar, editar o marcar como libre</p>
+    <p style="font-size:12px;color:#999;text-align:center;margin-top:-4px;">Toc&aacute; un d&iacute;a para agregar, editar o marcar como libre</p>
   </div>
 
   <!-- AUDITORIA -->
   <div id="screen-auditoria" class="screen">
     <div class="card">
-      <h3 style="margin-bottom:12px;">Nueva auditoría</h3>
+      <h3 style="margin-bottom:12px;">Nueva auditor&iacute;a</h3>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
         <div class="form-row"><label>Mes</label>
           <select id="sel-mes"><option value="1">Enero</option><option value="2">Febrero</option><option value="3">Marzo</option><option value="4">Abril</option><option value="5">Mayo</option><option value="6">Junio</option><option value="7">Julio</option><option value="8">Agosto</option><option value="9">Septiembre</option><option value="10">Octubre</option><option value="11">Noviembre</option><option value="12">Diciembre</option></select>
         </div>
-        <div class="form-row"><label>Año</label><input type="number" id="inp-anio" value="2026"></div>
+        <div class="form-row"><label>A&ntilde;o</label><input type="number" id="inp-anio" value="2026"></div>
       </div>
       <div class="dropzone" onclick="document.getElementById('file-input').click()">
-        <div style="font-size:28px;margin-bottom:8px;">📂</div>
+        <div style="font-size:28px;margin-bottom:8px;">&#128194;</div>
         <p style="font-weight:500;">Subir Excel de fichajes</p>
-        <p style="font-size:12px;margin-top:4px;">Hacé clic o arrastrá el archivo .xlsx</p>
+        <p style="font-size:12px;margin-top:4px;">Hac&eacute; clic o arrastr&aacute; el archivo .xlsx</p>
         <input type="file" id="file-input" accept=".xlsx,.xls" style="display:none;" onchange="procesarArchivo(event)">
       </div>
       <div id="preview-fichajes" style="margin-top:10px;display:none;">
         <p style="font-size:12px;color:#666;" id="preview-info"></p>
-        <button class="btn btn-primary" style="width:100%;margin-top:8px;" onclick="ejecutarAuditoria()">▶ Procesar auditoría</button>
+        <button class="btn btn-primary" style="width:100%;margin-top:8px;" onclick="ejecutarAuditoria()">&#9654; Procesar auditor&iacute;a</button>
       </div>
-      <button class="btn" style="width:100%;margin-top:8px;" onclick="usarDemo()">🗄 Usar datos de demostración</button>
+      <button class="btn" style="width:100%;margin-top:8px;" onclick="usarDemo()">&#128452; Usar datos de demostraci&oacute;n</button>
     </div>
     <div class="card">
       <h3 style="margin-bottom:10px;">Historial</h3>
@@ -219,15 +216,15 @@
 
   <!-- RESULTADOS -->
   <div id="screen-resultados" class="screen">
-    <div id="res-vacio" class="empty-state"><div style="font-size:32px;">📊</div><p>Procesá una auditoría primero</p></div>
+    <div id="res-vacio" class="empty-state"><div style="font-size:32px;">&#128202;</div><p>Proces&aacute; una auditor&iacute;a primero</p></div>
     <div id="res-contenido" style="display:none;">
       <div style="display:flex;gap:6px;justify-content:flex-end;margin-bottom:10px;">
-        <button class="btn btn-sm" onclick="exportarResultados()">⬇ Exportar Excel</button>
-        <button class="btn btn-sm btn-primary" onclick="guardarAuditoriaFirebase()">💾 Guardar</button>
+        <button class="btn btn-sm" onclick="exportarResultados()">&#11015; Exportar Excel</button>
+        <button class="btn btn-sm btn-primary" onclick="guardarAuditoriaFirebase()">&#128190; Guardar</button>
       </div>
       <div class="results-grid">
         <div>
-          <p style="font-size:11px;font-weight:500;color:#999;text-transform:uppercase;margin-bottom:8px;">Con desvíos</p>
+          <p style="font-size:11px;font-weight:500;color:#999;text-transform:uppercase;margin-bottom:8px;">Con desv&iacute;os</p>
           <div id="lista-desvios"></div>
         </div>
         <div>
@@ -236,7 +233,7 @@
         </div>
       </div>
       <div class="card" style="margin-top:12px;">
-        <h3 style="margin-bottom:10px;">Resumen para liquidación</h3>
+        <h3 style="margin-bottom:10px;">Resumen para liquidaci&oacute;n</h3>
         <table>
           <thead><tr><th>Empleado</th><th>Incidencias</th><th>Pierde presentismo</th><th>Obs.</th></tr></thead>
           <tbody id="tabla-resumen"></tbody>
@@ -250,7 +247,7 @@
     <div class="modal">
       <div class="flex-between" style="margin-bottom:14px;">
         <h3 id="modal-emp-title">Nuevo empleado</h3>
-        <button class="btn btn-sm" onclick="cerrarModalEmp()">✕</button>
+        <button class="btn btn-sm" onclick="cerrarModalEmp()">&#10005;</button>
       </div>
       <div class="form-row"><label>Nombre</label><input type="text" id="inp-emp-nombre" placeholder="Nombre completo"></div>
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
@@ -269,17 +266,17 @@
   <div class="modal-bg" id="modal-turno-bg">
     <div class="modal">
       <div class="flex-between" style="margin-bottom:14px;">
-        <h3 id="modal-turno-title">Turno del día</h3>
-        <button class="btn btn-sm" onclick="cerrarModalTurno()">✕</button>
+        <h3 id="modal-turno-title">Turno del d&iacute;a</h3>
+        <button class="btn btn-sm" onclick="cerrarModalTurno()">&#10005;</button>
       </div>
       <div class="turno-opciones">
         <label class="turno-opcion" id="opcion-trabaja">
           <input type="radio" name="tipo-turno" value="trabaja" checked onchange="toggleTipoTurno()">
-          <span>🕐 Asignar horario</span>
+          <span>&#128336; Asignar horario</span>
         </label>
         <label class="turno-opcion" id="opcion-libre">
           <input type="radio" name="tipo-turno" value="libre" onchange="toggleTipoTurno()">
-          <span>😴 No trabaja este día</span>
+          <span>&#128564; No trabaja este d&iacute;a</span>
         </label>
       </div>
       <div id="campos-horario">
@@ -289,7 +286,7 @@
         </div>
       </div>
       <div style="display:flex;gap:8px;justify-content:space-between;margin-top:14px;">
-        <button class="btn btn-danger btn-sm" id="btn-eliminar-turno" onclick="eliminarTurno()">🗑 Eliminar</button>
+        <button class="btn btn-danger btn-sm" id="btn-eliminar-turno" onclick="eliminarTurno()">&#128465; Eliminar</button>
         <div style="display:flex;gap:8px;">
           <button class="btn" onclick="cerrarModalTurno()">Cancelar</button>
           <button class="btn btn-primary" onclick="guardarTurno()">Guardar</button>
@@ -303,9 +300,9 @@
     <div class="modal" style="max-width:360px;">
       <div class="flex-between" style="margin-bottom:14px;">
         <h3 id="modal-feriados-title">Feriados</h3>
-        <button class="btn btn-sm" onclick="cerrarModalFeriados()">✕</button>
+        <button class="btn btn-sm" onclick="cerrarModalFeriados()">&#10005;</button>
       </div>
-      <p style="font-size:12px;color:#666;margin-bottom:12px;">Tocá los días feriados. No generan alertas ni ausencias para nadie.</p>
+      <p style="font-size:12px;color:#666;margin-bottom:12px;">Toc&aacute; los d&iacute;as feriados. No generan alertas ni ausencias para nadie.</p>
       <div id="feriados-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:16px;"></div>
       <div style="display:flex;justify-content:flex-end;">
         <button class="btn btn-primary" onclick="cerrarModalFeriados()">Listo</button>
@@ -319,7 +316,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, collection, getDocs, addDoc, query, where, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, doc, getDoc, setDoc, deleteDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAB2-btgFqGiCe1YdZSDv4EShV601N-uQs",
@@ -331,41 +329,37 @@ const firebaseConfig = {
 };
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const auth = getAuth(app);
 
-// ── CONSTANTES ────────────────────────────────────────────────────
 const MESES_FULL=['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-const DIAS_SEMANA=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+const DIAS_SEMANA=['Dom','Lun','Mar','Mi\u00e9','Jue','Vie','S\u00e1b'];
 
-// ── ESTADO ────────────────────────────────────────────────────────
 let local = 'ramos';
-let empleados = [];          // array en memoria
-let turnosCache = {};        // key: empIdx_mes_anio → objeto turnos
-let feriadosCache = {};      // key: mes_anio → array de días
+let empleados = [];
+let turnosCache = {};
+let feriadosCache = {};
 let empEditIdx = -1;
 let calEmpIdx = -1;
 let turnoFechaActual = null;
 let resultadosActuales = null;
 let fichajesCargados = null;
 
-// ── HELPERS ID FIRESTORE ──────────────────────────────────────────
 function empDocId() { return 'empleados_' + local; }
 function turnosDocId(empIdx, mes, anio) { return 'turnos_' + local + '_' + empIdx + '_' + anio + '_' + mes; }
 function feriadosDocId(mes, anio) { return 'feriados_' + local + '_' + anio + '_' + mes; }
 function auditoriaDocId(mes, anio) { return 'aud_' + local + '_' + anio + '_' + String(mes).padStart(2,'0'); }
 
-// ── CARGA EMPLEADOS ───────────────────────────────────────────────
 async function cargarEmpleados() {
   try {
     const snap = await getDoc(doc(db, 'auditoria_empleados', empDocId()));
     empleados = snap.exists() ? (snap.data().lista || []) : [];
-  } catch(e) { empleados = []; }
+  } catch(e) { console.error('Error cargando empleados:', e); empleados = []; }
 }
 
 async function guardarEmpleados() {
   await setDoc(doc(db, 'auditoria_empleados', empDocId()), { lista: empleados });
 }
 
-// ── CARGA TURNOS ──────────────────────────────────────────────────
 async function cargarTurnos(empIdx, mes, anio) {
   const key = empIdx + '_' + mes + '_' + anio;
   if (turnosCache[key] !== undefined) return turnosCache[key];
@@ -382,7 +376,6 @@ async function guardarTurnosFirebase(empIdx, mes, anio, turnos) {
   await setDoc(doc(db, 'auditoria_turnos', turnosDocId(empIdx, mes, anio)), { turnos, local, empIdx, mes, anio });
 }
 
-// ── CARGA FERIADOS ────────────────────────────────────────────────
 async function cargarFeriados(mes, anio) {
   const key = mes + '_' + anio;
   if (feriadosCache[key] !== undefined) return feriadosCache[key];
@@ -399,7 +392,6 @@ async function guardarFeriadosFirebase(mes, anio, dias) {
   await setDoc(doc(db, 'auditoria_feriados', feriadosDocId(mes, anio)), { dias, local, mes, anio });
 }
 
-// ── HELPERS UI ────────────────────────────────────────────────────
 function calcHoras(entrada, salida) {
   const [eh, em] = entrada.split(':').map(Number);
   const [sh, sm] = salida.split(':').map(Number);
@@ -427,7 +419,6 @@ function loading(show) {
   } else if (!show && el) { el.remove(); }
 }
 
-// ── CAMBIAR LOCAL ─────────────────────────────────────────────────
 window.cambiarLocal = async function() {
   local = document.getElementById('sel-local').value;
   turnosCache = {}; feriadosCache = {};
@@ -436,7 +427,6 @@ window.cambiarLocal = async function() {
   renderHistorial();
 };
 
-// ── TABS ──────────────────────────────────────────────────────────
 window.showTab = function(t, el) {
   document.querySelectorAll('.tab').forEach(e => e.classList.remove('active'));
   document.querySelectorAll('.screen').forEach(e => e.classList.remove('active'));
@@ -446,7 +436,6 @@ window.showTab = function(t, el) {
   if (t === 'ocupacion') renderOcupacion();
 };
 
-// ── EMPLEADOS ─────────────────────────────────────────────────────
 async function renderEmpleados() {
   const now = new Date();
   const mes = now.getMonth()+1, anio = now.getFullYear();
@@ -456,20 +445,10 @@ async function renderEmpleados() {
     tbody.innerHTML = '<tr><td colspan="4"><div class="empty-state"><p>Sin empleados cargados</p></div></td></tr>';
     return;
   }
-  // Cargar turnos del mes actual para el contador
   const counts = await Promise.all(empleados.map((_, i) => cargarTurnos(i, mes, anio)));
   tbody.innerHTML = empleados.map((e, i) => {
     const cnt = Object.values(counts[i]).filter(v => v.tipo !== 'libre').length;
-    return `<tr>
-      <td style="font-weight:500;">${e.nombre}</td>
-      <td>${e.excAnticipado ? '<span class="badge badge-info">Sí</span>' : '-'}</td>
-      <td><span style="font-size:12px;color:#666;">${cnt} turno${cnt!==1?'s':''}</span></td>
-      <td style="text-align:right;">
-        <button class="btn btn-sm" onclick="abrirCalendario(${i})">📅 Turnos</button>
-        <button class="btn btn-sm" onclick="editarEmp(${i})">✏️</button>
-        <button class="btn btn-sm btn-danger" onclick="eliminarEmp(${i})">🗑</button>
-      </td>
-    </tr>`;
+    return '<tr><td style="font-weight:500;">'+e.nombre+'</td><td>'+(e.excAnticipado?'<span class="badge badge-info">S\u00ed</span>':'-')+'</td><td><span style="font-size:12px;color:#666;">'+cnt+' turno'+(cnt!==1?'s':'')+'</span></td><td style="text-align:right;"><button class="btn btn-sm" onclick="abrirCalendario('+i+')">&#128197; Turnos</button> <button class="btn btn-sm" onclick="editarEmp('+i+')">&#9999;&#65039;</button> <button class="btn btn-sm btn-danger" onclick="eliminarEmp('+i+')">&#128465;</button></td></tr>';
   }).join('');
 }
 
@@ -496,7 +475,7 @@ window.cerrarModalEmp = function() { document.getElementById('modal-emp-bg').cla
 
 window.guardarNuevoEmp = async function() {
   const nombre = document.getElementById('inp-emp-nombre').value.trim();
-  if (!nombre) { toast('Escribí el nombre'); return; }
+  if (!nombre) { toast('Escrib\u00ed el nombre'); return; }
   const emp = { nombre, excAnticipado: document.getElementById('inp-exc-anticipado').checked, notas: document.getElementById('inp-emp-notas').value };
   loading(true);
   if (empEditIdx >= 0) empleados[empEditIdx] = emp; else empleados.push(emp);
@@ -508,7 +487,7 @@ window.guardarNuevoEmp = async function() {
 };
 
 window.eliminarEmp = async function(i) {
-  if (!confirm('¿Eliminar este empleado?')) return;
+  if (!confirm('\u00bfEliminar este empleado?')) return;
   loading(true);
   empleados.splice(i, 1);
   await guardarEmpleados();
@@ -517,16 +496,13 @@ window.eliminarEmp = async function(i) {
   toast('Empleado eliminado');
 };
 
-// ── OCUPACIÓN ─────────────────────────────────────────────────────
 window.renderOcupacion = async function() {
   const mes = parseInt(document.getElementById('ocup-mes').value);
   const anio = parseInt(document.getElementById('ocup-anio').value);
   const diasEnMes = new Date(anio, mes, 0).getDate();
   const feriados = await cargarFeriados(mes, anio);
-
   const mapaOcupacion = {};
   for (let d = 1; d <= diasEnMes; d++) mapaOcupacion[d] = [];
-
   await Promise.all(empleados.map(async (emp, idx) => {
     const turnos = await cargarTurnos(idx, mes, anio);
     Object.entries(turnos).forEach(([key, t]) => {
@@ -535,7 +511,6 @@ window.renderOcupacion = async function() {
       mapaOcupacion[d].push({ nombre: emp.nombre, entrada: t.e, salida: t.s, horas: calcHoras(t.e, t.s) });
     });
   }));
-
   let totalHorasMes = 0, diasConPersonal = 0, maxEmpleadosDia = 0;
   for (let d = 1; d <= diasEnMes; d++) {
     const emp = mapaOcupacion[d];
@@ -543,18 +518,7 @@ window.renderOcupacion = async function() {
     if (emp.length > maxEmpleadosDia) maxEmpleadosDia = emp.length;
     emp.forEach(e => totalHorasMes += e.horas);
   }
-
-  document.getElementById('ocup-resumen').innerHTML = `
-    <div style="font-size:13px;font-weight:700;color:#1a1a2e;margin-bottom:10px;">
-      📅 ${MESES_FULL[mes]} ${anio} — ${local === 'ramos' ? 'Ramos Mejía' : 'Morón'}
-      ${feriados.length > 0 ? `<span style="font-size:11px;font-weight:400;color:#c05c00;margin-left:8px;">🗓 ${feriados.length} feriado${feriados.length!==1?'s':''}</span>` : ''}
-    </div>
-    <div class="ocup-kpi-grid">
-      <div class="ocup-kpi"><span>Total horas mes</span><strong>${fmtHoras(totalHorasMes)}</strong></div>
-      <div class="ocup-kpi"><span>Días con personal</span><strong>${diasConPersonal}/${diasEnMes}</strong></div>
-      <div class="ocup-kpi"><span>Máx. empleados/día</span><strong>${maxEmpleadosDia}</strong></div>
-    </div>`;
-
+  document.getElementById('ocup-resumen').innerHTML = '<div style="font-size:13px;font-weight:700;color:#1a1a2e;margin-bottom:10px;">&#128197; '+MESES_FULL[mes]+' '+anio+' &mdash; '+(local==='ramos'?'Ramos Mej\u00eda':'Mor\u00f3n')+(feriados.length>0?' <span style="font-size:11px;font-weight:400;color:#c05c00;margin-left:8px;">&#128197; '+feriados.length+' feriado'+(feriados.length!==1?'s':'')+'</span>':'')+'</div><div class="ocup-kpi-grid"><div class="ocup-kpi"><span>Total horas mes</span><strong>'+fmtHoras(totalHorasMes)+'</strong></div><div class="ocup-kpi"><span>D\u00edas con personal</span><strong>'+diasConPersonal+'/'+diasEnMes+'</strong></div><div class="ocup-kpi"><span>M\u00e1x. empleados/d\u00eda</span><strong>'+maxEmpleadosDia+'</strong></div></div>';
   const lista = document.getElementById('ocup-lista');
   lista.innerHTML = '';
   for (let d = 1; d <= diasEnMes; d++) {
@@ -564,28 +528,10 @@ window.renderOcupacion = async function() {
     const tienePersonal = empsDelDia.length > 0;
     const esFeriado = feriados.includes(d);
     const totalHorasDia = empsDelDia.reduce((a, e) => a + e.horas, 0);
-    let badge = esFeriado ? `<span class="ocup-dia-badge ocup-badge-feriado">🗓 Feriado</span>`
-      : tienePersonal ? `<span class="ocup-dia-badge ocup-badge-activo">${empsDelDia.length} empleado${empsDelDia.length!==1?'s':''}</span>`
-      : `<span class="ocup-dia-badge ocup-badge-libre">Sin turnos</span>`;
+    let badge = esFeriado?'<span class="ocup-dia-badge ocup-badge-feriado">&#128197; Feriado</span>':tienePersonal?'<span class="ocup-dia-badge ocup-badge-activo">'+empsDelDia.length+' empleado'+(empsDelDia.length!==1?'s':'')+'</span>':'<span class="ocup-dia-badge ocup-badge-libre">Sin turnos</span>';
     const card = document.createElement('div');
     card.className = 'ocup-dia-card';
-    card.innerHTML = `
-      <div class="ocup-dia-header${esFeriado?' es-feriado':''}" onclick="toggleDia(this)">
-        <div>
-          <span class="ocup-dia-titulo">${diaSemana} ${d}/${mes}</span>
-          ${tienePersonal ? `<span class="ocup-dia-resumen" style="margin-left:8px;">· ${fmtHoras(totalHorasDia)} totales</span>` : ''}
-        </div>
-        <div style="display:flex;align-items:center;gap:8px;">${badge}<span style="color:#999;font-size:12px;">▾</span></div>
-      </div>
-      <div class="ocup-dia-body">
-        ${esFeriado && !tienePersonal
-          ? '<div class="ocup-vacio">🗓 Feriado — sin personal asignado</div>'
-          : tienePersonal
-            ? empsDelDia.map(e => `<div class="ocup-emp-row"><span class="ocup-emp-nombre">👤 ${e.nombre}</span><span class="ocup-emp-horario">${e.entrada} – ${e.salida}</span><span class="ocup-emp-horas">${fmtHoras(e.horas)}</span></div>`).join('') +
-              `<div class="ocup-total-dia"><span>Total del día</span><span>${fmtHoras(totalHorasDia)}</span></div>`
-            : '<div class="ocup-vacio">Sin turnos cargados</div>'
-        }
-      </div>`;
+    card.innerHTML = '<div class="ocup-dia-header'+(esFeriado?' es-feriado':'')+'" onclick="toggleDia(this)"><div><span class="ocup-dia-titulo">'+diaSemana+' '+d+'/'+mes+'</span>'+(tienePersonal?'<span class="ocup-dia-resumen" style="margin-left:8px;">&middot; '+fmtHoras(totalHorasDia)+' totales</span>':'')+'</div><div style="display:flex;align-items:center;gap:8px;">'+badge+'<span style="color:#999;font-size:12px;">&#9660;</span></div></div><div class="ocup-dia-body">'+(esFeriado&&!tienePersonal?'<div class="ocup-vacio">&#128197; Feriado &mdash; sin personal asignado</div>':tienePersonal?empsDelDia.map(e=>'<div class="ocup-emp-row"><span class="ocup-emp-nombre">&#128100; '+e.nombre+'</span><span class="ocup-emp-horario">'+e.entrada+' &ndash; '+e.salida+'</span><span class="ocup-emp-horas">'+fmtHoras(e.horas)+'</span></div>').join('')+'<div class="ocup-total-dia"><span>Total del d\u00eda</span><span>'+fmtHoras(totalHorasDia)+'</span></div>':'<div class="ocup-vacio">Sin turnos cargados</div>')+'</div>';
     lista.appendChild(card);
   }
 };
@@ -594,10 +540,9 @@ window.toggleDia = function(header) {
   const body = header.nextElementSibling;
   const arrow = header.querySelector('span:last-child');
   body.classList.toggle('abierto');
-  arrow.textContent = body.classList.contains('abierto') ? '▴' : '▾';
+  arrow.textContent = body.classList.contains('abierto') ? '\u25b4' : '\u25be';
 };
 
-// ── CALENDARIO ────────────────────────────────────────────────────
 window.abrirCalendario = async function(idx) {
   calEmpIdx = idx;
   document.getElementById('cal-emp-nombre').textContent = empleados[idx].nombre;
@@ -613,10 +558,7 @@ window.abrirCalendario = async function(idx) {
 window.cargarYRenderCalendario = async function() {
   const mes = parseInt(document.getElementById('cal-mes').value);
   const anio = parseInt(document.getElementById('cal-anio').value);
-  const [turnos, feriados] = await Promise.all([
-    cargarTurnos(calEmpIdx, mes, anio),
-    cargarFeriados(mes, anio)
-  ]);
+  const [turnos, feriados] = await Promise.all([cargarTurnos(calEmpIdx, mes, anio), cargarFeriados(mes, anio)]);
   renderCalendario(turnos, feriados, mes, anio);
 };
 
@@ -635,11 +577,11 @@ function renderCalendario(turnos, feriados, mes, anio) {
     if (esFeriado) cls += ' feriado';
     else if (esLibre) cls += ' no-trabaja';
     else if (t) cls += ' tiene-turno';
-    let inner = '<div class="dia-num">' + d + '</div>';
+    let inner = '<div class="dia-num">'+d+'</div>';
     if (esFeriado) inner += '<span class="feriado-tag">Feriado</span>';
     if (esLibre) inner += '<span class="libre-tag">No trabaja</span>';
-    else if (t) inner += `<span class="turno-tag">${t.e}<br>${t.s}</span>`;
-    html += `<div class="${cls}" onclick="abrirModalTurno(${d})">${inner}</div>`;
+    else if (t) inner += '<span class="turno-tag">'+t.e+'<br>'+t.s+'</span>';
+    html += '<div class="'+cls+'" onclick="abrirModalTurno('+d+')">'+inner+'</div>';
   }
   document.getElementById('cal-grid').innerHTML = html;
 }
@@ -658,7 +600,7 @@ window.abrirModalTurno = async function(dia) {
   turnoFechaActual = { dia, mes, anio, key };
   const turnos = await cargarTurnos(calEmpIdx, mes, anio);
   const t = turnos[key];
-  document.getElementById('modal-turno-title').textContent = 'Turno del ' + dia + '/' + mes + '/' + anio;
+  document.getElementById('modal-turno-title').textContent = 'Turno del '+dia+'/'+mes+'/'+anio;
   if (t && t.tipo === 'libre') document.querySelector('input[value="libre"]').checked = true;
   else document.querySelector('input[value="trabaja"]').checked = true;
   toggleTipoTurno();
@@ -682,7 +624,7 @@ window.guardarTurno = async function() {
   cerrarModalTurno();
   await cargarYRenderCalendario();
   renderEmpleados();
-  toast(tipo === 'libre' ? 'Día marcado como libre' : 'Turno guardado');
+  toast(tipo === 'libre' ? 'D\u00eda marcado como libre' : 'Turno guardado');
 };
 
 window.eliminarTurno = async function() {
@@ -698,11 +640,10 @@ window.eliminarTurno = async function() {
   toast('Turno eliminado');
 };
 
-// ── FERIADOS ──────────────────────────────────────────────────────
 window.abrirModalFeriados = async function() {
   const mes = parseInt(document.getElementById('cal-mes').value);
   const anio = parseInt(document.getElementById('cal-anio').value);
-  document.getElementById('modal-feriados-title').textContent = 'Feriados — ' + MESES_FULL[mes] + ' ' + anio;
+  document.getElementById('modal-feriados-title').textContent = 'Feriados &mdash; '+MESES_FULL[mes]+' '+anio;
   await renderFeriadosGrid(mes, anio);
   document.getElementById('modal-feriados-bg').classList.add('open');
 };
@@ -720,13 +661,7 @@ async function renderFeriadosGrid(mes, anio) {
     const fecha = new Date(anio, mes-1, d);
     const diaSemana = DIAS_SEMANA[fecha.getDay()];
     const activo = feriados.includes(d);
-    html += `<div onclick="toggleFeriado(${d},${mes},${anio})" style="
-      text-align:center;padding:8px 4px;border-radius:8px;cursor:pointer;font-size:12px;
-      border:1px solid ${activo?'#f4a261':'#e0e0e0'};
-      background:${activo?'#fff4e6':'white'};
-      color:${activo?'#c05c00':'#666'};
-      font-weight:${activo?'700':'400'};
-    "><div style="font-size:10px;color:#aaa;">${diaSemana}</div><div>${d}</div></div>`;
+    html += '<div onclick="toggleFeriado('+d+','+mes+','+anio+')" style="text-align:center;padding:8px 4px;border-radius:8px;cursor:pointer;font-size:12px;border:1px solid '+(activo?'#f4a261':'#e0e0e0')+';background:'+(activo?'#fff4e6':'white')+';color:'+(activo?'#c05c00':'#666')+';font-weight:'+(activo?'700':'400')+'"><div style="font-size:10px;color:#aaa;">'+diaSemana+'</div><div>'+d+'</div></div>';
   }
   document.getElementById('feriados-grid').innerHTML = html;
 }
@@ -739,7 +674,6 @@ window.toggleFeriado = async function(dia, mes, anio) {
   await renderFeriadosGrid(mes, anio);
 };
 
-// ── AUDITORÍA ─────────────────────────────────────────────────────
 window.procesarArchivo = function(event) {
   const file = event.target.files[0];
   if (!file) return;
@@ -795,11 +729,10 @@ function parseFecha(str) {
 function toMin(s) { const [h,m] = s.split(':').map(Number); return h*60+m; }
 
 window.ejecutarAuditoria = async function() {
-  if (!fichajesCargados) { toast('Cargá fichajes primero'); return; }
+  if (!fichajesCargados) { toast('Carg\u00e1 fichajes primero'); return; }
   const mes = parseInt(document.getElementById('sel-mes').value);
   const anio = parseInt(document.getElementById('inp-anio').value);
   const feriados = await cargarFeriados(mes, anio);
-
   const consolidado = {};
   fichajesCargados.forEach(f => {
     const nombre = (f.Usuario||f.usuario||'').trim();
@@ -813,7 +746,6 @@ window.ejecutarAuditoria = async function() {
       if (salida && (!consolidado[key].salida || salida > consolidado[key].salida)) consolidado[key].salida = salida;
     }
   });
-
   const resultados = [];
   for (let idx = 0; idx < empleados.length; idx++) {
     const emp = empleados[idx];
@@ -828,7 +760,7 @@ window.ejecutarAuditoria = async function() {
       const fKey = emp.nombre.toLowerCase()+'|'+fechaStr;
       const fich = consolidado[fKey];
       const dia = DIAS_SEMANA[fecha.getDay()];
-      if (!fich) { desvios.push({ fecha:d+'/'+mes, dia, planif:t.e+'-'+t.s, real:'--', tipo:'D', msg:'AUSENCIA - no se presentó', sev:'alta' }); return; }
+      if (!fich) { desvios.push({ fecha:d+'/'+mes, dia, planif:t.e+'-'+t.s, real:'--', tipo:'D', msg:'AUSENCIA - no se present\u00f3', sev:'alta' }); return; }
       const planE = toMin(t.e);
       let planS = toMin(t.s);
       if (planS <= planE) planS += 1440;
@@ -837,13 +769,12 @@ window.ejecutarAuditoria = async function() {
       const realStr = fich.ingreso.getHours()+':'+String(fich.ingreso.getMinutes()).padStart(2,'0')+(fich.salida?'-'+fich.salida.getHours()+':'+String(fich.salida.getMinutes()).padStart(2,'0'):'');
       const diffE = realE - planE;
       if (Math.abs(diffE) > 240) desvios.push({ fecha:d+'/'+mes, dia, planif:t.e+'-'+t.s, real:realStr, tipo:'E', msg:'Posible cambio de turno informal', sev:'info' });
-      else if (diffE > 10) desvios.push({ fecha:d+'/'+mes, dia, planif:t.e+'-'+t.s, real:realStr, tipo:'A', msg:'Llegó '+diffE+' min tarde - PIERDE PRESENTISMO', sev:'alta' });
-      else if (!emp.excAnticipado && diffE < -30) desvios.push({ fecha:d+'/'+mes, dia, planif:t.e+'-'+t.s, real:realStr, tipo:'C', msg:'Fichó '+Math.abs(diffE)+' min antes', sev:'baja' });
-      if (realS !== null && (realS - planS%1440) < -2) desvios.push({ fecha:d+'/'+mes, dia, planif:t.e+'-'+t.s, real:realStr, tipo:'B', msg:'Salió '+Math.abs(realS-planS%1440)+' min antes', sev:'media' });
+      else if (diffE > 10) desvios.push({ fecha:d+'/'+mes, dia, planif:t.e+'-'+t.s, real:realStr, tipo:'A', msg:'Lleg\u00f3 '+diffE+' min tarde - PIERDE PRESENTISMO', sev:'alta' });
+      else if (!emp.excAnticipado && diffE < -30) desvios.push({ fecha:d+'/'+mes, dia, planif:t.e+'-'+t.s, real:realStr, tipo:'C', msg:'Fich\u00f3 '+Math.abs(diffE)+' min antes', sev:'baja' });
+      if (realS !== null && (realS - planS%1440) < -2) desvios.push({ fecha:d+'/'+mes, dia, planif:t.e+'-'+t.s, real:realStr, tipo:'B', msg:'Sali\u00f3 '+Math.abs(realS-planS%1440)+' min antes', sev:'media' });
     });
     resultados.push({ empleado: emp, desvios });
   }
-
   resultadosActuales = { mes, anio, local, resultados, timestamp: Date.now() };
   renderResultados(resultados);
   document.querySelectorAll('.tab').forEach(e => e.classList.remove('active'));
@@ -857,15 +788,11 @@ function renderResultados(resultados) {
   document.getElementById('res-contenido').style.display = 'block';
   const conDev = resultados.filter(r => r.desvios.length > 0);
   const sinDev = resultados.filter(r => r.desvios.length === 0);
-  document.getElementById('lista-desvios').innerHTML = !conDev.length
-    ? '<div class="empty-state"><p>Sin desvíos</p></div>'
-    : conDev.map(r => `<div class="card" style="margin-bottom:8px;"><div style="font-weight:500;margin-bottom:8px;">${r.empleado.nombre}</div>${r.desvios.map(d=>`<div class="dev-item"><div class="flex-between"><span style="font-size:12px;color:#666;">${d.dia} ${d.fecha} · ${d.planif} vs ${d.real}</span><span class="badge badge-${d.sev}">${d.sev}</span></div><div style="font-size:12px;margin-top:2px;">${d.msg}</div></div>`).join('')}</div>`).join('');
-  document.getElementById('lista-perfectos').innerHTML = !sinDev.length
-    ? '<p style="color:#999;font-size:13px;">Todos tienen desvíos</p>'
-    : sinDev.map(r => `<div class="perf-item"><span style="color:#2a9d5c;font-size:20px;">✅</span><span style="font-weight:500;">${r.empleado.nombre}</span><span class="badge" style="background:#EAF3DE;color:#3B6D11;">PRESENTISMO</span></div>`).join('');
+  document.getElementById('lista-desvios').innerHTML = !conDev.length ? '<div class="empty-state"><p>Sin desv\u00edos</p></div>' : conDev.map(r => '<div class="card" style="margin-bottom:8px;"><div style="font-weight:500;margin-bottom:8px;">'+r.empleado.nombre+'</div>'+r.desvios.map(d=>'<div class="dev-item"><div class="flex-between"><span style="font-size:12px;color:#666;">'+d.dia+' '+d.fecha+' &middot; '+d.planif+' vs '+d.real+'</span><span class="badge badge-'+d.sev+'">'+d.sev+'</span></div><div style="font-size:12px;margin-top:2px;">'+d.msg+'</div></div>').join('')+'</div>').join('');
+  document.getElementById('lista-perfectos').innerHTML = !sinDev.length ? '<p style="color:#999;font-size:13px;">Todos tienen desv\u00edos</p>' : sinDev.map(r => '<div class="perf-item"><span style="color:#2a9d5c;font-size:20px;">&#9989;</span><span style="font-weight:500;">'+r.empleado.nombre+'</span><span class="badge" style="background:#EAF3DE;color:#3B6D11;">PRESENTISMO</span></div>').join('');
   document.getElementById('tabla-resumen').innerHTML = resultados.map(r => {
     const pierde = r.desvios.some(d => d.tipo==='A'||d.tipo==='D');
-    return `<tr><td style="font-weight:500;">${r.empleado.nombre}</td><td>${r.desvios.length}</td><td>${pierde?'<span class="badge badge-alta">Sí</span>':'<span class="badge" style="background:#EAF3DE;color:#3B6D11;">No</span>'}</td><td style="font-size:12px;color:#666;">${r.desvios.filter(d=>d.tipo==='A').length>0?r.desvios.filter(d=>d.tipo==='A').length+' tarde(s)':''}</td></tr>`;
+    return '<tr><td style="font-weight:500;">'+r.empleado.nombre+'</td><td>'+r.desvios.length+'</td><td>'+(pierde?'<span class="badge badge-alta">S\u00ed</span>':'<span class="badge" style="background:#EAF3DE;color:#3B6D11;">No</span>')+'</td><td style="font-size:12px;color:#666;">'+(r.desvios.filter(d=>d.tipo==='A').length>0?r.desvios.filter(d=>d.tipo==='A').length+' tarde(s)':'')+'</td></tr>';
   }).join('');
 }
 
@@ -876,7 +803,7 @@ window.guardarAuditoriaFirebase = async function() {
     await setDoc(doc(db, 'auditoria_historial', auditoriaDocId(resultadosActuales.mes, resultadosActuales.anio)), resultadosActuales);
     loading(false);
     renderHistorial();
-    toast('Auditoría guardada');
+    toast('Auditor\u00eda guardada');
   } catch(e) { loading(false); toast('Error al guardar'); }
 };
 
@@ -888,15 +815,8 @@ async function renderHistorial() {
     const items = [];
     snap.forEach(d => { const data = d.data(); if (data.local === local) items.push({ id: d.id, ...data }); });
     items.sort((a,b) => b.timestamp - a.timestamp);
-    if (!items.length) { div.innerHTML = '<p style="color:#999;font-size:13px;">Sin auditorías guardadas</p>'; return; }
-    div.innerHTML = items.map(d => `
-      <div class="flex-between" style="padding:8px 0;border-bottom:1px solid #eee;">
-        <span style="font-size:13px;">${MESES_FULL[d.mes]} ${d.anio}</span>
-        <div style="display:flex;gap:6px;">
-          <button class="btn btn-sm" onclick="verAuditoria('${d.id}')">👁 Ver</button>
-          <button class="btn btn-sm btn-danger" onclick="eliminarAuditoria('${d.id}')">🗑</button>
-        </div>
-      </div>`).join('');
+    if (!items.length) { div.innerHTML = '<p style="color:#999;font-size:13px;">Sin auditor\u00edas guardadas</p>'; return; }
+    div.innerHTML = items.map(d => '<div class="flex-between" style="padding:8px 0;border-bottom:1px solid #eee;"><span style="font-size:13px;">'+MESES_FULL[d.mes]+' '+d.anio+'</span><div style="display:flex;gap:6px;"><button class="btn btn-sm" onclick="verAuditoria(\''+d.id+'\')">&#128065; Ver</button><button class="btn btn-sm btn-danger" onclick="eliminarAuditoria(\''+d.id+'\')">&#128465;</button></div></div>').join('');
   } catch(e) { div.innerHTML = '<p style="color:#999;font-size:13px;">Error al cargar historial</p>'; }
 }
 
@@ -912,7 +832,7 @@ window.verAuditoria = async function(id) {
 };
 
 window.eliminarAuditoria = async function(id) {
-  if (!confirm('¿Eliminar esta auditoría?')) return;
+  if (!confirm('\u00bfEliminar esta auditor\u00eda?')) return;
   await deleteDoc(doc(db, 'auditoria_historial', id));
   renderHistorial();
   toast('Eliminado');
@@ -920,37 +840,26 @@ window.eliminarAuditoria = async function(id) {
 
 window.exportarResultados = function() {
   if (!resultadosActuales) return;
-  const rows = [['Empleado','Fecha','Día','Planificado','Real','Tipo','Severidad','Detalle']];
+  const rows = [['Empleado','Fecha','D\u00eda','Planificado','Real','Tipo','Severidad','Detalle']];
   resultadosActuales.resultados.forEach(r => r.desvios.forEach(d => rows.push([r.empleado.nombre,d.fecha,d.dia,d.planif,d.real,d.tipo,d.sev,d.msg])));
   const ws = XLSX.utils.aoa_to_sheet(rows);
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb,'Auditoría',ws);
+  XLSX.utils.book_append_sheet(wb,'Auditor\u00eda',ws);
   XLSX.writeFile(wb,'auditoria_'+local+'_'+resultadosActuales.mes+'_'+resultadosActuales.anio+'.xlsx');
 };
 
-// ── INIT ──────────────────────────────────────────────────────────
-(async () => {
+// ── INIT CON AUTH ─────────────────────────────────────────────────
+onAuthStateChanged(auth, async (user) => {
+  if (!user) { window.location.href = 'login.html'; return; }
   await cargarEmpleados();
-
-  // Migrar datos de localStorage si existen (una sola vez)
-  const lsKey = 'emp_' + local;
-  const lsData = localStorage.getItem(lsKey);
-  if (lsData && empleados.length === 0) {
-    empleados = JSON.parse(lsData);
-    await guardarEmpleados();
-    localStorage.removeItem(lsKey);
-    toast('Datos migrados a Firebase ✅');
-  }
-
   renderEmpleados();
   renderHistorial();
-
   const now = new Date();
   document.getElementById('sel-mes').value = now.getMonth()+1;
   document.getElementById('inp-anio').value = now.getFullYear();
   document.getElementById('ocup-mes').value = now.getMonth()+1;
   document.getElementById('ocup-anio').value = now.getFullYear();
-})();
+});
 </script>
 </body>
 </html>
