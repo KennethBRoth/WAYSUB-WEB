@@ -254,8 +254,17 @@ let resultados = null;
 // ── INIT ─────────────────────────────────────────────────
 const params = new URLSearchParams(window.location.search);
 localActual = params.get('local') || 'Desconocido';
-// Sanitize for Firestore doc ID (no spaces or special chars)
-function docId(s) { return s.replace(/[^a-zA-Z0-9_-]/g, '_'); }
+// Mapear nombre de local al ID que ya existe en Firebase
+function docId(s) {
+  const mapa = {
+    'Ramos Mejía': 'Ramos Mejía',
+    'Ramos Mejia': 'Ramos Mejía',
+    'Morón': 'moron',
+    'Moron': 'moron',
+    'moron': 'moron',
+  };
+  return mapa[s] || s.replace(/[^a-zA-Z0-9_-]/g, '_');
+}
 document.getElementById('local-nombre').textContent = localActual;
 
 const hoy = new Date();
