@@ -231,31 +231,20 @@
       permisosActuales = usuarioActual.permisos || {};
       const esAdmin = usuarioActual.rol === 'admin';
       const cajeros = usuarioActual.cajeros || {};
+      const accesos = usuarioActual.accesos || {};
       const tieneCajero = Object.values(cajeros).some(v => v === true);
 
       document.getElementById('usuario-nombre').textContent = '👋 Hola, ' + (usuarioActual.nombre || user.email);
 
-      // Verificar si tiene algún permiso de módulo en cualquier local
-      const tieneModulos = esAdmin || Object.values(permisosActuales).some(local =>
-        Object.values(local).some(v => v === true)
-      );
-
-      // Mostrar/ocultar cards de locales
+      // Mostrar/ocultar según accesos (admins ven todo)
       document.querySelectorAll('.local-card').forEach(card => {
-        card.style.display = tieneModulos ? 'block' : 'none';
+        card.style.display = (esAdmin || accesos.ver_locales) ? 'block' : 'none';
       });
 
-      // Movimiento de Caja y Cashflow solo para admins
-      document.getElementById('btn-caja').style.display = esAdmin ? 'block' : 'none';
-      document.getElementById('btn-cashflow').style.display = esAdmin ? 'block' : 'none';
-
-      // Cierre de Caja solo si tiene permiso cajero
-      document.getElementById('btn-cajero').style.display = (esAdmin || tieneCajero) ? 'block' : 'none';
-
-      // Admin
-      if (esAdmin) {
-        document.getElementById('btn-admin').style.display = 'block';
-      }
+      document.getElementById('btn-caja').style.display     = (esAdmin || accesos.ver_caja)      ? 'block' : 'none';
+      document.getElementById('btn-cashflow').style.display = (esAdmin || accesos.ver_cashflow)   ? 'block' : 'none';
+      document.getElementById('btn-cajero').style.display   = (esAdmin || tieneCajero)            ? 'block' : 'none';
+      document.getElementById('btn-admin').style.display    = esAdmin                             ? 'block' : 'none';
     });
 
     window.cerrarSesion = async function() {
@@ -277,7 +266,13 @@
           } else {
             if (mod === 'axionlog') el.onclick = abrirAxionlog;
             if (mod === 'coca') el.onclick = abrirCoca;
-            if (mod === 'horas') el.onclick = () => window.location.href = 'auditoria.html';
+            if (mod === 'horas') el.onclick = () => {
+              if (esAdmin || (usuarioActual.accesos && usuarioActual.accesos.ver_auditoria) || permsLocal['horas']) {
+                window.location.href = 'auditoria.html';
+              } else {
+                alert('No tenés permiso para este módulo');
+              }
+            };
             if (mod === 'reportes') el.onclick = abrirReportes;
           }
         }
