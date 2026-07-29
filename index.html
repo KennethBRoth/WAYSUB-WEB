@@ -97,9 +97,9 @@
         <h2>Morón</h2>
         <p>Subway · Balcarce</p>
       </div>
-      <div class="btn-general" onclick="abrirCaja()">💰 Movimiento de Caja</div>
-      <div class="btn-general" onclick="window.location.href='cashflow.html'">📊 Cashflow</div>
-      <div class="btn-general" onclick="window.location.href='cajero.html'">🧾 Cierre de Caja</div>
+      <div class="btn-general" id="btn-caja" onclick="abrirCaja()" style="display:none;">💰 Movimiento de Caja</div>
+      <div class="btn-general" id="btn-cashflow" onclick="window.location.href='cashflow.html'" style="display:none;">📊 Cashflow</div>
+      <div class="btn-general" id="btn-cajero" onclick="window.location.href='cajero.html'" style="display:none;">🧾 Cierre de Caja</div>
       <div class="btn-general" id="btn-admin" onclick="window.location.href='admin.html'" style="display:none;">👤 Administrar usuarios</div>
       <div class="btn-cerrar-sesion" onclick="cerrarSesion()">🚪 Cerrar sesión</div>
     </div>
@@ -229,8 +229,31 @@
       }
       usuarioActual = snap.data();
       permisosActuales = usuarioActual.permisos || {};
+      const esAdmin = usuarioActual.rol === 'admin';
+      const cajeros = usuarioActual.cajeros || {};
+      const tieneCajero = Object.values(cajeros).some(v => v === true);
+
       document.getElementById('usuario-nombre').textContent = '👋 Hola, ' + (usuarioActual.nombre || user.email);
-      if (usuarioActual.rol === 'admin') {
+
+      // Verificar si tiene algún permiso de módulo en cualquier local
+      const tieneModulos = esAdmin || Object.values(permisosActuales).some(local =>
+        Object.values(local).some(v => v === true)
+      );
+
+      // Mostrar/ocultar cards de locales
+      document.querySelectorAll('.local-card').forEach(card => {
+        card.style.display = tieneModulos ? 'block' : 'none';
+      });
+
+      // Movimiento de Caja y Cashflow solo para admins
+      document.getElementById('btn-caja').style.display = esAdmin ? 'block' : 'none';
+      document.getElementById('btn-cashflow').style.display = esAdmin ? 'block' : 'none';
+
+      // Cierre de Caja solo si tiene permiso cajero
+      document.getElementById('btn-cajero').style.display = (esAdmin || tieneCajero) ? 'block' : 'none';
+
+      // Admin
+      if (esAdmin) {
         document.getElementById('btn-admin').style.display = 'block';
       }
     });
