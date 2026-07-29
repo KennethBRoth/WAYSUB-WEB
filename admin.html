@@ -94,6 +94,13 @@
     { key: 'cajero_balcarce_moron', label: '🍰 Balcarce Morón' }
   ];
 
+  const ACCESOS_GENERALES = [
+    { key: 'ver_locales',   label: '🏪 Ver cards de locales' },
+    { key: 'ver_caja',      label: '💰 Movimiento de Caja' },
+    { key: 'ver_cashflow',  label: '📊 Cashflow' },
+    { key: 'ver_auditoria', label: '⏰ Auditoría' },
+  ];
+
   onAuthStateChanged(auth, async (user) => {
     if (!user) { window.location.href = 'login.html'; return; }
     const snap = await getDoc(doc(db, "usuarios", user.uid));
@@ -198,6 +205,23 @@
         </div>`;
       });
       html += '</div></div>';
+
+      // Accesos generales a la pantalla de inicio
+      const accesos = u.accesos || {};
+      html += `<div class="cajero-seccion">
+        <h5>🖥️ Accesos pantalla de inicio</h5>
+        <div class="cajero-locales">`;
+      ACCESOS_GENERALES.forEach(a => {
+        const checked = accesos[a.key] ? 'checked' : '';
+        html += `<div class="cajero-toggle">
+          <span>${a.label}</span>
+          <label class="toggle">
+            <input type="checkbox" ${checked} onchange="window.toggleAcceso('${u.id}', '${a.key}', this.checked)">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>`;
+      });
+      html += '</div></div>';
     }
 
     card.innerHTML = html;
@@ -225,6 +249,11 @@
 
   window.toggleCajero = async function(uid, localKey, valor) {
     const campo = 'cajeros.' + localKey;
+    await updateDoc(doc(db, "usuarios", uid), { [campo]: valor });
+  }
+
+  window.toggleAcceso = async function(uid, key, valor) {
+    const campo = 'accesos.' + key;
     await updateDoc(doc(db, "usuarios", uid), { [campo]: valor });
   }
 
