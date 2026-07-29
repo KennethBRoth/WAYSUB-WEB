@@ -320,6 +320,13 @@
       </table>
     </div>
 
+    <!-- EGRESOS (solo Subway) -->
+    <div class="section" id="seccion-egresos" style="display:none;">
+      <div class="section-title">📤 Egresos <span style="font-size:11px;color:#aaa;font-weight:400;text-transform:none;letter-spacing:0;">solo informativo</span></div>
+      <div class="gastos-lista" id="egresos-lista"></div>
+      <button class="btn-add-gasto" onclick="agregarEgreso()">+ Agregar egreso</button>
+    </div>
+
     <!-- PANES (solo Subway) -->
     <div class="section" id="seccion-panes" style="display:none;">
       <div class="section-title">🍞 Conteo de Panes</div>
@@ -442,6 +449,7 @@ function entrarALocal(key) {
   document.getElementById('campo-cajero').textContent = nombreUsuario;
   document.getElementById('campo-fecha').value = new Date().toISOString().split('T')[0];
   document.getElementById('seccion-panes').style.display = esSubway ? 'block' : 'none';
+  document.getElementById('seccion-egresos').style.display = esSubway ? 'block' : 'none';
   document.getElementById('btn-cambiar').style.display = esMultiLocal ? 'block' : 'none';
 
   mostrarPantalla(null);
@@ -458,6 +466,41 @@ function mostrarPantalla(id) {
   document.getElementById('app').style.display = 'none';
   if (id) document.getElementById(id).classList.add('active');
 }
+
+// ── EGRESOS ─────────────────────────────────────────────
+let egresosActuales = [];
+
+function renderEgresos() {
+  const lista = document.getElementById('egresos-lista');
+  if (!lista) return;
+  lista.innerHTML = egresosActuales.map((e, i) => `
+    <div class="gasto-item">
+      <input type="text" class="gasto-desc" placeholder="Descripción" value="${e.desc || ''}"
+        oninput="window.actualizarEgreso(${i}, 'desc', this.value)">
+      <input type="number" class="gasto-monto" placeholder="$0" value="${e.monto || ''}"
+        inputmode="decimal" oninput="window.actualizarEgreso(${i}, 'monto', this.value)">
+      <button class="btn-del-gasto" onclick="window.eliminarEgreso(${i})">🗑</button>
+    </div>
+  `).join('');
+}
+
+window.agregarEgreso = function() {
+  egresosActuales.push({ desc: '', monto: '' });
+  renderEgresos();
+  setTimeout(() => {
+    const inputs = document.querySelectorAll('#egresos-lista .gasto-desc');
+    if (inputs.length) inputs[inputs.length - 1].focus();
+  }, 50);
+};
+
+window.actualizarEgreso = function(i, campo, valor) {
+  egresosActuales[i][campo] = valor;
+};
+
+window.eliminarEgreso = function(i) {
+  egresosActuales.splice(i, 1);
+  renderEgresos();
+};
 
 // ── GASTOS ──────────────────────────────────────────────
 function renderGastos() {
@@ -641,6 +684,9 @@ function cargarDatos(data) {
   // Gastos
   gastosActuales = data.gastos || [];
   renderGastos();
+  // Egresos
+  egresosActuales = data.egresos || [];
+  renderEgresos();
 
   // Panes
   if (data.panes && esSubway) {
@@ -664,6 +710,8 @@ function limpiarFormulario() {
   ].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
   gastosActuales = [];
   renderGastos();
+  egresosActuales = [];
+  renderEgresos();
   recalcular();
 }
 
@@ -693,6 +741,7 @@ window.guardarCierre = async function() {
       ventasIva:       getNum('ventas-iva'),
       vouchers:        getNum('vouchers'),
       gastos:          gastosActuales.filter(g => g.desc || g.monto),
+      egresos:         egresosActuales.filter(e => e.desc || e.monto),
       totalGastos,
       mercadoDelivery: md,
       rappi,
