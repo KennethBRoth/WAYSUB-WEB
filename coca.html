@@ -91,6 +91,13 @@
     <h3 style="font-size:15px;color:#1a1a2e;font-weight:800;text-transform:none;letter-spacing:0;border-left:4px solid #1a1a2e;padding-left:10px;">
       📦 Stock Inicial <span style="font-size:11px;color:#2a9d5c;font-weight:400;">(cargado automáticamente)</span>
     </h3>
+    <div style="margin-bottom:12px;">
+      <p style="font-size:11px;color:#999;margin-bottom:6px;font-weight:600;">PEGÁ EL REPORTE DE LINISCO (CONTEO):</p>
+      <textarea id="linisco-si-paste" rows="4" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:12px;font-family:monospace;resize:vertical;" placeholder="COCA COLA&#10;Común:123&#10;Zero:110&#10;..."></textarea>
+      <button onclick="interpretarLinisco('si')" style="width:100%;background:#1a1a2e;color:white;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;margin-top:6px;">🔍 Interpretar y cargar</button>
+      <div id="res-linisco-si" style="font-size:12px;color:#2a9d5c;margin-top:6px;display:none;"></div>
+    </div>
+    <p style="font-size:11px;color:#999;margin-bottom:8px;font-weight:600;">O CARGÁ MANUALMENTE:</p>
     <table class="productos-tabla">
       <thead><tr><th>Producto</th><th style="text-align:center;">Unid.</th></tr></thead>
       <tbody id="tbody-stock-inicial"></tbody>
@@ -416,10 +423,10 @@ window.guardarComoStockInicial = async function() {
 
 // ── LINISCO ──────────────────────────────────────────────
 window.interpretarLinisco = function(tipo) {
-  const esStock = tipo === 'stock';
-  const textareaId = esStock ? 'linisco-stock-paste' : 'linisco-ventas-paste';
-  const resultadoId = esStock ? 'res-linisco-stock' : 'res-linisco-ventas';
-  const tablaId     = esStock ? 'sa' : 'ventas';
+  const esStock = tipo === 'stock' || tipo === 'si';
+  const textareaId = tipo === 'si' ? 'linisco-si-paste' : esStock ? 'linisco-stock-paste' : 'linisco-ventas-paste';
+  const resultadoId = tipo === 'si' ? 'res-linisco-si' : esStock ? 'res-linisco-stock' : 'res-linisco-ventas';
+  const tablaId     = tipo === 'si' ? 'si' : esStock ? 'sa' : 'ventas';
 
   const texto = document.getElementById(textareaId).value.trim();
   if (!texto) { toast('Pega el texto primero', 'err'); return; }
