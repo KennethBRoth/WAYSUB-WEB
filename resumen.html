@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Resumen Cierres — Waysub Panel</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f0f2f5; color: #1a1a2e; min-height: 100vh; }
+
+  .header { background: #1a1a2e; color: white; padding: 16px 20px; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+  .btn-back { background: rgba(255,255,255,0.1); border: none; color: white; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 14px; }
+  .header h1 { font-size: 18px; font-weight: 600; flex: 1; }
+
+  .container { max-width: 720px; margin: 0 auto; padding: 20px 16px 60px; }
+
+  /* FILTROS */
+  .filtros { background: white; border-radius: 16px; padding: 18px 20px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; }
+  .filtro-group { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 140px; }
+  .filtro-group label { font-size: 12px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.05em; }
+  .filtro-group select, .filtro-group input { padding: 10px 12px; border: 1.5px solid #e8e8e8; border-radius: 10px; font-size: 14px; color: #1a1a2e; background: #fafafa; outline: none; font-family: inherit; }
+  .filtro-group select:focus, .filtro-group input:focus { border-color: #1a1a2e; background: white; }
+  .btn-buscar { background: #1a1a2e; color: white; border: none; padding: 10px 20px; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; white-space: nowrap; align-self: flex-end; }
+
+  /* LOCALES TABS */
+  .locales-tabs { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+  .local-tab { padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer; border: 1.5px solid #e8e8e8; background: white; color: #888; transition: all 0.2s; }
+  .local-tab.activo { background: #1a1a2e; color: white; border-color: #1a1a2e; }
+
+  /* CARDS */
+  .cierre-card { background: white; border-radius: 16px; padding: 20px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+  .cierre-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #f0f0f0; }
+  .cierre-fecha { font-size: 16px; font-weight: 700; color: #1a1a2e; }
+  .cierre-cajero { font-size: 12px; color: #888; margin-top: 2px; }
+  .cierre-resultado { font-size: 20px; font-weight: 800; }
+  .cierre-resultado.ok { color: #2ecc71; }
+  .cierre-resultado.warn { color: #e74c3c; }
+  .cierre-resultado.neutral { color: #888; }
+
+  .cierre-fila { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #f8f8f8; font-size: 14px; }
+  .cierre-fila:last-child { border-bottom: none; }
+  .cierre-fila .label { color: #666; font-weight: 500; }
+  .cierre-fila .valor { font-weight: 700; color: #1a1a2e; }
+  .cierre-fila .valor.verde { color: #2a9d5c; }
+  .cierre-fila .valor.rojo { color: #e63946; }
+
+  .egresos-lista { margin-top: 8px; padding: 10px 14px; background: #f8f9fa; border-radius: 10px; }
+  .egreso-item { display: flex; justify-content: space-between; font-size: 13px; padding: 4px 0; color: #555; }
+  .egresos-titulo { font-size: 11px; font-weight: 700; color: #aaa; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
+
+  .sin-datos { text-align: center; padding: 60px 20px; color: #bbb; font-size: 15px; }
+  .sin-datos .icon { font-size: 40px; margin-bottom: 12px; }
+
+  .loading { text-align: center; padding: 40px; color: #999; }
+  .spinner { width: 36px; height: 36px; border: 3px solid #ddd; border-top-color: #1a1a2e; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  @media (max-width: 480px) {
+    .filtros { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <button class="btn-back" onclick="window.location.href='index.html'">← Inicio</button>
+  <h1>📋 Resumen de Cierres</h1>
+</div>
+
+<div class="container">
+
+  <!-- FILTROS -->
+  <div class="filtros">
+    <div class="filtro-group">
+      <label>Desde</label>
+      <input type="date" id="filtro-desde">
+    </div>
+    <div class="filtro-group">
+      <label>Hasta</label>
+      <input type="date" id="filtro-hasta">
+    </div>
+    <button class="btn-buscar" onclick="buscar()">🔍 Buscar</button>
+  </div>
+
+  <!-- TABS DE LOCALES -->
+  <div class="locales-tabs">
+    <div class="local-tab activo" onclick="cambiarLocal('Subway Ramos Mejía', this)">🥖 Subway Ramos</div>
+    <div class="local-tab" onclick="cambiarLocal('Subway Morón', this)">🥖 Subway Morón</div>
+    <div class="local-tab" onclick="cambiarLocal('Balcarce Ramos Mejía', this)">🍰 Balcarce Ramos</div>
+    <div class="local-tab" onclick="cambiarLocal('Balcarce Morón', this)">🍰 Balcarce Morón</div>
+  </div>
+
+  <!-- RESULTADOS -->
+  <div id="resultados">
+    <div class="sin-datos"><div class="icon">📅</div><p>Seleccioná un rango de fechas y buscá</p></div>
+  </div>
+
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAB2-btgFqGiCe1YdZSDv4EShV601N-uQs",
+  authDomain: "waysub-web.firebaseapp.com",
+  projectId: "waysub-web",
+  storageBucket: "waysub-web.firebasestorage.app",
+  messagingSenderId: "219825581217",
+  appId: "1:219825581217:web:6f752ee27a5446400114e0"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+let localActual = 'Subway Ramos Mejía';
+let todosLosCierres = [];
+
+// Auth
+onAuthStateChanged(auth, async (user) => {
+  if (!user) { window.location.href = 'login.html'; return; }
+  const snap = await getDoc(doc(db, 'usuarios', user.uid));
+  if (!snap.exists() || snap.data().rol !== 'admin') {
+    window.location.href = 'index.html'; return;
+  }
+  // Fechas default: este mes
+  const hoy = new Date();
+  const primeroDeMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1).toISOString().split('T')[0];
+  const hoyStr = hoy.toISOString().split('T')[0];
+  document.getElementById('filtro-desde').value = primeroDeMes;
+  document.getElementById('filtro-hasta').value = hoyStr;
+  buscar();
+});
+
+window.cambiarLocal = function(local, el) {
+  localActual = local;
+  document.querySelectorAll('.local-tab').forEach(t => t.classList.remove('activo'));
+  el.classList.add('activo');
+  renderCierres();
+};
+
+window.buscar = async function() {
+  const div = document.getElementById('resultados');
+  div.innerHTML = '<div class="loading"><div class="spinner"></div><p>Cargando...</p></div>';
+
+  try {
+    const snap = await getDocs(collection(db, 'cajero_cierres'));
+    todosLosCierres = [];
+    snap.forEach(d => todosLosCierres.push({ id: d.id, ...d.data() }));
+    renderCierres();
+  } catch(e) {
+    div.innerHTML = '<div class="sin-datos"><div class="icon">❌</div><p>Error al cargar datos</p></div>';
+  }
+};
+
+function renderCierres() {
+  const desde = document.getElementById('filtro-desde').value;
+  const hasta = document.getElementById('filtro-hasta').value;
+  const div = document.getElementById('resultados');
+
+  const filtrados = todosLosCierres
+    .filter(c => c.local === localActual && c.fecha >= desde && c.fecha <= hasta)
+    .sort((a, b) => b.fecha.localeCompare(a.fecha));
+
+  if (!filtrados.length) {
+    div.innerHTML = '<div class="sin-datos"><div class="icon">📭</div><p>Sin cierres en este período</p></div>';
+    return;
+  }
+
+  div.innerHTML = filtrados.map(c => {
+    const apertura = (c.aperturaFuerte || 0) + (c.aperturaRegistradora || 0) || c.apertura || 0;
+    const cierre = (c.cierreFuerte || 0) + (c.cierreRegistradora || 0) || c.cierreContado || 0;
+    const resultado = c.resultadoCaja || 0;
+    const egresos = c.egresos || [];
+    const totalEgresos = egresos.reduce((acc, e) => acc + (parseFloat(e.monto) || 0), 0);
+
+    const resClase = resultado > 0 ? 'ok' : resultado < 0 ? 'warn' : 'neutral';
+
+    return `
+      <div class="cierre-card">
+        <div class="cierre-header">
+          <div>
+            <div class="cierre-fecha">${formatFecha(c.fecha)}</div>
+            <div class="cierre-cajero">👤 ${c.cajero || '—'}</div>
+          </div>
+          <div class="cierre-resultado ${resClase}">${formatPeso(resultado)}</div>
+        </div>
+
+        <div class="cierre-fila">
+          <span class="label">Apertura</span>
+          <span class="valor rojo">${formatPeso(apertura)}</span>
+        </div>
+        <div class="cierre-fila">
+          <span class="label">Cierre contado</span>
+          <span class="valor verde">${formatPeso(cierre)}</span>
+        </div>
+
+        ${egresos.length ? `
+          <div class="cierre-fila" style="align-items:flex-start;flex-direction:column;gap:8px;">
+            <span class="label">Egresos</span>
+            <div class="egresos-lista" style="width:100%;">
+              ${egresos.map(e => `
+                <div class="egreso-item">
+                  <span>${e.desc || '—'}</span>
+                  <span style="font-weight:700;">${formatPeso(parseFloat(e.monto) || 0)}</span>
+                </div>
+              `).join('')}
+              <div class="egreso-item" style="border-top:1px solid #e0e0e0;margin-top:6px;padding-top:6px;font-weight:700;color:#1a1a2e;">
+                <span>Total egresos</span>
+                <span>${formatPeso(totalEgresos)}</span>
+              </div>
+            </div>
+          </div>
+        ` : `
+          <div class="cierre-fila">
+            <span class="label">Egresos</span>
+            <span class="valor" style="color:#bbb;">Sin egresos</span>
+          </div>
+        `}
+      </div>
+    `;
+  }).join('');
+}
+
+function formatFecha(str) {
+  if (!str) return '—';
+  const [y, m, d] = str.split('-');
+  const meses = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  return `${d} ${meses[parseInt(m)-1]} ${y}`;
+}
+
+function formatPeso(n) {
+  return '$' + Math.abs(n).toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+}
+</script>
+</body>
+</html>
