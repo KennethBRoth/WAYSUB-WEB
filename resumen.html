@@ -170,8 +170,8 @@ function renderCierres() {
   }
 
   div.innerHTML = filtrados.map(c => {
-    const apertura = (c.aperturaFuerte || 0) + (c.aperturaRegistradora || 0) || c.apertura || 0;
-    const cierre = (c.cierreFuerte || 0) + (c.cierreRegistradora || 0) || c.cierreContado || 0;
+    const apertura = c.aperturaFuerte || 0;
+    const cierre = c.cierreFuerte || 0;
     const resultado = c.resultadoCaja || 0;
     const egresos = c.egresos || [];
     const totalEgresos = egresos.reduce((acc, e) => acc + (parseFloat(e.monto) || 0), 0);
@@ -189,11 +189,11 @@ function renderCierres() {
         </div>
 
         <div class="cierre-fila">
-          <span class="label">Apertura</span>
+          <span class="label">Apertura caja fuerte</span>
           <span class="valor rojo">${formatPeso(apertura)}</span>
         </div>
         <div class="cierre-fila">
-          <span class="label">Cierre contado</span>
+          <span class="label">Cierre caja fuerte</span>
           <span class="valor verde">${formatPeso(cierre)}</span>
         </div>
 
