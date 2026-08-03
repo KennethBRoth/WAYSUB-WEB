@@ -108,6 +108,7 @@
       <div class="btn-general" id="btn-caja" onclick="abrirCaja()" style="display:none;">💰 Movimiento de Caja</div>
       <div class="btn-general" id="btn-cashflow" onclick="window.location.href='cashflow.html'" style="display:none;">📊 Cashflow</div>
       <div class="btn-general" id="btn-cajero" onclick="window.location.href='cajero.html'" style="display:none;">🧾 Cierre de Caja</div>
+      <div class="btn-general" id="btn-resumen" onclick="window.location.href='resumen.html'" style="display:none;">📋 Resumen de Cierres</div>
       <div class="btn-general" id="btn-admin" onclick="window.location.href='admin.html'" style="display:none;">👤 Administrar usuarios</div>
       <div class="btn-cerrar-sesion" onclick="cerrarSesion()">🚪 Cerrar sesión</div>
     </div>
@@ -252,6 +253,7 @@
       document.getElementById('btn-caja').style.display     = (esAdmin || accesos.ver_caja)      ? 'block' : 'none';
       document.getElementById('btn-cashflow').style.display = (esAdmin || accesos.ver_cashflow)   ? 'block' : 'none';
       document.getElementById('btn-cajero').style.display   = (esAdmin || tieneCajero)            ? 'block' : 'none';
+      document.getElementById('btn-resumen').style.display  = esAdmin                             ? 'block' : 'none';
       document.getElementById('btn-admin').style.display    = esAdmin                             ? 'block' : 'none';
     });
 
