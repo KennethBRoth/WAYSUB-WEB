@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+\<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
@@ -307,20 +307,26 @@
     <!-- DELIVERY -->
     <div class="section">
       <div class="section-title">🛵 Delivery</div>
-      <table class="delivery-table">
-        <thead><tr><th>Canal</th><th>Importe ($) <span class="tag-suma" style="vertical-align:middle;">SUMA</span></th></tr></thead>
-        <tbody>
-          <tr><td>Mercado Delivery</td><td><input type="number" id="md" placeholder="0" inputmode="decimal" oninput="recalcular()"></td></tr>
-          <tr><td>Rappi</td><td><input type="number" id="rappi" placeholder="0" inputmode="decimal" oninput="recalcular()"></td></tr>
-          <tr><td>Pedidos Ya</td><td><input type="number" id="pedidosya" placeholder="0" inputmode="decimal" oninput="recalcular()"></td></tr>
-          <tr><td>Uber Eats</td><td><input type="number" id="ubereats" placeholder="0" inputmode="decimal" oninput="recalcular()"></td></tr>
-          <tr><td>Diferencia <span class="tag-resta" style="vertical-align:middle;">RESTA</span></td><td><input type="number" id="dif-delivery-input" placeholder="0" inputmode="decimal" oninput="recalcular()"></td></tr>
-          <tr class="delivery-total-row">
-            <td>Total delivery</td>
-            <td><input type="text" id="total-delivery" readonly></td>
-          </tr>
-        </tbody>
-      </table>
+      <div class="field-label-row" style="margin-bottom:10px;">
+        <label style="font-size:13px;font-weight:700;color:#555;">Canales</label>
+        <span class="tag-suma">SUMA</span>
+      </div>
+      <div class="gastos-lista" id="delivery-lista"></div>
+      <button class="btn-add-gasto" onclick="agregarDelivery()">+ Agregar canal</button>
+
+      <div style="margin-top:12px;">
+        <div class="field-label-row" style="margin-bottom:6px;">
+          <label style="font-size:13px;font-weight:600;color:#555;">Diferencia</label>
+          <span class="tag-resta">RESTA</span>
+        </div>
+        <input type="number" id="dif-delivery-input" placeholder="0" inputmode="decimal" oninput="recalcular()"
+          style="width:100%;padding:12px 14px;border:1.5px solid #e8e8e8;border-radius:10px;font-size:15px;background:#fafafa;outline:none;appearance:textfield;">
+      </div>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;background:#e8f8f0;border-radius:10px;padding:10px 14px;margin-top:10px;">
+        <span style="font-size:13px;font-weight:700;color:#555;">Total delivery</span>
+        <span style="font-size:18px;font-weight:800;color:#2a9d5c;" id="total-delivery-label">$0</span>
+      </div>
     </div>
 
     <!-- EGRESOS (solo Subway) -->
@@ -470,6 +476,45 @@ function mostrarPantalla(id) {
   if (id) document.getElementById(id).classList.add('active');
 }
 
+// ── DELIVERY ────────────────────────────────────────────
+let deliveryActual = [];
+
+const CANALES_DEFAULT = ['Mercado Delivery', 'Rappi', 'Pedidos Ya', 'Uber Eats'];
+
+function renderDelivery() {
+  const lista = document.getElementById('delivery-lista');
+  if (!lista) return;
+  lista.innerHTML = deliveryActual.map((d, i) => `
+    <div class="gasto-item">
+      <input type="text" class="gasto-desc" placeholder="Canal" value="${d.canal || ''}"
+        oninput="window.actualizarDelivery(${i}, 'canal', this.value)">
+      <input type="number" class="gasto-monto" placeholder="$0" value="${d.monto || ''}"
+        inputmode="decimal" oninput="window.actualizarDelivery(${i}, 'monto', this.value)">
+      <button class="btn-del-gasto" onclick="window.eliminarDelivery(${i})">🗑</button>
+    </div>
+  `).join('');
+  recalcular();
+}
+
+window.agregarDelivery = function(canal) {
+  deliveryActual.push({ canal: canal || '', monto: '' });
+  renderDelivery();
+  setTimeout(() => {
+    const inputs = document.querySelectorAll('#delivery-lista .gasto-desc');
+    if (inputs.length) inputs[inputs.length - 1].focus();
+  }, 50);
+};
+
+window.actualizarDelivery = function(i, campo, valor) {
+  deliveryActual[i][campo] = valor;
+  recalcular();
+};
+
+window.eliminarDelivery = function(i) {
+  deliveryActual.splice(i, 1);
+  renderDelivery();
+};
+
 // ── TARJETAS ────────────────────────────────────────────
 let tarjetasActuales = [];
 
@@ -601,12 +646,8 @@ window.recalcular = function() {
   const totalGastos = gastosActuales.reduce((acc, g) => acc + (parseFloat(g.monto) || 0), 0);
 
   // Delivery primero (necesario para el resultado)
-  const md       = getNum('md');
-  const rappi    = getNum('rappi');
-  const pedidos  = getNum('pedidosya');
-  const uber     = getNum('ubereats');
   const difDelInput = getNum('dif-delivery-input');
-  const totalDel = md + rappi + pedidos + uber - difDelInput;
+  const totalDel = deliveryActual.reduce((acc, d) => acc + (parseFloat(d.monto) || 0), 0) - difDelInput;
 
   // Resultado = Cierre + Tarjetas + MP + Gastos + Delivery - Apertura - IVA
   const resultado = cierre + tarjetas + mp + totalGastos + totalDel - apertura - iva;
@@ -624,7 +665,8 @@ window.recalcular = function() {
   document.getElementById('res-vouchers').textContent = formatPeso(vouchers);
 
   // Delivery
-  document.getElementById('total-delivery').value = formatPeso(totalDel);
+  const elTotalDel = document.getElementById('total-delivery-label');
+  if (elTotalDel) elTotalDel.textContent = formatPeso(totalDel);
 };
 
 window.calcPanes = function() {
@@ -721,10 +763,18 @@ function cargarDatos(data) {
   set('mercado-pago',     data.mercadoPago);
   set('ventas-iva',       data.ventasIva);
   set('vouchers',         data.vouchers);
-  set('md',               data.mercadoDelivery);
-  set('rappi',            data.rappi);
-  set('pedidosya',        data.pedidosYa);
-  set('ubereats',         data.uberEats);
+  // Delivery
+  if (data.delivery) {
+    deliveryActual = data.delivery;
+  } else {
+    // compatibilidad con registros viejos
+    deliveryActual = [];
+    if (data.mercadoDelivery) deliveryActual.push({ canal: 'Mercado Delivery', monto: data.mercadoDelivery });
+    if (data.rappi) deliveryActual.push({ canal: 'Rappi', monto: data.rappi });
+    if (data.pedidosYa) deliveryActual.push({ canal: 'Pedidos Ya', monto: data.pedidosYa });
+    if (data.uberEats) deliveryActual.push({ canal: 'Uber Eats', monto: data.uberEats });
+  }
+  renderDelivery();
   set('dif-delivery-input', data.difDelivery);
 
   // Gastos
@@ -750,12 +800,14 @@ function cargarDatos(data) {
 
 function limpiarFormulario() {
   ['apertura-fuerte','apertura-registradora','cierre-fuerte','cierre-registradora','mercado-pago',
-   'ventas-iva','vouchers','md','rappi','pedidosya','ubereats','dif-delivery-input',
+   'ventas-iva','vouchers','dif-delivery-input',
    'panes-sistema','sobrantes-anterior','retardador',
    'panes-egresados','desperdicios','sobrantes-dia'
   ].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
   gastosActuales = [];
   renderGastos();
+  deliveryActual = CANALES_DEFAULT.map(c => ({ canal: c, monto: '' }));
+  renderDelivery();
   tarjetasActuales = [];
   renderTarjetas();
   egresosActuales = [];
@@ -792,12 +844,9 @@ window.guardarCierre = async function() {
       gastos:          gastosActuales.filter(g => g.desc || g.monto),
       egresos:         egresosActuales.filter(e => e.desc || e.monto),
       totalGastos,
-      mercadoDelivery: md,
-      rappi,
-      pedidosYa:       pedidos,
-      uberEats:        uber,
+      delivery:        deliveryActual.filter(d => d.canal || d.monto),
       difDelivery:     getNum('dif-delivery-input'),
-      totalDelivery:   md + rappi + pedidos + uber - getNum('dif-delivery-input'),
+      totalDelivery:   deliveryActual.reduce((acc, d) => acc + (parseFloat(d.monto) || 0), 0) - getNum('dif-delivery-input'),
       resultadoCaja:   (getNum('cierre-fuerte') + getNum('cierre-registradora')) + getNum('importe-tarjetas') + getNum('mercado-pago') + totalGastos - (getNum('apertura-fuerte') + getNum('apertura-registradora')) - getNum('ventas-iva')
     };
 
