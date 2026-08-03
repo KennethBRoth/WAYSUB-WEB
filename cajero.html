@@ -1,4 +1,4 @@
-\<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
@@ -307,12 +307,8 @@
     <!-- DELIVERY -->
     <div class="section">
       <div class="section-title">🛵 Delivery</div>
-      <div class="field-label-row" style="margin-bottom:10px;">
-        <label style="font-size:13px;font-weight:700;color:#555;">Canales</label>
-        <span class="tag-suma">SUMA</span>
-      </div>
-      <div class="gastos-lista" id="delivery-lista"></div>
-      <button class="btn-add-gasto" onclick="agregarDelivery()">+ Agregar canal</button>
+      <div id="delivery-bloques"></div>
+      <button class="btn-add-gasto" onclick="agregarBloqueDelivery()" style="margin-bottom:12px;">+ Agregar turno de delivery</button>
 
       <div style="margin-top:12px;">
         <div class="field-label-row" style="margin-bottom:6px;">
@@ -477,42 +473,49 @@ function mostrarPantalla(id) {
 }
 
 // ── DELIVERY ────────────────────────────────────────────
-let deliveryActual = [];
+// Estructura: array de bloques, cada bloque tiene array de canales
+let deliveryBloques = []; // [{cajero:'', canales:[{canal:'', monto:''}]}]
 
 const CANALES_DEFAULT = ['Mercado Delivery', 'Rappi', 'Pedidos Ya', 'Uber Eats'];
 
 function renderDelivery() {
-  const lista = document.getElementById('delivery-lista');
-  if (!lista) return;
-  lista.innerHTML = deliveryActual.map((d, i) => `
-    <div class="gasto-item">
-      <input type="text" class="gasto-desc" placeholder="Canal" value="${d.canal || ''}"
-        oninput="window.actualizarDelivery(${i}, 'canal', this.value)">
-      <input type="number" class="gasto-monto" placeholder="$0" value="${d.monto || ''}"
-        inputmode="decimal" oninput="window.actualizarDelivery(${i}, 'monto', this.value)">
-      <button class="btn-del-gasto" onclick="window.eliminarDelivery(${i})">🗑</button>
+  const cont = document.getElementById('delivery-bloques');
+  if (!cont) return;
+  cont.innerHTML = deliveryBloques.map((bloque, bi) => `
+    <div style="background:#f8f9fa;border-radius:12px;padding:14px;margin-bottom:10px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <span style="font-size:12px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.05em;">Turno ${bi + 1}</span>
+        <button class="btn-del-gasto" onclick="window.eliminarBloqueDelivery(${bi})" style="padding:4px 8px;font-size:12px;">🗑 Eliminar turno</button>
+      </div>
+      ${bloque.canales.map((c, ci) => `
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+          <span style="font-size:13px;font-weight:600;color:#1a1a2e;width:140px;flex-shrink:0;">${c.canal}</span>
+          <input type="number" placeholder="$0" value="${c.monto || ''}"
+            inputmode="decimal"
+            oninput="window.actualizarDelivery(${bi}, ${ci}, this.value)"
+            style="flex:1;padding:8px 10px;border:1.5px solid #e8e8e8;border-radius:8px;font-size:14px;background:white;outline:none;appearance:textfield;">
+        </div>
+      `).join('')}
     </div>
   `).join('');
   recalcular();
 }
 
-window.agregarDelivery = function(canal) {
-  deliveryActual.push({ canal: canal || '', monto: '' });
+window.agregarBloqueDelivery = function() {
+  deliveryBloques.push({
+    canales: CANALES_DEFAULT.map(c => ({ canal: c, monto: '' }))
+  });
   renderDelivery();
-  setTimeout(() => {
-    const inputs = document.querySelectorAll('#delivery-lista .gasto-desc');
-    if (inputs.length) inputs[inputs.length - 1].focus();
-  }, 50);
 };
 
-window.actualizarDelivery = function(i, campo, valor) {
-  deliveryActual[i][campo] = valor;
+window.eliminarBloqueDelivery = function(bi) {
+  deliveryBloques.splice(bi, 1);
+  renderDelivery();
+};
+
+window.actualizarDelivery = function(bi, ci, valor) {
+  deliveryBloques[bi].canales[ci].monto = valor;
   recalcular();
-};
-
-window.eliminarDelivery = function(i) {
-  deliveryActual.splice(i, 1);
-  renderDelivery();
 };
 
 // ── TARJETAS ────────────────────────────────────────────
@@ -647,7 +650,8 @@ window.recalcular = function() {
 
   // Delivery primero (necesario para el resultado)
   const difDelInput = getNum('dif-delivery-input');
-  const totalDel = deliveryActual.reduce((acc, d) => acc + (parseFloat(d.monto) || 0), 0) - difDelInput;
+  const totalDel = deliveryBloques.reduce((acc, bloque) =>
+    acc + bloque.canales.reduce((a, c) => a + (parseFloat(c.monto) || 0), 0), 0) - difDelInput;
 
   // Resultado = Cierre + Tarjetas + MP + Gastos + Delivery - Apertura - IVA
   const resultado = cierre + tarjetas + mp + totalGastos + totalDel - apertura - iva;
@@ -764,15 +768,19 @@ function cargarDatos(data) {
   set('ventas-iva',       data.ventasIva);
   set('vouchers',         data.vouchers);
   // Delivery
-  if (data.delivery) {
-    deliveryActual = data.delivery;
+  if (data.deliveryBloques && data.deliveryBloques.length) {
+    deliveryBloques = data.deliveryBloques;
+  } else if (data.delivery && data.delivery.length) {
+    // compatibilidad formato anterior
+    deliveryBloques = [{ canales: data.delivery }];
   } else {
-    // compatibilidad con registros viejos
-    deliveryActual = [];
-    if (data.mercadoDelivery) deliveryActual.push({ canal: 'Mercado Delivery', monto: data.mercadoDelivery });
-    if (data.rappi) deliveryActual.push({ canal: 'Rappi', monto: data.rappi });
-    if (data.pedidosYa) deliveryActual.push({ canal: 'Pedidos Ya', monto: data.pedidosYa });
-    if (data.uberEats) deliveryActual.push({ canal: 'Uber Eats', monto: data.uberEats });
+    // compatibilidad registros muy viejos
+    const canalesViejos = CANALES_DEFAULT.map(c => ({ canal: c, monto: '' }));
+    if (data.mercadoDelivery) canalesViejos[0].monto = data.mercadoDelivery;
+    if (data.rappi) canalesViejos[1].monto = data.rappi;
+    if (data.pedidosYa) canalesViejos[2].monto = data.pedidosYa;
+    if (data.uberEats) canalesViejos[3].monto = data.uberEats;
+    deliveryBloques = [{ canales: canalesViejos }];
   }
   renderDelivery();
   set('dif-delivery-input', data.difDelivery);
@@ -806,7 +814,7 @@ function limpiarFormulario() {
   ].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
   gastosActuales = [];
   renderGastos();
-  deliveryActual = CANALES_DEFAULT.map(c => ({ canal: c, monto: '' }));
+  deliveryBloques = [{ canales: CANALES_DEFAULT.map(c => ({ canal: c, monto: '' })) }];
   renderDelivery();
   tarjetasActuales = [];
   renderTarjetas();
@@ -844,9 +852,9 @@ window.guardarCierre = async function() {
       gastos:          gastosActuales.filter(g => g.desc || g.monto),
       egresos:         egresosActuales.filter(e => e.desc || e.monto),
       totalGastos,
-      delivery:        deliveryActual.filter(d => d.canal || d.monto),
+      deliveryBloques: deliveryBloques,
       difDelivery:     getNum('dif-delivery-input'),
-      totalDelivery:   deliveryActual.reduce((acc, d) => acc + (parseFloat(d.monto) || 0), 0) - getNum('dif-delivery-input'),
+      totalDelivery:   deliveryBloques.reduce((acc, b) => acc + b.canales.reduce((a, c) => a + (parseFloat(c.monto)||0), 0), 0) - getNum('dif-delivery-input'),
       resultadoCaja:   (getNum('cierre-fuerte') + getNum('cierre-registradora')) + getNum('importe-tarjetas') + getNum('mercado-pago') + totalGastos - (getNum('apertura-fuerte') + getNum('apertura-registradora')) - getNum('ventas-iva')
     };
 
