@@ -527,15 +527,36 @@ function renderTarjetas() {
   lista.innerHTML = tarjetasActuales.map((t, i) => `
     <div class="gasto-item">
       <input type="number" class="gasto-monto" placeholder="Importe $0" value="${t.importe || ''}"
-        inputmode="decimal" oninput="window.actualizarTarjeta(${i}, 'importe', this.value)" style="flex:2;">
+        inputmode="decimal"
+        onchange="window.actualizarTarjeta(${i}, 'importe', this.value)"
+        onblur="actualizarTotalTarjetas()"
+        style="flex:2;">
       <input type="number" class="gasto-monto" placeholder="Cant. 0" value="${t.cantidad || ''}"
-        inputmode="numeric" oninput="window.actualizarTarjeta(${i}, 'cantidad', this.value)" style="flex:1;min-width:70px;">
+        inputmode="numeric"
+        onchange="window.actualizarTarjeta(${i}, 'cantidad', this.value)"
+        onblur="actualizarTotalTarjetas()"
+        style="flex:1;min-width:70px;">
       <button class="btn-del-gasto" onclick="window.eliminarTarjeta(${i})">🗑</button>
     </div>
   `).join('');
-  // Actualizar total
-  const totalImporte = tarjetasActuales.reduce((acc, t) => acc + (parseFloat(t.importe) || 0), 0);
-  const totalCantidad = tarjetasActuales.reduce((acc, t) => acc + (parseInt(t.cantidad) || 0), 0);
+  actualizarTotalTarjetas();
+}
+
+function actualizarTotalTarjetas() {
+  // Leer valores directamente del DOM sin re-renderizar
+  let totalImporte = 0, totalCantidad = 0;
+  document.querySelectorAll('#tarjetas-lista .gasto-item').forEach((item, i) => {
+    const inputs = item.querySelectorAll('input');
+    const importe = parseFloat(inputs[0].value) || 0;
+    const cantidad = parseInt(inputs[1].value) || 0;
+    // Sincronizar con el array
+    if (tarjetasActuales[i]) {
+      tarjetasActuales[i].importe = inputs[0].value;
+      tarjetasActuales[i].cantidad = inputs[1].value;
+    }
+    totalImporte += importe;
+    totalCantidad += cantidad;
+  });
   const el = document.getElementById('total-tarjetas-label');
   if (el) el.textContent = '$' + totalImporte.toLocaleString('es-AR') + ' · ' + totalCantidad + ' tarjeta' + (totalCantidad !== 1 ? 's' : '');
   recalcular();
@@ -551,8 +572,8 @@ window.agregarTarjeta = function() {
 };
 
 window.actualizarTarjeta = function(i, campo, valor) {
-  tarjetasActuales[i][campo] = valor;
-  renderTarjetas();
+  if (tarjetasActuales[i]) tarjetasActuales[i][campo] = valor;
+  actualizarTotalTarjetas();
 };
 
 window.eliminarTarjeta = function(i) {
