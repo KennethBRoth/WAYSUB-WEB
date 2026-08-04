@@ -455,7 +455,7 @@ function entrarALocal(key) {
   document.getElementById('campo-cajero').textContent = nombreUsuario;
   document.getElementById('campo-fecha').value = new Date().toISOString().split('T')[0];
   document.getElementById('seccion-panes').style.display = esSubway ? 'block' : 'none';
-  document.getElementById('seccion-egresos').style.display = esSubway ? 'block' : 'none';
+  document.getElementById('seccion-egresos').style.display = 'block';
   document.getElementById('btn-cambiar').style.display = esMultiLocal ? 'block' : 'none';
 
   mostrarPantalla(null);
