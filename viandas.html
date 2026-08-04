@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stock Viandas — Waysub Panel</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f0f2f5; color: #1a1a2e; min-height: 100vh; }
+
+  .header { background: #1a1a2e; color: white; padding: 16px 20px; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+  .btn-back { background: rgba(255,255,255,0.1); border: none; color: white; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 14px; }
+  .header h1 { font-size: 18px; font-weight: 600; flex: 1; }
+
+  .tabs { display: flex; background: white; border-bottom: 2px solid #f0f2f5; position: sticky; top: 57px; z-index: 99; }
+  .tab { flex: 1; padding: 13px 8px; text-align: center; font-size: 13px; font-weight: 600; color: #999; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; }
+  .tab.activo { color: #1a1a2e; border-bottom-color: #1a1a2e; }
+
+  .seccion { display: none; padding: 20px 16px 80px; max-width: 680px; margin: 0 auto; }
+  .seccion.activa { display: block; }
+
+  .section { background: white; border-radius: 16px; padding: 20px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+  .section-title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #888; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid #f0f0f0; }
+
+  .field { margin-bottom: 14px; }
+  .field:last-child { margin-bottom: 0; }
+  .field label { display: block; font-size: 13px; font-weight: 600; color: #555; margin-bottom: 6px; }
+  .field input { width: 100%; padding: 12px 14px; border: 1.5px solid #e8e8e8; border-radius: 10px; font-size: 15px; color: #1a1a2e; background: #fafafa; transition: border-color 0.2s; outline: none; font-family: inherit; }
+  .field input:focus { border-color: #1a1a2e; background: white; }
+  .field input[type="number"] { appearance: textfield; }
+  .field input[type="number"]::-webkit-inner-spin-button,
+  .field input[type="number"]::-webkit-outer-spin-button { display: none; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  .btn-save { width: 100%; padding: 16px; background: #1a1a2e; color: white; border: none; border-radius: 14px; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 8px; }
+  .btn-save:disabled { background: #ccc; cursor: not-allowed; }
+
+  /* LISTA */
+  .vianda-card { background: white; border-radius: 14px; padding: 16px; margin-bottom: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+  .vianda-info { flex: 1; }
+  .vianda-producto { font-size: 16px; font-weight: 700; color: #1a1a2e; margin-bottom: 4px; }
+  .vianda-persona { font-size: 13px; color: #555; margin-bottom: 4px; }
+  .vianda-meta { font-size: 12px; color: #aaa; display: flex; gap: 12px; flex-wrap: wrap; }
+  .vianda-costo { font-size: 18px; font-weight: 800; color: #2a9d5c; white-space: nowrap; }
+  .btn-del { background: #fff0f0; border: none; color: #e63946; border-radius: 8px; padding: 8px 10px; cursor: pointer; font-size: 14px; flex-shrink: 0; }
+
+  .filtro-fecha { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+  .filtro-fecha input { flex: 1; min-width: 130px; padding: 10px 14px; border: 1.5px solid #e8e8e8; border-radius: 10px; font-size: 14px; background: white; outline: none; font-family: inherit; }
+  .filtro-fecha input:focus { border-color: #1a1a2e; }
+
+  .resumen-total { background: #1a1a2e; border-radius: 14px; padding: 16px 20px; color: white; display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+  .resumen-total span { font-size: 13px; color: rgba(255,255,255,0.6); }
+  .resumen-total strong { font-size: 24px; font-weight: 800; color: #2ecc71; }
+
+  .sin-datos { text-align: center; padding: 60px 20px; color: #bbb; }
+  .sin-datos .icon { font-size: 40px; margin-bottom: 12px; }
+
+  .loading-box { text-align: center; padding: 40px; color: #999; }
+  .spinner { width: 36px; height: 36px; border: 3px solid #ddd; border-top-color: #1a1a2e; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); background: #1a1a2e; color: white; padding: 14px 24px; border-radius: 12px; font-size: 14px; font-weight: 600; transition: transform 0.3s; z-index: 999; white-space: nowrap; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast.success { background: #2ecc71; color: #1a1a2e; }
+  .toast.error { background: #e74c3c; }
+
+  @media (max-width: 480px) {
+    .two-col { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <button class="btn-back" onclick="window.location.href='index.html'">← Inicio</button>
+  <h1>🥡 Stock Viandas</h1>
+</div>
+
+<div class="tabs">
+  <div class="tab activo" onclick="cambiarTab('carga', this)">➕ Cargar</div>
+  <div class="tab" onclick="cambiarTab('lista', this)">📋 Lista</div>
+</div>
+
+<!-- TAB CARGA -->
+<div class="seccion activa" id="tab-carga">
+  <div class="section">
+    <div class="section-title">📦 Nueva vianda</div>
+
+    <div class="field">
+      <label>Producto</label>
+      <input type="text" id="inp-producto" placeholder="Ej: Milanesa con papas">
+    </div>
+
+    <div class="field">
+      <label>Nombre de la persona</label>
+      <input type="text" id="inp-persona" placeholder="Ej: Juan Pérez">
+    </div>
+
+    <div class="two-col">
+      <div class="field">
+        <label>Fecha de entrega</label>
+        <input type="date" id="inp-fecha">
+      </div>
+      <div class="field">
+        <label>Costo del envío ($)</label>
+        <input type="number" id="inp-costo" placeholder="0" inputmode="decimal">
+      </div>
+    </div>
+
+    <button class="btn-save" id="btn-guardar" onclick="guardarVianda()">Guardar vianda</button>
+  </div>
+</div>
+
+<!-- TAB LISTA -->
+<div class="seccion" id="tab-lista">
+  <div class="filtro-fecha">
+    <input type="date" id="filtro-desde" onchange="renderLista()">
+    <input type="date" id="filtro-hasta" onchange="renderLista()">
+  </div>
+  <div class="resumen-total">
+    <div>
+      <span>Total envíos</span><br>
+      <strong id="total-costo">$0</strong>
+    </div>
+    <span id="total-cantidad" style="font-size:14px;color:rgba(255,255,255,0.5);">0 viandas</span>
+  </div>
+  <div id="lista-viandas">
+    <div class="loading-box"><div class="spinner"></div><p>Cargando...</p></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAB2-btgFqGiCe1YdZSDv4EShV601N-uQs",
+  authDomain: "waysub-web.firebaseapp.com",
+  projectId: "waysub-web",
+  storageBucket: "waysub-web.firebasestorage.app",
+  messagingSenderId: "219825581217",
+  appId: "1:219825581217:web:6f752ee27a5446400114e0"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+let viandas = [];
+let nombreUsuario = '';
+
+onAuthStateChanged(auth, async (user) => {
+  if (!user) { window.location.href = 'login.html'; return; }
+  const snap = await getDoc(doc(db, 'usuarios', user.uid));
+  if (!snap.exists() || !snap.data().aprobado) { window.location.href = 'login.html'; return; }
+
+  const userData = snap.data();
+  const accesos = userData.accesos || {};
+  const esAdmin = userData.rol === 'admin';
+  if (!esAdmin && !accesos.ver_viandas) { window.location.href = 'index.html'; return; }
+
+  nombreUsuario = userData.nombre || user.email;
+
+  // Fecha de hoy por defecto
+  const hoy = new Date().toISOString().split('T')[0];
+  document.getElementById('inp-fecha').value = hoy;
+
+  // Filtros default: este mes
+  const primeroDeMes = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0];
+  document.getElementById('filtro-desde').value = primeroDeMes;
+  document.getElementById('filtro-hasta').value = hoy;
+
+  await cargarViandas();
+});
+
+async function cargarViandas() {
+  try {
+    const snap = await getDocs(collection(db, 'stock_viandas'));
+    viandas = [];
+    snap.forEach(d => viandas.push({ id: d.id, ...d.data() }));
+    viandas.sort((a, b) => b.fecha.localeCompare(a.fecha));
+    renderLista();
+  } catch(e) {
+    console.error(e);
+  }
+}
+
+window.cambiarTab = function(tab, el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('activo'));
+  document.querySelectorAll('.seccion').forEach(s => s.classList.remove('activa'));
+  el.classList.add('activo');
+  document.getElementById('tab-' + tab).classList.add('activa');
+};
+
+window.guardarVianda = async function() {
+  const producto = document.getElementById('inp-producto').value.trim();
+  const persona = document.getElementById('inp-persona').value.trim();
+  const fecha = document.getElementById('inp-fecha').value;
+  const costo = parseFloat(document.getElementById('inp-costo').value) || 0;
+
+  if (!producto || !persona || !fecha) {
+    toast('Completá producto, persona y fecha', 'error');
+    return;
+  }
+
+  const btn = document.getElementById('btn-guardar');
+  btn.disabled = true; btn.textContent = 'Guardando...';
+
+  try {
+    const nueva = { producto, persona, fecha, costo, cargadoPor: nombreUsuario, timestamp: serverTimestamp() };
+    const ref = await addDoc(collection(db, 'stock_viandas'), nueva);
+    viandas.unshift({ id: ref.id, ...nueva, timestamp: Date.now() });
+    viandas.sort((a, b) => b.fecha.localeCompare(a.fecha));
+
+    // Limpiar form
+    document.getElementById('inp-producto').value = '';
+    document.getElementById('inp-persona').value = '';
+    document.getElementById('inp-costo').value = '';
+    document.getElementById('inp-fecha').value = new Date().toISOString().split('T')[0];
+
+    toast('✅ Vianda guardada', 'success');
+    renderLista();
+  } catch(e) {
+    console.error(e);
+    toast('❌ Error al guardar', 'error');
+  }
+
+  btn.disabled = false; btn.textContent = 'Guardar vianda';
+};
+
+window.renderLista = function() {
+  const desde = document.getElementById('filtro-desde').value;
+  const hasta = document.getElementById('filtro-hasta').value;
+  const lista = document.getElementById('lista-viandas');
+
+  const filtradas = viandas.filter(v => (!desde || v.fecha >= desde) && (!hasta || v.fecha <= hasta));
+
+  const totalCosto = filtradas.reduce((acc, v) => acc + (v.costo || 0), 0);
+  document.getElementById('total-costo').textContent = '$' + totalCosto.toLocaleString('es-AR');
+  document.getElementById('total-cantidad').textContent = filtradas.length + ' vianda' + (filtradas.length !== 1 ? 's' : '');
+
+  if (!filtradas.length) {
+    lista.innerHTML = '<div class="sin-datos"><div class="icon">📭</div><p>Sin viandas en este período</p></div>';
+    return;
+  }
+
+  lista.innerHTML = filtradas.map(v => `
+    <div class="vianda-card">
+      <div class="vianda-info">
+        <div class="vianda-producto">${v.producto}</div>
+        <div class="vianda-persona">👤 ${v.persona}</div>
+        <div class="vianda-meta">
+          <span>📅 ${formatFecha(v.fecha)}</span>
+          ${v.cargadoPor ? `<span>Cargado por: ${v.cargadoPor}</span>` : ''}
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;">
+        <span class="vianda-costo">$${(v.costo || 0).toLocaleString('es-AR')}</span>
+        <button class="btn-del" onclick="window.eliminarVianda('${v.id}')">🗑</button>
+      </div>
+    </div>
+  `).join('');
+};
+
+window.eliminarVianda = async function(id) {
+  if (!confirm('¿Eliminar esta vianda?')) return;
+  try {
+    await deleteDoc(doc(db, 'stock_viandas', id));
+    viandas = viandas.filter(v => v.id !== id);
+    renderLista();
+    toast('Eliminado', '');
+  } catch(e) {
+    toast('❌ Error al eliminar', 'error');
+  }
+};
+
+function formatFecha(str) {
+  if (!str) return '—';
+  const [y, m, d] = str.split('-');
+  const meses = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  return `${d} ${meses[parseInt(m)-1]} ${y}`;
+}
+
+function toast(msg, tipo = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'toast ' + tipo;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+</script>
+</body>
+</html>
