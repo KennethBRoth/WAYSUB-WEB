@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gestión Diaria — Waysub Panel</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f0f2f5; color: #1a1a2e; min-height: 100vh; }
+
+  .header { background: #1a1a2e; color: white; padding: 16px 20px; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+  .btn-back { background: rgba(255,255,255,0.1); border: none; color: white; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 14px; }
+  .header h1 { font-size: 18px; font-weight: 600; flex: 1; }
+
+  .container { max-width: 680px; margin: 0 auto; padding: 20px 16px 80px; }
+
+  .filtro-fecha { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+  .filtro-fecha input { flex: 1; min-width: 130px; padding: 12px 14px; border: 1.5px solid #e8e8e8; border-radius: 10px; font-size: 14px; background: white; outline: none; font-family: inherit; color: #1a1a2e; }
+  .filtro-fecha input:focus { border-color: #1a1a2e; }
+
+  .dia-block { margin-bottom: 22px; }
+  .dia-header { font-size: 14px; font-weight: 800; color: #1a1a2e; margin-bottom: 10px; padding-left: 2px; text-transform: capitalize; }
+
+  .local-row { background: white; border-radius: 14px; padding: 14px 16px; margin-bottom: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+  .local-nombre { font-size: 13px; font-weight: 700; color: #1a1a2e; flex: 1; min-width: 0; }
+  .local-metricas { display: flex; gap: 18px; }
+  .metrica { text-align: right; min-width: 74px; }
+  .metrica .m-label { font-size: 10px; font-weight: 700; color: #999; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 3px; }
+  .metrica .m-valor { font-size: 15px; font-weight: 800; color: #1a1a2e; }
+  .metrica .m-valor.pos { color: #2ecc71; }
+  .metrica .m-valor.neg { color: #e74c3c; }
+  .metrica .m-valor.sin-datos { color: #ccc; font-weight: 600; font-size: 13px; }
+
+  .dia-total-row { background: #1a1a2e; border-radius: 14px; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 2px; }
+  .dia-total-row .local-nombre { color: rgba(255,255,255,0.6); }
+  .dia-total-row .metrica .m-label { color: rgba(255,255,255,0.4); }
+  .dia-total-row .metrica .m-valor { color: #e8b84b; }
+  .dia-total-row .metrica .m-valor.pos { color: #2ecc71; }
+  .dia-total-row .metrica .m-valor.neg { color: #e74c3c; }
+
+  .sin-datos-rango { text-align: center; padding: 60px 20px; color: #bbb; }
+  .sin-datos-rango .icon { font-size: 40px; margin-bottom: 12px; }
+
+  .loading-box { text-align: center; padding: 40px; color: #999; }
+  .spinner { width: 36px; height: 36px; border: 3px solid #ddd; border-top-color: #1a1a2e; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .error-box { max-width: 400px; margin: 60px auto; background: white; border-radius: 16px; padding: 40px; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+  .error-box .icon { font-size: 48px; margin-bottom: 16px; }
+  .error-box h2 { font-size: 20px; margin-bottom: 8px; }
+  .error-box p { color: #666; font-size: 14px; margin-bottom: 20px; }
+
+  @media (max-width: 420px) {
+    .local-row, .dia-total-row { flex-direction: column; align-items: stretch; gap: 8px; }
+    .local-metricas { justify-content: space-between; }
+    .metrica { text-align: left; }
+  }
+</style>
+</head>
+<body>
+
+<div id="screen-error" style="display:none;">
+  <div class="error-box">
+    <div class="icon">🔒</div>
+    <h2>Sin acceso</h2>
+    <p>Este módulo es solo para administradores.</p>
+    <button style="background:#1a1a2e;color:white;padding:12px 24px;border-radius:10px;font-size:14px;border:none;cursor:pointer;" onclick="window.location.href='index.html'">Volver al inicio</button>
+  </div>
+</div>
+
+<div id="app" style="display:none;">
+  <div class="header">
+    <button class="btn-back" onclick="window.location.href='index.html'">← Inicio</button>
+    <h1>📊 Gestión Diaria</h1>
+  </div>
+
+  <div class="container">
+    <div class="filtro-fecha">
+      <input type="date" id="filtro-desde" onchange="renderReporte()">
+      <input type="date" id="filtro-hasta" onchange="renderReporte()">
+    </div>
+
+    <div id="reporte-contenido">
+      <div class="loading-box"><div class="spinner"></div><p>Cargando...</p></div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAB2-btgFqGiCe1YdZSDv4EShV601N-uQs",
+  authDomain: "waysub-web.firebaseapp.com",
+  projectId: "waysub-web",
+  storageBucket: "waysub-web.firebasestorage.app",
+  messagingSenderId: "219825581217",
+  appId: "1:219825581217:web:6f752ee27a5446400114e0"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// Orden fijo de los 4 locales, tal como se guardan en "local" dentro de cajero_cierres
+const LOCALES = [
+  { nombre: 'Subway Ramos Mejía',   emoji: '🥖' },
+  { nombre: 'Subway Morón',         emoji: '🥖' },
+  { nombre: 'Balcarce Ramos Mejía', emoji: '🍰' },
+  { nombre: 'Balcarce Morón',       emoji: '🍰' }
+];
+
+let cierres = [];
+
+onAuthStateChanged(auth, async (user) => {
+  if (!user) { window.location.href = 'login.html'; return; }
+  const snap = await getDoc(doc(db, 'usuarios', user.uid));
+  if (!snap.exists() || !snap.data().aprobado) { window.location.href = 'login.html'; return; }
+
+  const userData = snap.data();
+  if (userData.rol !== 'admin') {
+    document.getElementById('screen-error').style.display = 'block';
+    return;
+  }
+
+  document.getElementById('app').style.display = 'block';
+
+  // Rango por defecto: últimos 7 días
+  const hoy = new Date();
+  const hace7 = new Date();
+  hace7.setDate(hoy.getDate() - 6);
+  document.getElementById('filtro-hasta').value = hoy.toISOString().split('T')[0];
+  document.getElementById('filtro-desde').value = hace7.toISOString().split('T')[0];
+
+  await cargarCierres();
+});
+
+async function cargarCierres() {
+  try {
+    const snap = await getDocs(collection(db, 'cajero_cierres'));
+    cierres = [];
+    snap.forEach(d => cierres.push(d.data()));
+    renderReporte();
+  } catch (e) {
+    console.error(e);
+    document.getElementById('reporte-contenido').innerHTML = '<div class="sin-datos-rango"><div class="icon">⚠️</div><p>Error al cargar los datos</p></div>';
+  }
+}
+
+function generarRangoFechas(desde, hasta) {
+  const fechas = [];
+  let actual = new Date(desde + 'T00:00:00');
+  const fin = new Date(hasta + 'T00:00:00');
+  while (actual <= fin) {
+    fechas.push(actual.toISOString().split('T')[0]);
+    actual.setDate(actual.getDate() + 1);
+  }
+  return fechas.reverse(); // más reciente primero
+}
+
+window.renderReporte = function() {
+  const desde = document.getElementById('filtro-desde').value;
+  const hasta = document.getElementById('filtro-hasta').value;
+  const cont = document.getElementById('reporte-contenido');
+  if (!desde || !hasta) return;
+
+  const fechas = generarRangoFechas(desde, hasta);
+
+  cont.innerHTML = fechas.map(fecha => {
+    let totalVentas = 0, totalDif = 0;
+
+    const filas = LOCALES.map(loc => {
+      const delDia = cierres.filter(c => c.local === loc.nombre && c.fecha === fecha);
+
+      if (!delDia.length) {
+        return `
+        <div class="local-row">
+          <div class="local-nombre">${loc.emoji} ${loc.nombre}</div>
+          <div class="local-metricas">
+            <div class="metrica"><div class="m-label">Ventas IVA</div><div class="m-valor sin-datos">Sin cargar</div></div>
+            <div class="metrica"><div class="m-label">Diferencia</div><div class="m-valor sin-datos">—</div></div>
+          </div>
+        </div>`;
+      }
+
+      const ventas = delDia.reduce((acc, c) => acc + (c.ventasIva || 0), 0);
+      const dif = delDia.reduce((acc, c) => acc + (c.resultadoCaja || 0), 0);
+      totalVentas += ventas;
+      totalDif += dif;
+
+      return `
+      <div class="local-row">
+        <div class="local-nombre">${loc.emoji} ${loc.nombre}</div>
+        <div class="local-metricas">
+          <div class="metrica"><div class="m-label">Ventas IVA</div><div class="m-valor">${formatPeso(ventas)}</div></div>
+          <div class="metrica"><div class="m-label">Diferencia</div><div class="m-valor ${dif >= 0 ? 'pos' : 'neg'}">${formatPeso(dif)}</div></div>
+        </div>
+      </div>`;
+    }).join('');
+
+    return `
+    <div class="dia-block">
+      <div class="dia-header">📅 ${formatFechaLarga(fecha)}</div>
+      ${filas}
+      <div class="dia-total-row">
+        <div class="local-nombre">Total del día</div>
+        <div class="local-metricas">
+          <div class="metrica"><div class="m-label">Ventas IVA</div><div class="m-valor">${formatPeso(totalVentas)}</div></div>
+          <div class="metrica"><div class="m-label">Diferencia</div><div class="m-valor ${totalDif >= 0 ? 'pos' : 'neg'}">${formatPeso(totalDif)}</div></div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  if (!fechas.length) {
+    cont.innerHTML = '<div class="sin-datos-rango"><div class="icon">📭</div><p>Rango de fechas inválido</p></div>';
+  }
+};
+
+function formatPeso(n) {
+  const signo = n < 0 ? '-' : '';
+  return signo + '$' + Math.abs(n).toLocaleString('es-AR', { maximumFractionDigits: 0 });
+}
+
+function formatFechaLarga(str) {
+  const [y, m, d] = str.split('-');
+  const meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  const dias = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+  const fechaObj = new Date(str + 'T00:00:00');
+  return `${dias[fechaObj.getDay()]} ${parseInt(d)} de ${meses[parseInt(m) - 1]}`;
+}
+</script>
+</body>
+</html>
