@@ -110,6 +110,7 @@
       <div class="btn-general" id="btn-cajero" onclick="window.location.href='cajero.html'" style="display:none;">🧾 Cierre de Caja</div>
       <div class="btn-general" id="btn-viandas" onclick="window.location.href='viandas.html'" style="display:none;">🥡 Stock Viandas</div>
       <div class="btn-general" id="btn-resumen" onclick="window.location.href='resumen.html'" style="display:none;">📋 Resumen de Cierres</div>
+      <div class="btn-general" id="btn-gestion-diaria" onclick="window.location.href='gestion-diaria.html'" style="display:none;">📊 Gestión Diaria</div>
       <div class="btn-general" id="btn-admin" onclick="window.location.href='admin.html'" style="display:none;">👤 Administrar usuarios</div>
       <div class="btn-cerrar-sesion" onclick="cerrarSesion()">🚪 Cerrar sesión</div>
     </div>
@@ -256,6 +257,7 @@
       document.getElementById('btn-cajero').style.display   = (esAdmin || tieneCajero)            ? 'block' : 'none';
       document.getElementById('btn-viandas').style.display  = (esAdmin || accesos.ver_viandas)     ? 'block' : 'none';
       document.getElementById('btn-resumen').style.display  = esAdmin                             ? 'block' : 'none';
+      document.getElementById('btn-gestion-diaria').style.display = esAdmin                        ? 'block' : 'none';
       document.getElementById('btn-admin').style.display    = esAdmin                             ? 'block' : 'none';
     });
 
