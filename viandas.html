@@ -35,22 +35,37 @@
   .btn-save { width: 100%; padding: 16px; background: #1a1a2e; color: white; border: none; border-radius: 14px; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 8px; }
   .btn-save:disabled { background: #ccc; cursor: not-allowed; }
 
+  /* PRODUCTOS DEL PEDIDO (carga) */
+  .productos-container { display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px; }
+  .producto-row { display: flex; gap: 8px; align-items: center; }
+  .producto-row select { flex: 1; min-width: 0; padding: 12px 10px; border: 1.5px solid #e8e8e8; border-radius: 10px; font-size: 14px; color: #1a1a2e; background: #fafafa; outline: none; font-family: inherit; }
+  .producto-row select:focus { border-color: #1a1a2e; background: white; }
+  .producto-row .producto-cantidad { width: 60px; flex-shrink: 0; padding: 12px 6px; border: 1.5px solid #e8e8e8; border-radius: 10px; font-size: 14px; text-align: center; background: #fafafa; outline: none; font-family: inherit; }
+  .producto-row .producto-cantidad:focus { border-color: #1a1a2e; background: white; }
+  .btn-quitar-producto { background: #fff0f0; border: none; color: #e63946; border-radius: 8px; width: 40px; height: 40px; font-size: 16px; cursor: pointer; flex-shrink: 0; }
+  .btn-agregar-producto { width: 100%; padding: 12px; background: #f0f2f5; border: 1.5px dashed #cccccc; border-radius: 10px; color: #555; font-size: 14px; font-weight: 600; cursor: pointer; margin-bottom: 6px; }
+
   /* LISTA */
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+  .stat-box { background: #1a1a2e; border-radius: 14px; padding: 14px 16px; }
+  .stat-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: rgba(255,255,255,0.5); margin-bottom: 4px; }
+  .stat-value { font-size: 20px; font-weight: 800; color: #2ecc71; }
+  .stat-box.general .stat-value { color: #e8b84b; }
+
   .vianda-card { background: white; border-radius: 14px; padding: 16px; margin-bottom: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
-  .vianda-info { flex: 1; }
-  .vianda-producto { font-size: 16px; font-weight: 700; color: #1a1a2e; margin-bottom: 4px; }
+  .vianda-info { flex: 1; min-width: 0; }
+  .vianda-productos { font-size: 15px; font-weight: 700; color: #1a1a2e; margin-bottom: 6px; line-height: 1.4; }
+  .vianda-productos .cant { color: #888; font-weight: 600; }
   .vianda-persona { font-size: 13px; color: #555; margin-bottom: 4px; }
-  .vianda-meta { font-size: 12px; color: #aaa; display: flex; gap: 12px; flex-wrap: wrap; }
-  .vianda-costo { font-size: 18px; font-weight: 800; color: #2a9d5c; white-space: nowrap; }
+  .vianda-meta { font-size: 12px; color: #aaa; display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 6px; }
+  .vianda-costos { font-size: 12px; color: #888; display: flex; gap: 10px; flex-wrap: wrap; }
+  .vianda-costos b { color: #2a9d5c; }
+  .vianda-total { font-size: 18px; font-weight: 800; color: #2a9d5c; white-space: nowrap; }
   .btn-del { background: #fff0f0; border: none; color: #e63946; border-radius: 8px; padding: 8px 10px; cursor: pointer; font-size: 14px; flex-shrink: 0; }
 
   .filtro-fecha { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
   .filtro-fecha input { flex: 1; min-width: 130px; padding: 10px 14px; border: 1.5px solid #e8e8e8; border-radius: 10px; font-size: 14px; background: white; outline: none; font-family: inherit; }
   .filtro-fecha input:focus { border-color: #1a1a2e; }
-
-  .resumen-total { background: #1a1a2e; border-radius: 14px; padding: 16px 20px; color: white; display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-  .resumen-total span { font-size: 13px; color: rgba(255,255,255,0.6); }
-  .resumen-total strong { font-size: 24px; font-weight: 800; color: #2ecc71; }
 
   .sin-datos { text-align: center; padding: 60px 20px; color: #bbb; }
   .sin-datos .icon { font-size: 40px; margin-bottom: 12px; }
@@ -84,30 +99,36 @@
 <!-- TAB CARGA -->
 <div class="seccion activa" id="tab-carga">
   <div class="section">
-    <div class="section-title">📦 Nueva vianda</div>
-
-    <div class="field">
-      <label>Producto</label>
-      <input type="text" id="inp-producto" placeholder="Ej: Milanesa con papas">
-    </div>
+    <div class="section-title">📦 Nuevo pedido</div>
 
     <div class="field">
       <label>Nombre de la persona</label>
       <input type="text" id="inp-persona" placeholder="Ej: Juan Pérez">
     </div>
 
+    <div class="field">
+      <label>Fecha de entrega</label>
+      <input type="date" id="inp-fecha">
+    </div>
+
+    <div class="field">
+      <label>Productos del pedido</label>
+      <div class="productos-container" id="productos-container"></div>
+      <button type="button" class="btn-agregar-producto" onclick="agregarProducto()">+ Agregar otro producto</button>
+    </div>
+
     <div class="two-col">
       <div class="field">
-        <label>Fecha de entrega</label>
-        <input type="date" id="inp-fecha">
+        <label>Costo del pedido ($)</label>
+        <input type="number" id="inp-costo-pedido" placeholder="0" inputmode="decimal">
       </div>
       <div class="field">
         <label>Costo del envío ($)</label>
-        <input type="number" id="inp-costo" placeholder="0" inputmode="decimal">
+        <input type="number" id="inp-costo-envio" placeholder="0" inputmode="decimal">
       </div>
     </div>
 
-    <button class="btn-save" id="btn-guardar" onclick="guardarVianda()">Guardar vianda</button>
+    <button class="btn-save" id="btn-guardar" onclick="guardarVianda()">Guardar pedido</button>
   </div>
 </div>
 
@@ -117,12 +138,23 @@
     <input type="date" id="filtro-desde" onchange="renderLista()">
     <input type="date" id="filtro-hasta" onchange="renderLista()">
   </div>
-  <div class="resumen-total">
-    <div>
-      <span>Total envíos</span><br>
-      <strong id="total-costo">$0</strong>
+  <div class="stats-grid">
+    <div class="stat-box">
+      <div class="stat-label">Total pedidos</div>
+      <div class="stat-value" id="total-pedido">$0</div>
     </div>
-    <span id="total-cantidad" style="font-size:14px;color:rgba(255,255,255,0.5);">0 viandas</span>
+    <div class="stat-box">
+      <div class="stat-label">Total envíos</div>
+      <div class="stat-value" id="total-envio">$0</div>
+    </div>
+    <div class="stat-box general">
+      <div class="stat-label">Total general</div>
+      <div class="stat-value" id="total-general">$0</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-label">Cantidad</div>
+      <div class="stat-value" id="total-cantidad" style="color:white;">0</div>
+    </div>
   </div>
   <div id="lista-viandas">
     <div class="loading-box"><div class="spinner"></div><p>Cargando...</p></div>
@@ -149,6 +181,25 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+// 🍽️ Catálogo fijo de productos de viandas. Para agregar/quitar productos,
+// simplemente editá esta lista (respetando las comillas y comas).
+const PRODUCTOS_VIANDAS = [
+  "Carré de Cerdo con Puré de Batatas",
+  "Estofado de Ternera con Fideos Casarecce",
+  "Milanesa de Peceto con Puré de Papas",
+  "Goulash de Ternera con Coditos a la Crema",
+  "Sorrentinos de Jamón y Queso con Salsa de Hongos",
+  "Risotto de Hongos",
+  "Pechuga Prote (con arroz y huevo)",
+  "Milanesa de Peceto con Fideos Spaghetoni",
+  "Cazuela de Arroz con Pollo",
+  "Guiso de Lentejas Veggie",
+  "Tenders de Pollo con Fideos",
+  "Ensalada Caesar Crispy",
+  "Ravioles de Espinaca con Salsa Rosa",
+  "Milanesa de Soja Napolitana con Puré de Papas"
+];
+
 let viandas = [];
 let nombreUsuario = '';
 
@@ -173,6 +224,9 @@ onAuthStateChanged(auth, async (user) => {
   document.getElementById('filtro-desde').value = primeroDeMes;
   document.getElementById('filtro-hasta').value = hoy;
 
+  // Arranca el formulario con una fila de producto vacía
+  resetProductosContainer();
+
   await cargarViandas();
 });
 
@@ -181,7 +235,7 @@ async function cargarViandas() {
     const snap = await getDocs(collection(db, 'stock_viandas'));
     viandas = [];
     snap.forEach(d => viandas.push({ id: d.id, ...d.data() }));
-    viandas.sort((a, b) => b.fecha.localeCompare(a.fecha));
+    viandas.sort((a, b) => (b.fecha || '').localeCompare(a.fecha || ''));
     renderLista();
   } catch(e) {
     console.error(e);
@@ -195,14 +249,67 @@ window.cambiarTab = function(tab, el) {
   document.getElementById('tab-' + tab).classList.add('activa');
 };
 
+// ---------- FILAS DE PRODUCTOS (carga) ----------
+
+function crearFilaProducto() {
+  const row = document.createElement('div');
+  row.className = 'producto-row';
+
+  const opciones = PRODUCTOS_VIANDAS.map(p => `<option value="${p}">${p}</option>`).join('');
+  row.innerHTML = `
+    <select class="producto-select">
+      <option value="">Seleccionar producto...</option>
+      ${opciones}
+    </select>
+    <input type="number" class="producto-cantidad" value="1" min="1" inputmode="numeric">
+    <button type="button" class="btn-quitar-producto" onclick="quitarProducto(this)">✕</button>
+  `;
+  return row;
+}
+
+function resetProductosContainer() {
+  const cont = document.getElementById('productos-container');
+  cont.innerHTML = '';
+  cont.appendChild(crearFilaProducto());
+}
+
+window.agregarProducto = function() {
+  document.getElementById('productos-container').appendChild(crearFilaProducto());
+};
+
+window.quitarProducto = function(btn) {
+  const cont = document.getElementById('productos-container');
+  const row = btn.closest('.producto-row');
+  row.remove();
+  if (!cont.children.length) cont.appendChild(crearFilaProducto());
+};
+
+function leerProductosDelForm() {
+  const filas = document.querySelectorAll('#productos-container .producto-row');
+  const productos = [];
+  filas.forEach(f => {
+    const producto = f.querySelector('.producto-select').value;
+    const cantidad = parseInt(f.querySelector('.producto-cantidad').value) || 0;
+    if (producto && cantidad > 0) productos.push({ producto, cantidad });
+  });
+  return productos;
+}
+
+// ---------- GUARDAR ----------
+
 window.guardarVianda = async function() {
-  const producto = document.getElementById('inp-producto').value.trim();
   const persona = document.getElementById('inp-persona').value.trim();
   const fecha = document.getElementById('inp-fecha').value;
-  const costo = parseFloat(document.getElementById('inp-costo').value) || 0;
+  const costoPedido = parseFloat(document.getElementById('inp-costo-pedido').value) || 0;
+  const costoEnvio = parseFloat(document.getElementById('inp-costo-envio').value) || 0;
+  const productos = leerProductosDelForm();
 
-  if (!producto || !persona || !fecha) {
-    toast('Completá producto, persona y fecha', 'error');
+  if (!persona || !fecha) {
+    toast('Completá persona y fecha', 'error');
+    return;
+  }
+  if (!productos.length) {
+    toast('Agregá al menos un producto', 'error');
     return;
   }
 
@@ -210,26 +317,46 @@ window.guardarVianda = async function() {
   btn.disabled = true; btn.textContent = 'Guardando...';
 
   try {
-    const nueva = { producto, persona, fecha, costo, cargadoPor: nombreUsuario, timestamp: serverTimestamp() };
+    const nueva = { productos, persona, fecha, costoPedido, costoEnvio, cargadoPor: nombreUsuario, timestamp: serverTimestamp() };
     const ref = await addDoc(collection(db, 'stock_viandas'), nueva);
     viandas.unshift({ id: ref.id, ...nueva, timestamp: Date.now() });
-    viandas.sort((a, b) => b.fecha.localeCompare(a.fecha));
+    viandas.sort((a, b) => (b.fecha || '').localeCompare(a.fecha || ''));
 
     // Limpiar form
-    document.getElementById('inp-producto').value = '';
     document.getElementById('inp-persona').value = '';
-    document.getElementById('inp-costo').value = '';
+    document.getElementById('inp-costo-pedido').value = '';
+    document.getElementById('inp-costo-envio').value = '';
     document.getElementById('inp-fecha').value = new Date().toISOString().split('T')[0];
+    resetProductosContainer();
 
-    toast('✅ Vianda guardada', 'success');
+    toast('✅ Pedido guardado', 'success');
     renderLista();
   } catch(e) {
     console.error(e);
     toast('❌ Error al guardar', 'error');
   }
 
-  btn.disabled = false; btn.textContent = 'Guardar vianda';
+  btn.disabled = false; btn.textContent = 'Guardar pedido';
 };
+
+// ---------- LECTURA COMPATIBLE (pedidos viejos con un solo producto) ----------
+
+function getProductosDeVianda(v) {
+  if (Array.isArray(v.productos) && v.productos.length) return v.productos;
+  if (v.producto) return [{ producto: v.producto, cantidad: 1 }];
+  return [];
+}
+
+function getCostoEnvio(v) {
+  if (typeof v.costoEnvio === 'number') return v.costoEnvio;
+  return v.costo || 0; // formato viejo: "costo" era el envío
+}
+
+function getCostoPedido(v) {
+  return v.costoPedido || 0;
+}
+
+// ---------- LISTA ----------
 
 window.renderLista = function() {
   const desde = document.getElementById('filtro-desde').value;
@@ -238,35 +365,55 @@ window.renderLista = function() {
 
   const filtradas = viandas.filter(v => (!desde || v.fecha >= desde) && (!hasta || v.fecha <= hasta));
 
-  const totalCosto = filtradas.reduce((acc, v) => acc + (v.costo || 0), 0);
-  document.getElementById('total-costo').textContent = '$' + totalCosto.toLocaleString('es-AR');
-  document.getElementById('total-cantidad').textContent = filtradas.length + ' vianda' + (filtradas.length !== 1 ? 's' : '');
+  const totalEnvio = filtradas.reduce((acc, v) => acc + getCostoEnvio(v), 0);
+  const totalPedido = filtradas.reduce((acc, v) => acc + getCostoPedido(v), 0);
+  const totalGeneral = totalEnvio + totalPedido;
+
+  document.getElementById('total-envio').textContent = '$' + totalEnvio.toLocaleString('es-AR');
+  document.getElementById('total-pedido').textContent = '$' + totalPedido.toLocaleString('es-AR');
+  document.getElementById('total-general').textContent = '$' + totalGeneral.toLocaleString('es-AR');
+  document.getElementById('total-cantidad').textContent = filtradas.length;
 
   if (!filtradas.length) {
-    lista.innerHTML = '<div class="sin-datos"><div class="icon">📭</div><p>Sin viandas en este período</p></div>';
+    lista.innerHTML = '<div class="sin-datos"><div class="icon">📭</div><p>Sin pedidos en este período</p></div>';
     return;
   }
 
-  lista.innerHTML = filtradas.map(v => `
+  lista.innerHTML = filtradas.map(v => {
+    const productos = getProductosDeVianda(v);
+    const costoEnvio = getCostoEnvio(v);
+    const costoPedido = getCostoPedido(v);
+    const total = costoEnvio + costoPedido;
+
+    const listaProductos = productos.map(p =>
+      `<span class="cant">${p.cantidad}x</span> ${p.producto}`
+    ).join('<br>');
+
+    return `
     <div class="vianda-card">
       <div class="vianda-info">
-        <div class="vianda-producto">${v.producto}</div>
+        <div class="vianda-productos">${listaProductos}</div>
         <div class="vianda-persona">👤 ${v.persona}</div>
         <div class="vianda-meta">
           <span>📅 ${formatFecha(v.fecha)}</span>
           ${v.cargadoPor ? `<span>Cargado por: ${v.cargadoPor}</span>` : ''}
         </div>
+        <div class="vianda-costos">
+          <span>Pedido: <b>$${costoPedido.toLocaleString('es-AR')}</b></span>
+          <span>Envío: <b>$${costoEnvio.toLocaleString('es-AR')}</b></span>
+        </div>
       </div>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;">
-        <span class="vianda-costo">$${(v.costo || 0).toLocaleString('es-AR')}</span>
+        <span class="vianda-total">$${total.toLocaleString('es-AR')}</span>
         <button class="btn-del" onclick="window.eliminarVianda('${v.id}')">🗑</button>
       </div>
     </div>
-  `).join('');
+  `;
+  }).join('');
 };
 
 window.eliminarVianda = async function(id) {
-  if (!confirm('¿Eliminar esta vianda?')) return;
+  if (!confirm('¿Eliminar este pedido?')) return;
   try {
     await deleteDoc(doc(db, 'stock_viandas', id));
     viandas = viandas.filter(v => v.id !== id);
