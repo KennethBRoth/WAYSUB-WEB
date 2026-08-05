@@ -210,7 +210,7 @@
         <div class="res-item"><div class="ri-label">IVA (ventas sistema)</div><div class="ri-val resta" id="res-iva">$0</div></div>
         <div class="res-item"><div class="ri-label">Gastos</div><div class="ri-val suma" id="res-gastos">$0</div></div>
         <div class="res-item"><div class="ri-label">Vouchers (info)</div><div class="ri-val" id="res-vouchers" style="color:white;">$0</div></div>
-        <div class="res-item" id="res-item-posnet" style="display:none;"><div class="ri-label">Posnet Balcarce</div><div class="ri-val suma" id="res-posnet">$0</div></div>
+        <div class="res-item" id="res-item-posnet" style="display:none;"><div class="ri-label">Posnet Balcarce</div><div class="ri-val resta" id="res-posnet">$0</div></div>
       </div>
     </div>
 
@@ -280,7 +280,7 @@
       <div id="bloque-posnet-balcarce" style="display:none;margin-top:14px;">
         <div class="field-label-row" style="margin-bottom:10px;">
           <label style="font-size:13px;font-weight:700;color:#555;">Posnet Balcarce</label>
-          <span class="tag-suma">SUMA</span>
+          <span class="tag-resta">RESTA</span>
         </div>
         <div class="field">
           <label>Monto ($)</label>
@@ -694,8 +694,8 @@ window.recalcular = function() {
   const totalDel = deliveryBloques.reduce((acc, bloque) =>
     acc + bloque.canales.reduce((a, c) => a + (parseFloat(c.monto) || 0), 0), 0) - difDelInput;
 
-  // Resultado = Cierre + Tarjetas + MP + Posnet Balcarce + Gastos + Delivery - Apertura - IVA
-  const resultado = cierre + tarjetas + mp + posnetBalcarce + totalGastos + totalDel - apertura - iva;
+  // Resultado = Cierre + Tarjetas + MP + Gastos + Delivery - Apertura - IVA - Posnet Balcarce
+  const resultado = cierre + tarjetas + mp + totalGastos + totalDel - apertura - iva - posnetBalcarce;
 
   // Actualizar resultado principal
   const elRes = document.getElementById('res-total');
@@ -905,7 +905,7 @@ window.guardarCierre = async function() {
       deliveryBloques: deliveryBloques,
       difDelivery:     getNum('dif-delivery-input'),
       totalDelivery:   deliveryBloques.reduce((acc, b) => acc + b.canales.reduce((a, c) => a + (parseFloat(c.monto)||0), 0), 0) - getNum('dif-delivery-input'),
-      resultadoCaja:   (getNum('cierre-fuerte') + getNum('cierre-registradora')) + getNum('importe-tarjetas') + getNum('mercado-pago') + getNum('posnet-balcarce') + totalGastos - (getNum('apertura-fuerte') + getNum('apertura-registradora')) - getNum('ventas-iva')
+      resultadoCaja:   (getNum('cierre-fuerte') + getNum('cierre-registradora')) + getNum('importe-tarjetas') + getNum('mercado-pago') + totalGastos - (getNum('apertura-fuerte') + getNum('apertura-registradora')) - getNum('ventas-iva') - getNum('posnet-balcarce')
     };
 
     if (esSubway) {
