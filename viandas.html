@@ -79,6 +79,19 @@
   .toast.success { background: #2ecc71; color: #1a1a2e; }
   .toast.error { background: #e74c3c; }
 
+  /* FILTRO DE PAGO (chips) */
+  .filtro-pago { display: flex; gap: 8px; margin-bottom: 16px; }
+  .chip { flex: 1; text-align: center; padding: 9px 8px; border-radius: 10px; background: white; color: #888; font-size: 13px; font-weight: 600; cursor: pointer; border: 1.5px solid #e8e8e8; }
+  .chip.activo { background: #1a1a2e; color: white; border-color: #1a1a2e; }
+
+  /* ESTADO DE PAGO (tarjeta) */
+  .badge-pago { display: inline-block; font-size: 11px; font-weight: 700; padding: 4px 9px; border-radius: 20px; margin-bottom: 6px; }
+  .badge-pago.pendiente { background: #fff0d9; color: #b8790a; }
+  .badge-pago.pagado { background: #e3f9ec; color: #1e8a4c; }
+  .btn-pago { width: 100%; margin-top: 8px; padding: 9px; border: none; border-radius: 10px; font-size: 12px; font-weight: 700; cursor: pointer; }
+  .btn-pago.marcar-pagado { background: #2ecc71; color: #1a1a2e; }
+  .btn-pago.marcar-pendiente { background: #f0f2f5; color: #888; }
+
   @media (max-width: 480px) {
     .two-col { grid-template-columns: 1fr; }
   }
@@ -152,9 +165,14 @@
       <div class="stat-value" id="total-general">$0</div>
     </div>
     <div class="stat-box">
-      <div class="stat-label">Cantidad</div>
-      <div class="stat-value" id="total-cantidad" style="color:white;">0</div>
+      <div class="stat-label">Pendiente de cobro</div>
+      <div class="stat-value" id="total-pendiente-cobro" style="color:#e8b84b;">$0</div>
     </div>
+  </div>
+  <div class="filtro-pago">
+    <div class="chip activo" onclick="setFiltroPago('todos', this)">Todos</div>
+    <div class="chip" onclick="setFiltroPago('pendientes', this)">Pendientes</div>
+    <div class="chip" onclick="setFiltroPago('pagados', this)">Pagados</div>
   </div>
   <div id="lista-viandas">
     <div class="loading-box"><div class="spinner"></div><p>Cargando...</p></div>
@@ -166,7 +184,7 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, deleteDoc, updateDoc, doc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAB2-btgFqGiCe1YdZSDv4EShV601N-uQs",
@@ -202,6 +220,7 @@ const PRODUCTOS_VIANDAS = [
 
 let viandas = [];
 let nombreUsuario = '';
+let filtroPago = 'todos'; // 'todos' | 'pendientes' | 'pagados'
 
 onAuthStateChanged(auth, async (user) => {
   if (!user) { window.location.href = 'login.html'; return; }
@@ -317,7 +336,7 @@ window.guardarVianda = async function() {
   btn.disabled = true; btn.textContent = 'Guardando...';
 
   try {
-    const nueva = { productos, persona, fecha, costoPedido, costoEnvio, cargadoPor: nombreUsuario, timestamp: serverTimestamp() };
+    const nueva = { productos, persona, fecha, costoPedido, costoEnvio, pagado: false, cargadoPor: nombreUsuario, timestamp: serverTimestamp() };
     const ref = await addDoc(collection(db, 'stock_viandas'), nueva);
     viandas.unshift({ id: ref.id, ...nueva, timestamp: Date.now() });
     viandas.sort((a, b) => (b.fecha || '').localeCompare(a.fecha || ''));
@@ -356,30 +375,50 @@ function getCostoPedido(v) {
   return v.costoPedido || 0;
 }
 
+function getPagado(v) {
+  return v.pagado === true; // pedidos viejos sin este campo cuentan como pendientes
+}
+
 // ---------- LISTA ----------
+
+window.setFiltroPago = function(valor, el) {
+  filtroPago = valor;
+  document.querySelectorAll('.filtro-pago .chip').forEach(c => c.classList.remove('activo'));
+  el.classList.add('activo');
+  renderLista();
+};
 
 window.renderLista = function() {
   const desde = document.getElementById('filtro-desde').value;
   const hasta = document.getElementById('filtro-hasta').value;
   const lista = document.getElementById('lista-viandas');
 
+  // Filtro por rango de fechas: se usa para las estadísticas del período completo
   const filtradas = viandas.filter(v => (!desde || v.fecha >= desde) && (!hasta || v.fecha <= hasta));
 
   const totalEnvio = filtradas.reduce((acc, v) => acc + getCostoEnvio(v), 0);
   const totalPedido = filtradas.reduce((acc, v) => acc + getCostoPedido(v), 0);
   const totalGeneral = totalEnvio + totalPedido;
+  const totalPendienteCobro = filtradas.reduce((acc, v) => acc + (!getPagado(v) ? getCostoEnvio(v) + getCostoPedido(v) : 0), 0);
 
   document.getElementById('total-envio').textContent = '$' + totalEnvio.toLocaleString('es-AR');
   document.getElementById('total-pedido').textContent = '$' + totalPedido.toLocaleString('es-AR');
   document.getElementById('total-general').textContent = '$' + totalGeneral.toLocaleString('es-AR');
-  document.getElementById('total-cantidad').textContent = filtradas.length;
+  document.getElementById('total-pendiente-cobro').textContent = '$' + totalPendienteCobro.toLocaleString('es-AR');
 
-  if (!filtradas.length) {
+  // Filtro por estado de pago (chips): se usa solo para qué tarjetas se muestran
+  const vista = filtradas.filter(v => {
+    if (filtroPago === 'pendientes') return !getPagado(v);
+    if (filtroPago === 'pagados') return getPagado(v);
+    return true;
+  });
+
+  if (!vista.length) {
     lista.innerHTML = '<div class="sin-datos"><div class="icon">📭</div><p>Sin pedidos en este período</p></div>';
     return;
   }
 
-  lista.innerHTML = filtradas.map(v => {
+  lista.innerHTML = vista.map(v => {
     const productos = getProductosDeVianda(v);
     const costoEnvio = getCostoEnvio(v);
     const costoPedido = getCostoPedido(v);
@@ -389,9 +428,18 @@ window.renderLista = function() {
       `<span class="cant">${p.cantidad}x</span> ${p.producto}`
     ).join('<br>');
 
+    const pagado = getPagado(v);
+    const badge = pagado
+      ? `<span class="badge-pago pagado">✅ Pagado</span>`
+      : `<span class="badge-pago pendiente">💰 No pagado</span>`;
+    const btnPago = pagado
+      ? `<button class="btn-pago marcar-pendiente" onclick="window.togglePago('${v.id}', ${pagado})">Marcar como no pagado</button>`
+      : `<button class="btn-pago marcar-pagado" onclick="window.togglePago('${v.id}', ${pagado})">Marcar como pagado</button>`;
+
     return `
     <div class="vianda-card">
       <div class="vianda-info">
+        ${badge}
         <div class="vianda-productos">${listaProductos}</div>
         <div class="vianda-persona">👤 ${v.persona}</div>
         <div class="vianda-meta">
@@ -402,6 +450,7 @@ window.renderLista = function() {
           <span>Pedido: <b>$${costoPedido.toLocaleString('es-AR')}</b></span>
           <span>Envío: <b>$${costoEnvio.toLocaleString('es-AR')}</b></span>
         </div>
+        ${btnPago}
       </div>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;">
         <span class="vianda-total">$${total.toLocaleString('es-AR')}</span>
@@ -410,6 +459,19 @@ window.renderLista = function() {
     </div>
   `;
   }).join('');
+};
+
+window.togglePago = async function(id, estabaPagado) {
+  try {
+    await updateDoc(doc(db, 'stock_viandas', id), { pagado: !estabaPagado });
+    const v = viandas.find(x => x.id === id);
+    if (v) v.pagado = !estabaPagado;
+    renderLista();
+    toast(!estabaPagado ? '✅ Marcado como pagado' : 'Marcado como no pagado', 'success');
+  } catch(e) {
+    console.error(e);
+    toast('❌ Error al actualizar', 'error');
+  }
 };
 
 window.eliminarVianda = async function(id) {
