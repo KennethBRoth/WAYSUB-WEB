@@ -132,7 +132,7 @@
 
     <div class="two-col">
       <div class="field">
-        <label>Costo del pedido ($)</label>
+        <label>Costo del pedido ($) <span style="font-weight:400;color:#aaa;">· automático</span></label>
         <input type="number" id="inp-costo-pedido" placeholder="0" inputmode="decimal">
       </div>
       <div class="field">
@@ -199,23 +199,24 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// 🍽️ Catálogo fijo de productos de viandas. Para agregar/quitar productos,
-// simplemente editá esta lista (respetando las comillas y comas).
+// 🍽️ Catálogo de productos de viandas con precio. Para agregar/quitar productos
+// o actualizar precios, simplemente editá esta lista (respetando comillas y comas).
+// El costo del pedido se calcula solo a partir de estos precios x cantidad.
 const PRODUCTOS_VIANDAS = [
-  "Carré de Cerdo con Puré de Batatas",
-  "Estofado de Ternera con Fideos Casarecce",
-  "Milanesa de Peceto con Puré de Papas",
-  "Goulash de Ternera con Coditos a la Crema",
-  "Sorrentinos de Jamón y Queso con Salsa de Hongos",
-  "Risotto de Hongos",
-  "Pechuga Prote (con arroz y huevo)",
-  "Milanesa de Peceto con Fideos Spaghetoni",
-  "Cazuela de Arroz con Pollo",
-  "Guiso de Lentejas Veggie",
-  "Tenders de Pollo con Fideos",
-  "Ensalada Caesar Crispy",
-  "Ravioles de Espinaca con Salsa Rosa",
-  "Milanesa de Soja Napolitana con Puré de Papas"
+  { producto: "Carré de Cerdo con Puré de Batata", precio: 11500 },
+  { producto: "Milanesa de Soja Napolitana con Puré de Papas", precio: 10500 },
+  { producto: "Ravioles de Espinaca con Salsa Rosa", precio: 10500 },
+  { producto: "Ensalada Caesar", precio: 10500 },
+  { producto: "Guiso de Lentejas Vegano", precio: 9500 },
+  { producto: "Cazuela de Arroz con Pollo", precio: 9500 },
+  { producto: "Pechuga de Pollo con Arroz Cremoso y Huevo", precio: 11000 },
+  { producto: "Risotto de Hongos", precio: 10500 },
+  { producto: "Goulash de Ternera con Conchiglie a la Crema", precio: 10500 },
+  { producto: "Milanesa de Ternera con Puré de Papas", precio: 11500 },
+  { producto: "Ternera Estofada con Fideos", precio: 11000 },
+  { producto: "Milanesa de Pollo con Conchiglie a la Crema", precio: 10500 },
+  { producto: "Sorrentinos de Jamón y Queso con Salsa de Hongos", precio: 11500 },
+  { producto: "Milanesa de Ternera con Fideos", precio: 11500 }
 ];
 
 let viandas = [];
@@ -274,7 +275,7 @@ function crearFilaProducto() {
   const row = document.createElement('div');
   row.className = 'producto-row';
 
-  const opciones = PRODUCTOS_VIANDAS.map(p => `<option value="${p}">${p}</option>`).join('');
+  const opciones = PRODUCTOS_VIANDAS.map(p => `<option value="${p.producto}" data-precio="${p.precio}">${p.producto}</option>`).join('');
   row.innerHTML = `
     <select class="producto-select">
       <option value="">Seleccionar producto...</option>
@@ -283,13 +284,30 @@ function crearFilaProducto() {
     <input type="number" class="producto-cantidad" value="1" min="1" inputmode="numeric">
     <button type="button" class="btn-quitar-producto" onclick="quitarProducto(this)">✕</button>
   `;
+
+  row.querySelector('.producto-select').addEventListener('change', actualizarCostoPedido);
+  row.querySelector('.producto-cantidad').addEventListener('input', actualizarCostoPedido);
+
   return row;
+}
+
+function actualizarCostoPedido() {
+  const filas = document.querySelectorAll('#productos-container .producto-row');
+  let total = 0;
+  filas.forEach(f => {
+    const opt = f.querySelector('.producto-select').selectedOptions[0];
+    const precio = opt ? parseFloat(opt.dataset.precio) || 0 : 0;
+    const cantidad = parseInt(f.querySelector('.producto-cantidad').value) || 0;
+    total += precio * cantidad;
+  });
+  document.getElementById('inp-costo-pedido').value = total || '';
 }
 
 function resetProductosContainer() {
   const cont = document.getElementById('productos-container');
   cont.innerHTML = '';
   cont.appendChild(crearFilaProducto());
+  actualizarCostoPedido();
 }
 
 window.agregarProducto = function() {
@@ -301,6 +319,7 @@ window.quitarProducto = function(btn) {
   const row = btn.closest('.producto-row');
   row.remove();
   if (!cont.children.length) cont.appendChild(crearFilaProducto());
+  actualizarCostoPedido();
 };
 
 function leerProductosDelForm() {
