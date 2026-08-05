@@ -1,721 +1,732 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pedido Axionlog · Waysub</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: sans-serif; background: #f0f2f5; color: #1a1a1a; min-height: 100vh; }
-    header { background: #1a1a2e; color: white; padding: 16px 20px; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 100; }
-    .btn-volver { background: rgba(255,255,255,0.15); border: none; color: white; border-radius: 8px; padding: 6px 12px; font-size: 18px; cursor: pointer; }
-    header h1 { font-size: 18px; flex: 1; }
-    .local-badge { background: rgba(255,255,255,0.15); border-radius: 20px; padding: 4px 12px; font-size: 12px; }
-    .tabs { display: flex; background: white; border-bottom: 2px solid #f0f2f5; position: sticky; top: 57px; z-index: 99; }
-    .tab { flex: 1; padding: 12px 4px; text-align: center; font-size: 11px; font-weight: 600; color: #999; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.2s; }
-    .tab.activo { color: #1a1a2e; border-bottom-color: #1a1a2e; }
-    .seccion { display: none; padding-bottom: 100px; }
-    .seccion.activa { display: block; }
-    .card { background: white; margin: 12px 16px 0; border-radius: 12px; padding: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); }
-    .card h3 { font-size: 13px; font-weight: 700; color: #999; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 14px; }
-    .metodo-selector { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 12px 16px 0; }
-    .metodo-btn { background: white; border: 2px solid #e0e0e0; border-radius: 12px; padding: 14px 10px; text-align: center; cursor: pointer; transition: all 0.2s; }
-    .metodo-btn.activo { border-color: #1a1a2e; background: #1a1a2e; color: white; }
-    .metodo-btn .metodo-emoji { font-size: 24px; display: block; margin-bottom: 4px; }
-    .metodo-btn .metodo-label { font-size: 12px; font-weight: 600; }
-    .foto-area { border: 2px dashed #ddd; border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; background: #fafafa; margin-top: 10px; }
-    .foto-area input { display: none; }
-    .foto-area p { font-size: 13px; color: #999; margin-top: 6px; }
-    .foto-preview { max-width: 100%; border-radius: 8px; margin-top: 8px; display: none; }
-    .btn-analizar { width: 100%; background: #1a1a2e; color: white; border: none; border-radius: 8px; padding: 11px; font-size: 13px; font-weight: 600; cursor: pointer; margin-top: 8px; display: none; }
-    .btn-analizar:disabled { opacity: 0.6; cursor: wait; }
-    .analizando { text-align: center; padding: 12px; color: #666; font-size: 13px; display: none; }
-    .productos-tabla { width: 100%; border-collapse: collapse; font-size: 13px; }
-    .productos-tabla th { text-align: left; padding: 7px 5px; font-size: 11px; color: #999; font-weight: 700; text-transform: uppercase; border-bottom: 2px solid #f0f2f5; }
-    .productos-tabla td { padding: 7px 5px; border-bottom: 1px solid #f8f8f8; vertical-align: middle; }
-    .productos-tabla tr:last-child td { border-bottom: none; }
-    .productos-tabla input[type=number] { width: 70px; padding: 5px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; text-align: center; }
-    .productos-tabla input[type=number]:focus { outline: none; border-color: #1a1a2e; }
-    .grupo-header td { background: #f8f9ff; font-weight: 700; font-size: 11px; color: #1a1a2e; text-transform: uppercase; letter-spacing: 0.5px; padding: 9px 5px 5px; }
-    .unit-label { font-size: 10px; color: #aaa; }
-    .resultado-tabla { width: 100%; border-collapse: collapse; font-size: 12px; }
-    .resultado-tabla th { text-align: left; padding: 7px 5px; font-size: 10px; color: #999; font-weight: 700; text-transform: uppercase; border-bottom: 2px solid #f0f2f5; white-space: nowrap; }
-    .resultado-tabla td { padding: 7px 5px; border-bottom: 1px solid #f8f8f8; white-space: nowrap; }
-    .resultado-tabla tr:last-child td { border-bottom: none; }
-    .badge-rojo { background: #fff0f0; color: #e63946; border-radius: 20px; padding: 2px 7px; font-size: 11px; font-weight: 700; }
-    .badge-amarillo { background: #fffbee; color: #d4a017; border-radius: 20px; padding: 2px 7px; font-size: 11px; font-weight: 700; }
-    .badge-verde { background: #f0fff4; color: #2a9d5c; border-radius: 20px; padding: 2px 7px; font-size: 11px; font-weight: 700; }
-    .badge-gris { background: #f5f5f5; color: #999; border-radius: 20px; padding: 2px 7px; font-size: 11px; }
-    .pedido-input { width: 55px; padding: 5px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; text-align: center; }
-    .pedido-input.tiene-pedido { border-color: #e63946; background: #fff8f8; }
-    .alerta { border-radius: 10px; padding: 11px 13px; margin: 8px 16px 0; font-size: 13px; }
-    .alerta-roja { background: #fff0f0; border: 1px solid #ffd0d0; color: #c0392b; }
-    .alerta-amarilla { background: #fffbee; border: 1px solid #ffe8a0; color: #7d5a00; }
-    .alerta-azul { background: #f0f4ff; border: 1px solid #c5d0ff; color: #1a3a8e; }
-    .banner-auto { background: #f0fff4; border: 1px solid #c3e6cb; border-radius: 10px; padding: 10px 14px; margin: 12px 16px 0; font-size: 13px; color: #2a9d5c; display: none; }
-    .footer-btns { position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 1px solid #eee; padding: 12px 16px; display: flex; gap: 8px; z-index: 100; }
-    .btn-calcular { flex: 2; background: #1a1a2e; color: white; border: none; border-radius: 10px; padding: 13px; font-size: 14px; font-weight: 700; cursor: pointer; }
-    .btn-excel { flex: 1; background: #f0fff4; color: #2a9d5c; border: 1px solid #c3e6cb; border-radius: 10px; padding: 13px; font-size: 12px; font-weight: 600; cursor: pointer; display: none; }
-    .btn-guardar-hist { flex: 1; background: #f0f4ff; color: #1a1a2e; border: 1px solid #c5cff5; border-radius: 10px; padding: 13px; font-size: 12px; font-weight: 600; cursor: pointer; display: none; }
-    .historial-item { background: white; margin: 8px 16px 0; border-radius: 12px; padding: 14px 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
-    .hist-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-    .hist-fecha { font-size: 13px; font-weight: 700; }
-    .hist-local { font-size: 11px; color: #999; }
-    .hist-resumen { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
-    .hist-kpi { background: #f8f8f8; border-radius: 8px; padding: 8px; text-align: center; }
-    .hist-kpi span { font-size: 10px; color: #999; display: block; }
-    .hist-kpi strong { font-size: 14px; }
-    .btn-eliminar-hist { background: none; border: none; color: #ccc; cursor: pointer; font-size: 16px; }
-    .sin-historial { text-align: center; padding: 40px 20px; color: #bbb; font-size: 14px; }
-    .seccion-titulo { padding: 12px 16px 4px; font-size: 11px; font-weight: 700; color: #999; text-transform: uppercase; letter-spacing: 1px; }
-    .fecha-rango { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .fecha-campo label { font-size: 11px; color: #999; display: block; margin-bottom: 4px; font-weight: 600; text-transform: uppercase; }
-    .fecha-campo input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; }
-    .ia-ajustando { text-align: center; padding: 16px; color: #1a1a2e; font-size: 13px; display: none; background: #f0f4ff; border-radius: 10px; margin: 8px 16px 0; }
-    .aprendizaje-nota { font-size: 11px; color: #aaa; text-align: center; margin-top: 6px; }
-    .grupo-collapsible { cursor: pointer; user-select: none; }
-    .grupo-collapsible:after { content: ' ▾'; font-size: 10px; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pedido Axionlog — Waysub Panel</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f0f2f5; color: #1a1a2e; min-height: 100vh; }
+  .header { background: #1a1a2e; color: white; padding: 16px 20px; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 100; }
+  .btn-back { background: rgba(255,255,255,0.1); border: none; color: white; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 14px; }
+  .header h1 { font-size: 18px; font-weight: 600; flex: 1; }
+  .local-badge { background: #e8b84b; color: #1a1a2e; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; }
+
+  .tabs { display: flex; background: white; border-bottom: 2px solid #f0f2f5; position: sticky; top: 57px; z-index: 99; }
+  .tab { flex: 1; padding: 12px 8px; text-align: center; font-size: 12px; font-weight: 600; color: #999; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; }
+  .tab.activo { color: #1a1a2e; border-bottom-color: #1a1a2e; }
+
+  .seccion { display: none; padding: 16px 16px 100px; max-width: 900px; margin: 0 auto; }
+  .seccion.activa { display: block; }
+
+  .card { background: white; border-radius: 14px; padding: 18px; margin-bottom: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+  .card-title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #888; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center; }
+
+  /* FORMULARIO */
+  .grupo-titulo { font-size: 12px; font-weight: 700; color: #1a1a2e; text-transform: uppercase; letter-spacing: 0.5px; padding: 14px 0 8px; border-bottom: 2px solid #f0f2f5; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+  .prod-row { display: grid; grid-template-columns: 200px 1fr 1fr 1fr; gap: 10px; align-items: center; padding: 8px 0; border-bottom: 1px solid #f8f8f8; }
+  .prod-row:last-child { border-bottom: none; }
+  .prod-nombre { font-size: 13px; font-weight: 500; color: #333; }
+  .prod-stock-a { font-size: 13px; color: #888; background: #f8f9fa; padding: 8px 10px; border-radius: 8px; text-align: center; }
+  .prod-input { width: 100%; padding: 8px 10px; border: 1.5px solid #e8e8e8; border-radius: 8px; font-size: 13px; color: #1a1a2e; background: #fafafa; outline: none; font-family: inherit; text-align: center; appearance: textfield; }
+  .prod-input::-webkit-inner-spin-button { display: none; }
+  .prod-input:focus { border-color: #1a1a2e; background: white; }
+  .prod-unidad { font-size: 10px; color: #aaa; text-align: center; margin-top: 2px; }
+  .col-header { font-size: 10px; font-weight: 700; color: #999; text-transform: uppercase; text-align: center; letter-spacing: 0.05em; }
+
+  /* TRANSFERENCIAS */
+  .transfer-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+  .transfer-row select, .transfer-row input { padding: 8px 10px; border: 1.5px solid #e8e8e8; border-radius: 8px; font-size: 13px; outline: none; font-family: inherit; }
+  .transfer-row select { flex: 2; }
+  .transfer-row select:nth-child(2) { flex: 1; }
+  .transfer-row input { flex: 1; }
+  .btn-del-small { background: #fff0f0; border: none; color: #e63946; border-radius: 8px; padding: 8px 10px; cursor: pointer; }
+
+  /* ALERTAS */
+  .alerta { border-radius: 10px; padding: 12px 14px; margin-bottom: 8px; font-size: 13px; display: flex; align-items: flex-start; gap: 10px; }
+  .alerta-roja { background: #fff0f0; border: 1px solid #ffd0d0; color: #c0392b; }
+  .alerta-naranja { background: #fff8ee; border: 1px solid #ffd9a0; color: #a04000; }
+  .alerta-azul { background: #f0f4ff; border: 1px solid #c5cff5; color: #2c3e8a; }
+
+  /* REPORTE */
+  .reporte-tabla { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .reporte-tabla th { text-align: center; padding: 8px 6px; font-size: 10px; color: #999; font-weight: 700; text-transform: uppercase; border-bottom: 2px solid #f0f2f5; white-space: nowrap; }
+  .reporte-tabla td { padding: 8px 6px; border-bottom: 1px solid #f8f8f8; text-align: center; vertical-align: middle; }
+  .reporte-tabla td:first-child { text-align: left; font-weight: 500; }
+  .reporte-tabla tr:last-child td { border-bottom: none; }
+  .reporte-grupo { background: #f8f9ff; }
+  .reporte-grupo td { font-weight: 700; font-size: 11px; color: #1a1a2e; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  .pedido-consolidado { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
+  .pedido-item { background: #f0fff4; border: 1px solid #c3e6cb; border-radius: 10px; padding: 12px 14px; }
+  .pedido-item .p-nombre { font-size: 13px; font-weight: 700; color: #1a1a2e; margin-bottom: 4px; }
+  .pedido-item .p-sku { font-size: 10px; color: #888; margin-bottom: 6px; }
+  .pedido-item .p-cajas { font-size: 20px; font-weight: 800; color: #2a9d5c; }
+  .pedido-item .p-unidades { font-size: 11px; color: #666; }
+
+  .no-pedir-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #f0f0f0; font-size: 13px; }
+  .no-pedir-item:last-child { border-bottom: none; }
+  .no-pedir-razon { font-size: 11px; color: #aaa; }
+
+  /* HISTORIAL */
+  .hist-item { border: 1.5px solid #f0f0f0; border-radius: 12px; padding: 14px; margin-bottom: 10px; cursor: pointer; transition: background 0.2s; }
+  .hist-item:hover { background: #f8f9fa; }
+  .hist-header { display: flex; justify-content: space-between; align-items: center; }
+  .hist-fecha { font-weight: 700; font-size: 14px; }
+  .hist-local { font-size: 12px; color: #888; margin-top: 2px; }
+  .hist-alertas { font-size: 12px; }
+
+  .badge-rojo { background: #fff0f0; color: #e63946; border-radius: 20px; padding: 2px 8px; font-size: 11px; font-weight: 700; }
+  .badge-naranja { background: #fff8ee; color: #e67e22; border-radius: 20px; padding: 2px 8px; font-size: 11px; font-weight: 700; }
+  .badge-verde { background: #f0fff4; color: #2a9d5c; border-radius: 20px; padding: 2px 8px; font-size: 11px; font-weight: 700; }
+
+  /* BOTONES */
+  .btn-primary { background: #1a1a2e; color: white; border: none; padding: 14px 20px; border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; }
+  .btn-secondary { background: white; color: #1a1a2e; border: 1.5px solid #e8e8e8; padding: 12px 16px; border-radius: 12px; font-size: 14px; font-weight: 600; cursor: pointer; }
+  .btn-sm { padding: 8px 14px; font-size: 13px; border-radius: 8px; }
+
+  .footer-btns { position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 1px solid #eee; padding: 12px 16px; display: flex; gap: 10px; z-index: 100; }
+
+  .loading { text-align: center; padding: 40px; color: #999; }
+  .spinner { width: 36px; height: 36px; border: 3px solid #ddd; border-top-color: #1a1a2e; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(60px); background: #1a1a2e; color: white; padding: 12px 24px; border-radius: 10px; font-size: 14px; font-weight: 600; transition: transform 0.3s; z-index: 999; white-space: nowrap; }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast.ok { background: #2ecc71; color: #1a1a2e; }
+  .toast.err { background: #e74c3c; }
+
+  @media (max-width: 600px) {
+    .prod-row { grid-template-columns: 140px 1fr 1fr 1fr; }
+  }
+</style>
 </head>
 <body>
 
-<header>
-  <button class="btn-volver" onclick="window.location.href='index.html'">←</button>
+<div class="header">
+  <button class="btn-back" onclick="window.location.href='index.html'">← Inicio</button>
   <h1>📦 Pedido Axionlog</h1>
-  <span class="local-badge" id="local-nombre">—</span>
-</header>
+  <span class="local-badge" id="header-local">—</span>
+</div>
 
 <div class="tabs">
-  <div class="tab activo" onclick="cambiarTab('carga')">📥 Carga</div>
-  <div class="tab" onclick="cambiarTab('resultados')">📊 Resultados</div>
-  <div class="tab" onclick="cambiarTab('historial')">📋 Historial</div>
+  <div class="tab activo" onclick="cambiarTab('carga', this)">📥 Carga</div>
+  <div class="tab" onclick="cambiarTab('reporte', this)">📊 Reporte</div>
+  <div class="tab" onclick="cambiarTab('historial', this)">📋 Historial</div>
 </div>
 
 <!-- TAB CARGA -->
 <div class="seccion activa" id="tab-carga">
 
-  <div class="banner-auto" id="banner-auto"></div>
-
-  <div class="card" style="margin-top:12px;">
-    <h3>Semana</h3>
-    <div class="fecha-rango">
-      <div class="fecha-campo"><label>Desde</label><input type="date" id="fecha-desde"></div>
-      <div class="fecha-campo"><label>Hasta</label><input type="date" id="fecha-hasta"></div>
+  <!-- SELECTOR LOCAL -->
+  <div class="card">
+    <div class="card-title">🏪 Local</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+      <button class="btn-primary" id="btn-ramos" onclick="seleccionarLocal('ramos')">Ramos Mejía</button>
+      <button class="btn-secondary" id="btn-moron" onclick="seleccionarLocal('moron')">Morón</button>
+      <button class="btn-secondary" style="margin-left:auto;" onclick="window.location.href='axionlog-config.html'">⚙️ Configuración</button>
     </div>
+    <div id="info-local" style="margin-top:12px;font-size:13px;color:#888;display:none;"></div>
   </div>
 
-  <div class="seccion-titulo">Método de carga</div>
-  <div class="metodo-selector">
-    <div class="metodo-btn activo" id="btn-metodo-manual" onclick="setMetodo('manual')">
-      <span class="metodo-emoji">✏️</span><span class="metodo-label">Manual</span>
+  <!-- STOCK A (referencia) -->
+  <div class="card" id="card-stock-a" style="display:none;">
+    <div class="card-title">
+      📦 Stock A (semana anterior — referencia)
+      <span style="font-size:11px;color:#aaa;font-weight:400;text-transform:none;">cargado automáticamente</span>
     </div>
-    <div class="metodo-btn" id="btn-metodo-foto" onclick="setMetodo('foto')">
-      <span class="metodo-emoji">📷</span><span class="metodo-label">Por foto (IA)</span>
-    </div>
+    <div id="stock-a-resumen" style="font-size:13px;color:#666;">Cargando...</div>
   </div>
 
-  <div id="zona-foto" style="display:none; margin: 0 16px;">
-    <div style="margin-top:10px;">
-      <p style="font-size:12px; color:#999; margin-bottom:8px; font-weight:600; text-transform:uppercase;">¿Qué foto querés subir?</p>
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px;">
-        <button onclick="setTipoFoto('conteo')" id="tfb-conteo" style="background:#1a1a2e;color:white;border:2px solid #1a1a2e;border-radius:10px;padding:10px 4px;font-size:11px;font-weight:600;cursor:pointer;">📝<br>Conteo (Stock B)</button>
-        <button onclick="setTipoFoto('factura')" id="tfb-factura" style="background:white;color:#333;border:2px solid #ddd;border-radius:10px;padding:10px 4px;font-size:11px;font-weight:600;cursor:pointer;">🧾<br>Factura Axionlog</button>
+  <!-- FORMULARIO STOCK B + FACTURA -->
+  <div id="form-carga" style="display:none;">
+    <div class="card">
+      <div class="card-title">📝 Stock B (conteo actual) + Ingreso Factura</div>
+      <div class="prod-row" style="margin-bottom:8px;">
+        <div class="col-header">Producto</div>
+        <div class="col-header">Stock A (ref.)</div>
+        <div class="col-header">Stock B (hoy)</div>
+        <div class="col-header">Factura llegada</div>
       </div>
-      <label class="foto-area">
-        <input type="file" accept="image/*" onchange="previewFoto(event)">
-        <span style="font-size:28px;">📸</span>
-        <p>Tocá para subir foto</p>
-        <img class="foto-preview" id="foto-preview-img">
-      </label>
-      <button class="btn-analizar" id="btn-analizar" onclick="analizarFoto()">🔍 Analizar con IA</button>
-      <div class="analizando" id="analizando">⏳ Leyendo imagen...</div>
+      <div id="form-productos"></div>
+    </div>
+
+    <!-- TRANSFERENCIAS -->
+    <div class="card">
+      <div class="card-title">🔄 Transferencias entre locales <span style="font-size:11px;color:#aaa;font-weight:400;text-transform:none;">(opcional)</span></div>
+      <div id="lista-transfers"></div>
+      <button class="btn-secondary btn-sm" onclick="agregarTransfer()" style="margin-top:8px;">+ Agregar transferencia</button>
     </div>
   </div>
 
-  <!-- STOCK A (anterior, autocompletado) -->
-  <div class="card">
-    <h3>Stock A — Semana anterior <span style="font-size:11px;color:#2a9d5c;font-weight:400;">(autocompletado)</span></h3>
-    <div id="tablas-stocka"></div>
+  <div id="sin-local" style="text-align:center;padding:40px 20px;color:#bbb;">
+    <div style="font-size:40px;margin-bottom:12px;">🏪</div>
+    <p>Seleccioná un local para empezar</p>
   </div>
-
-  <!-- INGRESO FACTURA -->
-  <div class="card">
-    <h3>Ingreso Factura Axionlog</h3>
-    <div id="tablas-ingreso"></div>
-  </div>
-
-  <!-- STOCK B -->
-  <div class="card">
-    <h3>Stock B — Conteo actual</h3>
-    <div id="tablas-stockb"></div>
-  </div>
-
 </div>
 
-<!-- TAB RESULTADOS -->
-<div class="seccion" id="tab-resultados">
-  <div id="alertas-container"></div>
-  <div class="ia-ajustando" id="ia-ajustando">🤖 IA ajustando pedido según tu historial...</div>
-
-  <div class="card" style="margin-top:12px;">
-    <h3>Cálculo de consumo</h3>
-    <div style="overflow-x:auto;"><table class="resultado-tabla">
-      <thead><tr><th>Producto</th><th>StockA</th><th>Ingreso</th><th>StockB</th><th>Consumo</th><th>CD</th><th>Recibo</th><th>Cubre</th></tr></thead>
-      <tbody id="body-consumo"></tbody>
-    </table></div>
+<!-- TAB REPORTE -->
+<div class="seccion" id="tab-reporte">
+  <div id="reporte-vacio" style="text-align:center;padding:60px 20px;color:#bbb;">
+    <div style="font-size:40px;margin-bottom:12px;">📊</div>
+    <p>Calculá un pedido primero</p>
   </div>
+  <div id="reporte-contenido" style="display:none;">
+    <div id="alertas-container"></div>
 
-  <div class="card">
-    <h3>Pedido sugerido <span class="aprendizaje-nota">— ajustado por IA según tu historial</span></h3>
-    <div style="overflow-x:auto;"><table class="resultado-tabla">
-      <thead><tr><th>Producto</th><th>Consumo</th><th>Stock B</th><th>Recibo</th><th>Cajas</th></tr></thead>
-      <tbody id="body-pedido"></tbody>
-    </table></div>
-  </div>
+    <div class="card">
+      <div class="card-title">🛒 Pedido sugerido</div>
+      <div class="pedido-consolidado" id="pedido-consolidado"></div>
+    </div>
 
-  <div class="card">
-    <h3>No se piden</h3>
-    <div id="body-no-piden" style="font-size:13px;"></div>
+    <div class="card">
+      <div class="card-title">📊 Tabla de cálculo detallado</div>
+      <div style="overflow-x:auto;">
+        <table class="reporte-tabla">
+          <thead>
+            <tr>
+              <th>Producto</th>
+              <th>Stock A</th>
+              <th>Factura</th>
+              <th>Stock B</th>
+              <th>Consumo</th>
+              <th>CD/día</th>
+              <th>Stock recibo</th>
+              <th>Días cob.</th>
+              <th>¿Pedir?</th>
+              <th>Cajas</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-reporte"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">✅ No se piden</div>
+      <div id="lista-no-pedir"></div>
+    </div>
   </div>
 </div>
 
 <!-- TAB HISTORIAL -->
 <div class="seccion" id="tab-historial">
-  <div id="lista-historial" style="padding-bottom:20px;"></div>
+  <div id="lista-historial"><div class="loading"><div class="spinner"></div><p>Cargando...</p></div></div>
 </div>
 
-<div class="footer-btns">
-  <button class="btn-calcular" onclick="calcular()">⚡ Calcular</button>
-  <button class="btn-excel" id="btn-excel" onclick="exportarExcel()">📥 Excel</button>
-  <button class="btn-guardar-hist" id="btn-guardar" onclick="guardarEnFirebase()">💾 Guardar</button>
+<div class="footer-btns" id="footer-btns" style="display:none;">
+  <button class="btn-primary" style="flex:2;" onclick="calcular()">⚡ Calcular pedido</button>
+  <button class="btn-secondary" style="flex:1;" id="btn-guardar-reporte" onclick="guardarReporte()" style="display:none;">💾 Guardar</button>
+  <button class="btn-secondary" style="flex:1;" id="btn-excel" onclick="exportarExcel()" style="display:none;">📥 Excel</button>
 </div>
+
+<div class="toast" id="toast"></div>
 
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, query, where, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, collection, getDocs, doc, getDoc, setDoc, addDoc, query, orderBy, limit, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyAB2-btgFqGiCe1YdZSDv4EShV601N-uQs",
-    authDomain: "waysub-web.firebaseapp.com",
-    projectId: "waysub-web",
-    storageBucket: "waysub-web.firebasestorage.app",
-    messagingSenderId: "219825581217",
-    appId: "1:219825581217:web:6f752ee27a5446400114e0"
+const firebaseConfig = {
+  apiKey: "AIzaSyAB2-btgFqGiCe1YdZSDv4EShV601N-uQs",
+  authDomain: "waysub-web.firebaseapp.com",
+  projectId: "waysub-web",
+  storageBucket: "waysub-web.firebasestorage.app",
+  messagingSenderId: "219825581217",
+  appId: "1:219825581217:web:6f752ee27a5446400114e0"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+let localActual = null;
+let productos = [];
+let reglas = {};
+let stockA = {};
+let historialLocal = [];
+let resultadoCalculo = null;
+let transfers = [];
+
+// ── AUTH ─────────────────────────────────────────────
+onAuthStateChanged(auth, async (user) => {
+  if (!user) { window.location.href = 'login.html'; return; }
+  const snap = await getDoc(doc(db, 'usuarios', user.uid));
+  if (!snap.exists() || !snap.data().aprobado) { window.location.href = 'login.html'; return; }
+  await Promise.all([cargarProductos(), cargarReglas(), cargarHistorial()]);
+});
+
+// ── TABS ─────────────────────────────────────────────
+window.cambiarTab = function(tab, el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('activo'));
+  document.querySelectorAll('.seccion').forEach(s => s.classList.remove('activa'));
+  el.classList.add('activo');
+  document.getElementById('tab-' + tab).classList.add('activa');
+  const footer = document.getElementById('footer-btns');
+  footer.style.display = (tab === 'carga' || tab === 'reporte') && localActual ? 'flex' : 'none';
+  if (tab === 'reporte') {
+    document.getElementById('btn-guardar-reporte').style.display = resultadoCalculo ? 'block' : 'none';
+    document.getElementById('btn-excel').style.display = resultadoCalculo ? 'block' : 'none';
+  } else {
+    document.getElementById('btn-guardar-reporte').style.display = 'none';
+    document.getElementById('btn-excel').style.display = 'none';
+  }
+};
+
+// ── CARGAR DATOS ─────────────────────────────────────
+async function cargarProductos() {
+  const snap = await getDocs(collection(db, 'axionlog_productos'));
+  productos = [];
+  snap.forEach(d => productos.push({ id: d.id, ...d.data() }));
+  // Ordenar por categoría
+  const orden = ['Proteínas principales','Proteínas secundarias','Fiambres','Quesos','Panes','Salsas','Toppings de pan','Conservas','Snacks','Packaging','Otros'];
+  productos.sort((a, b) => {
+    const ia = orden.indexOf(a.categoria), ib = orden.indexOf(b.categoria);
+    return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+  });
+}
+
+async function cargarReglas() {
+  const snap = await getDoc(doc(db, 'axionlog_config', 'reglas'));
+  reglas = snap.exists() ? snap.data() : {
+    diasObjetivo:7, leadTime:2, margen:1, desvioRojo:80, desvioAmarillo:40,
+    panBlanco:220, panIntegral:165, protSecUmbral:5, salsas2Cajas:2,
+    snacksMin:35, papDeliMax:1, quesosAlerta:6, preventivos:['Mayonesa','Film PVC']
   };
+}
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+async function cargarStockA(local) {
+  // Buscar el último registro guardado para este local
+  const snap = await getDocs(collection(db, 'axionlog_historial_v2'));
+  const registros = [];
+  snap.forEach(d => { const data = d.data(); if (data.local === local) registros.push(data); });
+  registros.sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
+  if (registros.length > 0) {
+    stockA = registros[0].stockB || {};
+    return registros[0];
+  }
+  stockA = {};
+  return null;
+}
 
-  // ─── MAESTRO DE PRODUCTOS ────────────────────────────────────────
-  const GRUPOS = [
-    { grupo: "Proteínas", unit: "kg", items: [
-      { nombre: "Suprema", caja: 10 },
-      { nombre: "Pollo", caja: 10 },
-      { nombre: "Pollo Cortado", caja: 10 },
-      { nombre: "Criollo", caja: 5 },
-      { nombre: "Milanesa Res", caja: 5 },
-      { nombre: "Costillita BBQ", caja: 5 },
-      { nombre: "C y Queso", caja: 5 },
-      { nombre: "Pavo", caja: 3 },
-    ]},
-    { grupo: "Fiambres", unit: "kg", items: [
-      { nombre: "Atún", caja: 5.4 },
-      { nombre: "Jamón", caja: 10 },
-      { nombre: "Panceta", caja: 300 },
-    ]},
-    { grupo: "Quesos", unit: "kg", items: [
-      { nombre: "Dambo", caja: 2.16 },
-      { nombre: "Cheddar", caja: 9.48 },
-      { nombre: "Queso Crema", caja: 6 },
-    ]},
-    { grupo: "Panes", unit: "un", items: [
-      { nombre: "Pan Blanco", caja: 50, minRecibo: 300 },
-      { nombre: "Pan Integral", caja: 40, minRecibo: 240 },
-      { nombre: "Tortillas", caja: 60 },
-    ]},
-    { grupo: "Salsas", unit: "kg", items: [
-      { nombre: "Mayonesa", caja: 8.265, preventivo: true },
-      { nombre: "Mostaza", caja: 9 },
-      { nombre: "Ketchup", caja: 9 },
-      { nombre: "Barbacoa", caja: 6 },
-      { nombre: "Caesar", caja: 6 },
-      { nombre: "Ranch", caja: 6 },
-      { nombre: "Teriyaki", caja: 6 },
-      { nombre: "Ají Picante", caja: 6 },
-    ]},
-    { grupo: "Toppings de Pan", unit: "kg", items: [
-      { nombre: "Avena Dulce", caja: 6.6 },
-      { nombre: "Orégano", caja: 6.6 },
-    ]},
-    { grupo: "Conservas", unit: "kg", items: [
-      { nombre: "Pepinillos", caja: 6 },
-      { nombre: "Aceitunas", caja: 5 },
-      { nombre: "Guacamole", caja: 5.436 },
-    ]},
-    { grupo: "Snacks", unit: "un", items: [
-      { nombre: "Cookie Vainilla", caja: 80, minRecibo: 160 },
-      { nombre: "Cookie Choc", caja: 80, minRecibo: 160 },
-      { nombre: "Lays", caja: 68 },
-      { nombre: "Doritos", caja: 70 },
-    ]},
-    { grupo: "Packaging", unit: "un", items: [
-      { nombre: "Bolsa PYA", caja: 200 },
-      { nombre: "Pap Env CH", caja: 2000 },
-      { nombre: "Pap Env GDE", caja: 2000 },
-      { nombre: "Pap Deli", caja: 2000 },
-      { nombre: "Ensaladera GDE", caja: 150 },
-      { nombre: "Film PVC", caja: 1, preventivo: true },
-    ]},
-    { grupo: "Otros", unit: "un", items: [
-      { nombre: "Leche", caja: 12 },
-      { nombre: "Aceite", caja: 198 },
-    ]},
-  ];
+async function cargarHistorial() {
+  try {
+    const snap = await getDocs(collection(db, 'axionlog_historial_v2'));
+    historialLocal = [];
+    snap.forEach(d => historialLocal.push({ id: d.id, ...d.data() }));
+    historialLocal.sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
+    renderHistorial();
+  } catch(e) {}
+}
 
-  const TODOS_PRODUCTOS = GRUPOS.flatMap(g => g.items.map(i => ({ ...i, grupo: g.grupo, unit: g.unit })));
-  const DIAS_COBERTURA = 8;
-  const DIAS_HASTA_RECIBO = 2;
+// ── SELECTOR LOCAL ───────────────────────────────────
+window.seleccionarLocal = async function(local) {
+  localActual = local;
+  const label = local === 'ramos' ? 'Ramos Mejía' : 'Morón';
+  document.getElementById('header-local').textContent = label;
+  document.getElementById('btn-ramos').className = local === 'ramos' ? 'btn-primary' : 'btn-secondary';
+  document.getElementById('btn-moron').className = local === 'moron' ? 'btn-primary' : 'btn-secondary';
 
-  let localActual = '';
-  let metodo = 'manual';
-  let tipoFoto = 'conteo';
-  let fotoBase64 = null;
-  let resultados = null;
-  let historialResumen = [];
+  // Día de pedido según local
+  const diaPedido = local === 'ramos' ? 'miércoles' : 'martes';
+  const diaLlegada = local === 'ramos' ? 'viernes' : 'jueves';
+  document.getElementById('info-local').style.display = 'block';
+  document.getElementById('info-local').textContent = `Pedido los ${diaPedido} AM → llega el ${diaLlegada}. Ciclo de 7 días.`;
 
-  // ─── INIT ────────────────────────────────────────────────────────
-  const params = new URLSearchParams(window.location.search);
-  localActual = params.get('local') || 'Desconocido';
-  document.getElementById('local-nombre').textContent = localActual;
+  document.getElementById('sin-local').style.display = 'none';
+  document.getElementById('card-stock-a').style.display = 'block';
+  document.getElementById('footer-btns').style.display = 'flex';
 
-  const hoy = new Date();
-  const lunes = new Date(hoy);
-  lunes.setDate(hoy.getDate() - ((hoy.getDay() + 6) % 7));
-  const domingo = new Date(lunes);
-  domingo.setDate(lunes.getDate() + 6);
-  document.getElementById('fecha-desde').value = lunes.toISOString().split('T')[0];
-  document.getElementById('fecha-hasta').value = domingo.toISOString().split('T')[0];
+  // Cargar stock A
+  const ultimo = await cargarStockA(local);
+  if (ultimo) {
+    const fecha = ultimo.fecha || '—';
+    document.getElementById('stock-a-resumen').innerHTML =
+      `<span style="color:#2a9d5c;font-weight:700;">✅ Stock del ${fecha} cargado automáticamente</span><br>
+       <span style="font-size:12px;">${Object.keys(stockA).length} productos con datos anteriores</span>`;
+  } else {
+    document.getElementById('stock-a-resumen').innerHTML =
+      '<span style="color:#e67e22;">⚠️ Sin historial previo — primera vez para este local</span>';
+  }
 
-  construirTablas();
-  cargarStockAAutomatico();
-  cargarHistorial();
+  // Construir formulario
+  construirFormulario();
+};
 
-  // ─── CONSTRUIR TABLAS ────────────────────────────────────────────
-  function construirTablas() {
-    ['stocka', 'ingreso', 'stockb'].forEach(tid => {
-      const container = document.getElementById('tablas-' + tid);
-      container.innerHTML = '';
-      GRUPOS.forEach(g => {
-        const tabla = document.createElement('table');
-        tabla.className = 'productos-tabla';
-        tabla.style.marginBottom = '12px';
-        let rows = '<thead><tr><th colspan="2" style="background:#f8f9ff;color:#1a1a2e;text-transform:uppercase;font-size:11px;padding:8px 5px;">🔵 ' + g.grupo + ' <span class="unit-label">(' + g.unit + ')</span></th></tr></thead><tbody>';
-        g.items.forEach(item => {
-          rows += '<tr><td>' + item.nombre + '</td><td><input type="number" min="0" value="0" step="0.1" data-tabla="' + tid + '" data-prod="' + item.nombre + '"></td></tr>';
-        });
-        rows += '</tbody>';
-        tabla.innerHTML = rows;
-        container.appendChild(tabla);
-      });
+// ── FORMULARIO ───────────────────────────────────────
+function construirFormulario() {
+  const cont = document.getElementById('form-productos');
+  cont.innerHTML = '';
+  transfers = [];
+  renderTransfers();
+
+  // Agrupar por categoría, solo activos y externos (no excluidos)
+  const grupos = {};
+  productos.filter(p => p.estado !== 'excluido').forEach(p => {
+    if (!grupos[p.categoria]) grupos[p.categoria] = [];
+    grupos[p.categoria].push(p);
+  });
+
+  Object.entries(grupos).forEach(([cat, prods]) => {
+    const titulo = document.createElement('div');
+    titulo.className = 'grupo-titulo';
+    titulo.textContent = '📂 ' + cat;
+    cont.appendChild(titulo);
+
+    prods.forEach(p => {
+      const esExterno = p.estado === 'externo';
+      const stockAVal = stockA[p.nombre] !== undefined ? stockA[p.nombre] : '—';
+      const row = document.createElement('div');
+      row.className = 'prod-row';
+      row.innerHTML = `
+        <div>
+          <div class="prod-nombre">${p.nombre}</div>
+          ${esExterno ? '<div style="font-size:10px;color:#e67e22;">Gestión externa</div>' : ''}
+        </div>
+        <div class="prod-stock-a">${stockAVal !== '—' ? stockAVal + ' ' + p.unidad : '—'}</div>
+        <div>
+          <input type="number" class="prod-input" id="sb-${p.id}" placeholder="0" inputmode="decimal" step="any" ${esExterno ? 'disabled style="background:#f8f9fa;color:#ccc;"' : ''}>
+          <div class="prod-unidad">${p.unidad}</div>
+        </div>
+        <div>
+          <input type="number" class="prod-input" id="fac-${p.id}" placeholder="0" inputmode="decimal" step="any" ${esExterno ? 'disabled style="background:#f8f9fa;color:#ccc;"' : ''}>
+          <div class="prod-unidad">${p.unidad}</div>
+        </div>
+      `;
+      cont.appendChild(row);
     });
+  });
+
+  document.getElementById('form-carga').style.display = 'block';
+}
+
+// ── TRANSFERENCIAS ───────────────────────────────────
+window.agregarTransfer = function() {
+  transfers.push({ producto: productos[0]?.nombre || '', tipo: 'salida', cantidad: 0 });
+  renderTransfers();
+};
+
+function renderTransfers() {
+  const cont = document.getElementById('lista-transfers');
+  if (!transfers.length) { cont.innerHTML = '<p style="font-size:13px;color:#bbb;">Sin transferencias</p>'; return; }
+  cont.innerHTML = transfers.map((t, i) => `
+    <div class="transfer-row">
+      <select onchange="window.updTransfer(${i},'producto',this.value)">
+        ${productos.filter(p => p.estado === 'activo').map(p =>
+          `<option value="${p.nombre}" ${p.nombre === t.producto ? 'selected' : ''}>${p.nombre}</option>`
+        ).join('')}
+      </select>
+      <select onchange="window.updTransfer(${i},'tipo',this.value)">
+        <option value="salida" ${t.tipo==='salida'?'selected':''}>→ Salida (enviado)</option>
+        <option value="entrada" ${t.tipo==='entrada'?'selected':''}>← Entrada (recibido)</option>
+      </select>
+      <input type="number" placeholder="Cantidad" value="${t.cantidad||''}" inputmode="decimal"
+        onchange="window.updTransfer(${i},'cantidad',this.value)">
+      <button class="btn-del-small" onclick="window.delTransfer(${i})">✕</button>
+    </div>
+  `).join('');
+}
+
+window.updTransfer = (i, campo, val) => { transfers[i][campo] = campo === 'cantidad' ? parseFloat(val)||0 : val; };
+window.delTransfer = (i) => { transfers.splice(i,1); renderTransfers(); };
+
+// ── CÁLCULO ──────────────────────────────────────────
+window.calcular = function() {
+  if (!localActual) { toast('Seleccioná un local primero', 'err'); return; }
+
+  const R = reglas;
+  const alertas = [], pedir = [], noPedir = [], tablaCalc = [];
+
+  // Mapa de transferencias netas por producto
+  const transferMap = {};
+  transfers.forEach(t => {
+    if (!transferMap[t.producto]) transferMap[t.producto] = 0;
+    transferMap[t.producto] += t.tipo === 'entrada' ? (t.cantidad||0) : -(t.cantidad||0);
+  });
+
+  // Buscar historial previo para desvíos
+  const historialLocal_ = historialLocal.filter(h => h.local === localActual);
+  const cdAnterior = {};
+  if (historialLocal_.length > 0) {
+    const ultimo = historialLocal_[0];
+    (ultimo.tabla || []).forEach(r => { if (r.cd !== undefined) cdAnterior[r.nombre] = r.cd; });
   }
 
-  // ─── STOCK A AUTOMÁTICO ──────────────────────────────────────────
-  async function cargarStockAAutomatico() {
-    try {
-      const q = query(collection(db, "axionlog_historial"), where("local", "==", localActual), orderBy("timestamp", "desc"), limit(4));
-      const snap = await getDocs(q);
-      if (snap.empty) return;
+  productos.filter(p => p.estado === 'activo').forEach(p => {
+    const sbEl = document.getElementById('sb-' + p.id);
+    const facEl = document.getElementById('fac-' + p.id);
+    const sbStr = sbEl?.value;
+    const facStr = facEl?.value;
 
-      const ultimo = snap.docs[0].data();
-      // Cargar stock B del último registro como stock A de esta semana
-      if (ultimo.stockB) {
-        Object.entries(ultimo.stockB).forEach(([prod, val]) => {
-          const inp = document.querySelector('input[data-tabla="stocka"][data-prod="' + prod + '"]');
-          if (inp) inp.value = val;
-        });
-        const banner = document.getElementById('banner-auto');
-        banner.style.display = 'block';
-        const desde = ultimo.fechaDesde || ultimo.fecha || '';
-        const hasta = ultimo.fechaHasta || '';
-        banner.textContent = '✅ Stock A cargado automáticamente desde semana ' + desde + (hasta ? ' al ' + hasta : '');
-      }
-
-      // Guardar resumen de historial para IA (últimas 4 semanas)
-      historialResumen = snap.docs.map(d => {
-        const dat = d.data();
-        return {
-          semana: dat.fechaDesde || dat.fecha || '',
-          ajustes: dat.ajustesUsuario || {}
-        };
-      }).filter(h => Object.keys(h.ajustes).length > 0);
-
-    } catch(e) { /* sin historial */ }
-  }
-
-  // ─── TABS ────────────────────────────────────────────────────────
-  window.cambiarTab = function(tab) {
-    document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('activo', ['carga','resultados','historial'][i] === tab));
-    document.querySelectorAll('.seccion').forEach(s => s.classList.remove('activa'));
-    document.getElementById('tab-' + tab).classList.add('activa');
-    const btnCalc = document.querySelector('.btn-calcular');
-    if (tab === 'resultados') {
-      btnCalc.style.display = 'none';
-      document.getElementById('btn-excel').style.display = resultados ? 'block' : 'none';
-      document.getElementById('btn-guardar').style.display = resultados ? 'block' : 'none';
-    } else if (tab === 'historial') {
-      btnCalc.style.display = 'none';
-      document.getElementById('btn-excel').style.display = 'none';
-      document.getElementById('btn-guardar').style.display = 'none';
-    } else {
-      btnCalc.style.display = 'block';
-      document.getElementById('btn-excel').style.display = 'none';
-      document.getElementById('btn-guardar').style.display = 'none';
+    // Si no completó Stock B → alerta sin calcular
+    if (!sbStr || sbStr === '') {
+      alertas.push({ tipo: 'azul', msg: `${p.nombre}: sin dato de Stock B — no calculado` });
+      return;
     }
-  }
 
-  // ─── MÉTODO CARGA ────────────────────────────────────────────────
-  window.setMetodo = function(m) {
-    metodo = m;
-    document.getElementById('btn-metodo-manual').classList.toggle('activo', m === 'manual');
-    document.getElementById('btn-metodo-foto').classList.toggle('activo', m === 'foto');
-    document.getElementById('zona-foto').style.display = m === 'foto' ? 'block' : 'none';
-  }
+    const sa = stockA[p.nombre] !== undefined ? parseFloat(stockA[p.nombre]) : 0;
+    const sb = parseFloat(sbStr) || 0;
+    const fac = parseFloat(facStr) || 0;
+    const transf = transferMap[p.nombre] || 0;
 
-  window.setTipoFoto = function(t) {
-    tipoFoto = t;
-    ['conteo','factura'].forEach(x => {
-      const btn = document.getElementById('tfb-' + x);
-      if (x === t) { btn.style.background = '#1a1a2e'; btn.style.color = 'white'; btn.style.borderColor = '#1a1a2e'; }
-      else { btn.style.background = 'white'; btn.style.color = '#333'; btn.style.borderColor = '#ddd'; }
-    });
-  }
+    const consumoReal = sa + fac + transf - sb;
 
-  window.previewFoto = function(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = ev => {
-      fotoBase64 = ev.target.result.split(',')[1];
-      const img = document.getElementById('foto-preview-img');
-      img.src = ev.target.result;
-      img.style.display = 'block';
-      document.getElementById('btn-analizar').style.display = 'block';
-    };
-    reader.readAsDataURL(file);
-  }
-
-  window.analizarFoto = async function() {
-    if (!fotoBase64) return;
-    const btn = document.getElementById('btn-analizar');
-    const spin = document.getElementById('analizando');
-    btn.disabled = true; btn.style.display = 'none'; spin.style.display = 'block';
-
-    const listaProductos = TODOS_PRODUCTOS.map(p => p.nombre).join(', ');
-    const jsonBase = '{"Suprema":0,"Pollo":0,"Pollo Cortado":0,"Criollo":0,"Milanesa Res":0,"Costillita BBQ":0,"C y Queso":0,"Pavo":0,"Atún":0,"Jamón":0,"Panceta":0,"Dambo":0,"Cheddar":0,"Queso Crema":0,"Pan Blanco":0,"Pan Integral":0,"Tortillas":0,"Mayonesa":0,"Mostaza":0,"Ketchup":0,"Barbacoa":0,"Caesar":0,"Ranch":0,"Teriyaki":0,"Ají Picante":0,"Avena Dulce":0,"Orégano":0,"Pepinillos":0,"Aceitunas":0,"Guacamole":0,"Cookie Vainilla":0,"Cookie Choc":0,"Lays":0,"Doritos":0,"Bolsa PYA":0,"Pap Env CH":0,"Pap Env GDE":0,"Pap Deli":0,"Ensaladera GDE":0,"Film PVC":0,"Leche":0,"Aceite":0}';
-
-    const prompts = {
-      conteo: 'Sos un asistente que lee planillas de conteo de stock de un local Subway en Argentina. Extraé los valores de cada producto. Importante: si ves "Mila" anotada al pie = Milanesa Res. Si ves "Lays" puede estar en formato X+Y donde X=Lays e Y=Doritos, separarlos. Si dice "Hay" para un producto, interpretarlo como un valor alto (999). Productos: ' + listaProductos + '. Respondé SOLO con JSON válido sin texto extra ni backticks: ' + jsonBase,
-      factura: 'Sos un asistente que lee facturas de Axionlog para franquicias Subway en Argentina. Extraé las cantidades entregadas por producto. Si un producto no aparece en la factura ponele 0 (no se pidió esa semana). Productos: ' + listaProductos + '. Respondé SOLO con JSON válido sin texto extra ni backticks: ' + jsonBase
-    };
-
-    try {
-      const resp = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
-          max_tokens: 1000,
-          messages: [{ role: "user", content: [
-            { type: "image", source: { type: "base64", media_type: "image/jpeg", data: fotoBase64 } },
-            { type: "text", text: prompts[tipoFoto] }
-          ]}]
-        })
-      });
-      const data = await resp.json();
-      const texto = data.content.find(b => b.type === 'text')?.text || '{}';
-      const valores = JSON.parse(texto);
-      const mapaTabla = { conteo: 'stockb', factura: 'ingreso' };
-      llenarTabla(mapaTabla[tipoFoto], valores);
-      spin.style.display = 'none'; btn.disabled = false; btn.style.display = 'block';
-      btn.textContent = '✅ Listo — subir otra foto';
-      fotoBase64 = null;
-      document.getElementById('foto-preview-img').style.display = 'none';
-    } catch(err) {
-      spin.style.display = 'none'; btn.disabled = false; btn.style.display = 'block';
-      alert('Error al analizar. Intentá de nuevo.');
+    // Consumo negativo → alerta
+    if (consumoReal < 0) {
+      alertas.push({ tipo: 'rojo', msg: `${p.nombre}: consumo negativo (${consumoReal.toFixed(2)} ${p.unidad}). Verificar datos.` });
+      return;
     }
-  }
 
-  function llenarTabla(tablaId, valores) {
-    document.querySelectorAll('input[data-tabla="' + tablaId + '"]').forEach(inp => {
-      if (valores[inp.dataset.prod] !== undefined) inp.value = valores[inp.dataset.prod];
-    });
-  }
+    const cd = consumoReal / 7;
 
-  function getValores(tablaId) {
-    const out = {};
-    document.querySelectorAll('input[data-tabla="' + tablaId + '"]').forEach(inp => {
-      out[inp.dataset.prod] = Number(inp.value) || 0;
-    });
-    return out;
-  }
-
-  // ─── CALCULAR ────────────────────────────────────────────────────
-  window.calcular = async function() {
-    const stockA = getValores('stocka');
-    const ingreso = getValores('ingreso');
-    const stockB = getValores('stockb');
-
-    resultados = { consumo: [], pedido: [], noPiden: [], alertas: [], stockB, ajustesUsuario: {} };
-
-    TODOS_PRODUCTOS.forEach(prod => {
-      const sa = stockA[prod.nombre] || 0;
-      const ing = ingreso[prod.nombre] || 0;
-      const sb = stockB[prod.nombre] || 0;
-
-      const consumoReal = sa + ing - sb;
-      const cd = consumoReal / 7; // consumo diario
-      const stockAlRecibo = sb - (cd * DIAS_HASTA_RECIBO);
-      const diasCobertura = cd > 0 ? stockAlRecibo / cd : 999;
-
-      // Alertas consumo anormal
-      if (consumoReal < 0) {
-        resultados.alertas.push({ tipo: 'rojo', msg: '⚠️ ' + prod.nombre + ': consumo NEGATIVO (' + consumoReal.toFixed(2) + ') — verificar datos antes de calcular' });
+    // Desvío vs semana anterior
+    if (cdAnterior[p.nombre] !== undefined && cdAnterior[p.nombre] > 0) {
+      const desvio = Math.abs((cd - cdAnterior[p.nombre]) / cdAnterior[p.nombre]) * 100;
+      if (desvio > R.desvioRojo) {
+        alertas.push({ tipo: 'rojo', msg: `${p.nombre}: desvío de consumo ${desvio.toFixed(0)}% vs semana anterior — no calculado automáticamente` });
+        return;
+      } else if (desvio > R.desvioAmarillo) {
+        alertas.push({ tipo: 'naranja', msg: `${p.nombre}: desvío moderado ${desvio.toFixed(0)}% vs semana anterior — calculado igual` });
       }
+    }
 
-      resultados.consumo.push({ prod: prod.nombre, sa, ing, sb, consumoReal, cd, stockAlRecibo, diasCobertura, caja: prod.caja, unit: prod.unit, minRecibo: prod.minRecibo, preventivo: prod.preventivo });
+    const stockRecibo = sb - (cd * R.leadTime);
+    const diasCobertura = cd > 0 ? stockRecibo / cd : 999;
 
-      // Calcular pedido base
-      let cajas = 0;
-      let motivo = '';
+    // REGLAS ESPECIALES
+    let cajasASugerir = 0;
+    let razonNoPedir = '';
+    let esReglaEspecial = false;
 
-      if (consumoReal < 0) {
-        motivo = 'consumo negativo — revisar';
-        cajas = 0;
-      } else if (prod.minRecibo && stockAlRecibo < prod.minRecibo) {
-        // Stock mínimo obligatorio al recibo
-        const necesario = prod.minRecibo - stockAlRecibo;
-        cajas = Math.ceil(necesario / prod.caja);
-        motivo = 'stock mínimo al recibo';
-      } else if (diasCobertura >= DIAS_COBERTURA) {
-        motivo = diasCobertura === 999 ? 'sin consumo' : 'cubre ' + diasCobertura.toFixed(0) + ' días';
-        cajas = 0;
-      } else if (prod.preventivo && cajas === 0) {
-        cajas = 1;
-        motivo = 'preventivo';
+    if (p.nombre === 'Pan Blanco') {
+      esReglaEspecial = true;
+      const necesita = R.panBlanco - stockRecibo;
+      cajasASugerir = necesita > 0 ? Math.ceil(necesita / p.tamCaja) : 0;
+      if (cajasASugerir === 0) razonNoPedir = `Stock recibo (${stockRecibo.toFixed(0)} un) >= objetivo ${R.panBlanco} un`;
+    } else if (p.nombre === 'Pan Integral/Baguetín') {
+      esReglaEspecial = true;
+      const necesita = R.panIntegral - stockRecibo;
+      cajasASugerir = necesita > 0 ? Math.ceil(necesita / p.tamCaja) : 0;
+      if (cajasASugerir === 0) razonNoPedir = `Stock recibo (${stockRecibo.toFixed(0)} un) >= objetivo ${R.panIntegral} un`;
+    } else if (p.categoria === 'Proteínas secundarias') {
+      esReglaEspecial = true;
+      if (diasCobertura < R.protSecUmbral) {
+        const necesita = (cd * R.diasObjetivo) - stockRecibo;
+        cajasASugerir = Math.max(0, Math.ceil(necesita / p.tamCaja));
       } else {
-        const necesario = (cd * DIAS_COBERTURA) - stockAlRecibo;
-        cajas = Math.ceil(necesario / prod.caja);
-        motivo = 'cubre solo ' + diasCobertura.toFixed(1) + ' días';
+        razonNoPedir = `Cubre ${diasCobertura.toFixed(1)} días (umbral prot. sec.: ${R.protSecUmbral})`;
       }
-
-      // Calibración panes: multiplicar ×1.5
-      if (prod.grupo === 'Panes' && cajas > 0) cajas = Math.ceil(cajas * 1.5);
-
-      // Preventivo mínimo para productos marcados
-      if (prod.preventivo && cajas === 0) cajas = 1;
-
-      if (cajas > 0) {
-        resultados.pedido.push({ prod: prod.nombre, consumoReal, sb, stockAlRecibo, cajas, motivo, caja: prod.caja });
+    } else if (p.categoria === 'Salsas') {
+      esReglaEspecial = true;
+      const umbralPedir = R.diasObjetivo + R.margen;
+      if (diasCobertura < umbralPedir) {
+        cajasASugerir = diasCobertura < R.salsas2Cajas ? 2 : 1;
       } else {
-        resultados.noPiden.push({ prod: prod.nombre, motivo, diasCobertura });
+        razonNoPedir = `Cubre ${diasCobertura.toFixed(1)} días`;
       }
+    } else if (p.categoria === 'Snacks') {
+      esReglaEspecial = true;
+      if (stockRecibo < R.snacksMin || (consumoReal < 0 && (p.nombre === 'Lays' || p.nombre === 'Doritos'))) {
+        cajasASugerir = 1;
+      } else {
+        razonNoPedir = `Stock recibo (${stockRecibo.toFixed(0)}) >= mínimo ${R.snacksMin}`;
+      }
+    } else if (p.nombre === 'Pap Deli') {
+      esReglaEspecial = true;
+      if (sb === 0) {
+        const necesita = (cd * R.diasObjetivo) - stockRecibo;
+        cajasASugerir = Math.max(0, Math.ceil(necesita / p.tamCaja));
+      } else {
+        const necesita = (cd * R.diasObjetivo) - stockRecibo;
+        cajasASugerir = Math.min(R.papDeliMax, Math.max(0, Math.ceil(necesita / p.tamCaja)));
+      }
+      if (cajasASugerir === 0) razonNoPedir = `Sin necesidad`;
+    }
+
+    // Preventivos mínimos
+    if ((R.preventivos || []).includes(p.nombre) && cajasASugerir === 0) {
+      cajasASugerir = 1;
+      esReglaEspecial = true;
+    }
+
+    // Regla general
+    if (!esReglaEspecial) {
+      const umbralPedir = R.diasObjetivo + R.margen;
+      if (diasCobertura < umbralPedir) {
+        const necesita = (cd * R.diasObjetivo) - stockRecibo;
+        cajasASugerir = Math.max(0, Math.ceil(necesita / p.tamCaja));
+      } else {
+        razonNoPedir = `Cubre ${diasCobertura.toFixed(1)} días`;
+      }
+    }
+
+    // Alerta quesos > límite
+    if (p.categoria === 'Quesos' && cajasASugerir > R.quesosAlerta) {
+      alertas.push({ tipo: 'naranja', msg: `${p.nombre}: cálculo sugiere ${cajasASugerir} cajas (>${R.quesosAlerta}). Validar manualmente.` });
+    }
+
+    // Registrar resultado
+    const fila = { nombre: p.nombre, sku: p.sku, categoria: p.categoria, unidad: p.unidad, tamCaja: p.tamCaja,
+      sa, fac, sb, consumoReal, cd, stockRecibo, diasCobertura, cajasASugerir, razonNoPedir };
+    tablaCalc.push(fila);
+
+    if (cajasASugerir > 0) {
+      pedir.push(fila);
+    } else if (razonNoPedir) {
+      noPedir.push(fila);
+    }
+  });
+
+  resultadoCalculo = { alertas, pedir, noPedir, tablaCalc, local: localActual, fecha: new Date().toISOString().split('T')[0],
+    stockB: obtenerStockB() };
+  renderReporte();
+  cambiarTab('reporte', document.querySelectorAll('.tab')[1]);
+};
+
+function obtenerStockB() {
+  const sb = {};
+  productos.filter(p => p.estado === 'activo').forEach(p => {
+    const el = document.getElementById('sb-' + p.id);
+    if (el && el.value) sb[p.nombre] = parseFloat(el.value);
+  });
+  return sb;
+}
+
+// ── REPORTE ──────────────────────────────────────────
+function renderReporte() {
+  if (!resultadoCalculo) return;
+  const { alertas, pedir, noPedir, tablaCalc } = resultadoCalculo;
+
+  document.getElementById('reporte-vacio').style.display = 'none';
+  document.getElementById('reporte-contenido').style.display = 'block';
+
+  // Alertas
+  document.getElementById('alertas-container').innerHTML = alertas.length
+    ? alertas.map(a => `<div class="alerta alerta-${a.tipo === 'rojo' ? 'roja' : a.tipo === 'naranja' ? 'naranja' : 'azul'}">
+        ${a.tipo === 'rojo' ? '🔴' : a.tipo === 'naranja' ? '🟡' : 'ℹ️'} ${a.msg}</div>`).join('')
+    : '';
+
+  // Pedido consolidado
+  document.getElementById('pedido-consolidado').innerHTML = pedir.length
+    ? pedir.map(p => `<div class="pedido-item">
+        <div class="p-nombre">${p.nombre}</div>
+        <div class="p-sku">${p.sku || '—'}</div>
+        <div class="p-cajas">${p.cajasASugerir} caja${p.cajasASugerir !== 1 ? 's' : ''}</div>
+        <div class="p-unidades">${(p.cajasASugerir * p.tamCaja).toFixed(1)} ${p.unidad}</div>
+      </div>`).join('')
+    : '<p style="color:#bbb;font-size:13px;">No se sugiere pedir nada esta semana</p>';
+
+  // Tabla detallada
+  const grupos = {};
+  tablaCalc.forEach(r => { if (!grupos[r.categoria]) grupos[r.categoria] = []; grupos[r.categoria].push(r); });
+  let htmlTabla = '';
+  Object.entries(grupos).forEach(([cat, rows]) => {
+    htmlTabla += `<tr class="reporte-grupo"><td colspan="10">📂 ${cat}</td></tr>`;
+    rows.forEach(r => {
+      const pideClass = r.cajasASugerir > 0 ? 'badge-rojo' : 'badge-verde';
+      const pideText = r.cajasASugerir > 0 ? `✓ ${r.cajasASugerir} cj` : '—';
+      htmlTabla += `<tr>
+        <td>${r.nombre}</td>
+        <td>${r.sa.toFixed(1)}</td>
+        <td>${r.fac.toFixed(1)}</td>
+        <td>${r.sb.toFixed(1)}</td>
+        <td>${r.consumoReal.toFixed(1)}</td>
+        <td>${r.cd.toFixed(2)}</td>
+        <td>${r.stockRecibo.toFixed(1)}</td>
+        <td>${r.diasCobertura < 999 ? r.diasCobertura.toFixed(1) : '∞'}</td>
+        <td><span class="${pideClass}">${pideText}</span></td>
+        <td style="font-weight:700;">${r.cajasASugerir > 0 ? r.cajasASugerir : '—'}</td>
+      </tr>`;
     });
+  });
+  document.getElementById('tbody-reporte').innerHTML = htmlTabla;
 
-    renderResultados();
+  // No se piden
+  document.getElementById('lista-no-pedir').innerHTML = noPedir.length
+    ? noPedir.map(r => `<div class="no-pedir-item">
+        <span>${r.nombre}</span>
+        <span class="no-pedir-razon">${r.razonNoPedir}</span>
+      </div>`).join('')
+    : '<p style="color:#bbb;font-size:13px;">Todos los productos se piden esta semana</p>';
 
-    // IA ajusta el pedido si hay historial
-    if (historialResumen.length > 0) {
-      ajustarConIA();
-    } else {
-      cambiarTab('resultados');
-    }
+  document.getElementById('btn-guardar-reporte').style.display = 'block';
+  document.getElementById('btn-excel').style.display = 'block';
+}
+
+// ── GUARDAR ──────────────────────────────────────────
+window.guardarReporte = async function() {
+  if (!resultadoCalculo) return;
+  try {
+    await addDoc(collection(db, 'axionlog_historial_v2'), {
+      ...resultadoCalculo,
+      timestamp: serverTimestamp()
+    });
+    toast('✅ Pedido guardado — Stock B listo para próxima semana', 'ok');
+    await cargarHistorial();
+    document.getElementById('btn-guardar-reporte').style.display = 'none';
+  } catch(e) { toast('❌ Error al guardar', 'err'); }
+};
+
+// ── EXCEL ────────────────────────────────────────────
+window.exportarExcel = function() {
+  if (!resultadoCalculo) return;
+  const wb = XLSX.utils.book_new();
+  const ws1 = XLSX.utils.aoa_to_sheet([
+    ['Producto','SKU','Cajas','Unidades'],
+    ...resultadoCalculo.pedir.map(r => [r.nombre, r.sku, r.cajasASugerir, (r.cajasASugerir * r.tamCaja).toFixed(1)])
+  ]);
+  XLSX.utils.book_append_sheet(wb, ws1, 'Pedido');
+  const ws2 = XLSX.utils.aoa_to_sheet([
+    ['Producto','Stock A','Factura','Stock B','Consumo','CD/día','Stock recibo','Días cob.','Cajas'],
+    ...resultadoCalculo.tablaCalc.map(r => [r.nombre, r.sa, r.fac, r.sb, r.consumoReal.toFixed(2),
+      r.cd.toFixed(2), r.stockRecibo.toFixed(1), r.diasCobertura < 999 ? r.diasCobertura.toFixed(1) : '∞', r.cajasASugerir || 0])
+  ]);
+  XLSX.utils.book_append_sheet(wb, ws2, 'Detalle');
+  XLSX.writeFile(wb, 'Axionlog-' + (localActual === 'ramos' ? 'Ramos' : 'Moron') + '-' + resultadoCalculo.fecha + '.xlsx');
+};
+
+// ── HISTORIAL ────────────────────────────────────────
+function renderHistorial() {
+  const cont = document.getElementById('lista-historial');
+  if (!historialLocal.length) {
+    cont.innerHTML = '<p style="text-align:center;color:#bbb;padding:40px;">Sin pedidos guardados aún</p>';
+    return;
   }
+  cont.innerHTML = historialLocal.slice(0, 20).map(h => {
+    const label = h.local === 'ramos' ? 'Ramos Mejía' : 'Morón';
+    const alertasRojas = (h.alertas || []).filter(a => a.tipo === 'rojo').length;
+    const totalPedir = (h.pedir || []).length;
+    return `<div class="hist-item" onclick="verHistorial('${h.id}')">
+      <div class="hist-header">
+        <div>
+          <div class="hist-fecha">📅 ${h.fecha || '—'}</div>
+          <div class="hist-local">${label}</div>
+        </div>
+        <div class="hist-alertas">
+          ${alertasRojas > 0 ? `<span class="badge-rojo">${alertasRojas} alertas</span> ` : ''}
+          <span class="badge-verde">${totalPedir} productos</span>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
 
-  // ─── IA AJUSTE ───────────────────────────────────────────────────
-  async function ajustarConIA() {
-    cambiarTab('resultados');
-    const iaDiv = document.getElementById('ia-ajustando');
-    iaDiv.style.display = 'block';
+window.verHistorial = function(id) {
+  const h = historialLocal.find(x => x.id === id);
+  if (!h) return;
+  resultadoCalculo = h;
+  renderReporte();
+  cambiarTab('reporte', document.querySelectorAll('.tab')[1]);
+};
 
-    const resumenPedido = resultados.pedido.map(r => r.prod + ': ' + r.cajas + ' cajas').join(', ');
-    const resumenAjustes = historialResumen.map(h =>
-      'Semana ' + h.semana + ': ' + Object.entries(h.ajustes).map(([k,v]) => k + ' calculado=' + v.calculado + ' elegido=' + v.elegido).join(', ')
-    ).join(' | ');
-
-    const prompt = 'Sos el sistema de aprendizaje de pedidos de un Subway en Argentina. ' +
-      'El sistema calculó este pedido: ' + resumenPedido + '. ' +
-      'El operador tiene este historial de ajustes: ' + resumenAjustes + '. ' +
-      'Ajustá el pedido teniendo en cuenta sus patrones. ' +
-      'Respondé SOLO con JSON sin texto extra ni backticks, formato: {"NombreProducto": cajasAjustadas, ...}. ' +
-      'Solo incluí productos que debés ajustar, no todos.';
-
-    try {
-      const resp = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
-          max_tokens: 500,
-          messages: [{ role: "user", content: prompt }]
-        })
-      });
-      const data = await resp.json();
-      const texto = data.content.find(b => b.type === 'text')?.text || '{}';
-      const ajustes = JSON.parse(texto);
-      resultados.pedido.forEach(r => {
-        if (ajustes[r.prod] !== undefined && ajustes[r.prod] !== r.cajas) {
-          r.cajasIA = ajustes[r.prod];
-          r.cajasOriginales = r.cajas;
-          r.cajas = ajustes[r.prod];
-        }
-      });
-      renderPedido();
-    } catch(e) { /* si falla la IA, usamos el cálculo base */ }
-
-    iaDiv.style.display = 'none';
-  }
-
-  // ─── RENDER ──────────────────────────────────────────────────────
-  function renderResultados() {
-    // Alertas
-    document.getElementById('alertas-container').innerHTML = resultados.alertas.map(a =>
-      '<div class="alerta alerta-' + (a.tipo === 'rojo' ? 'roja' : 'amarilla') + '">' + a.msg + '</div>'
-    ).join('');
-
-    // Tabla consumo
-    document.getElementById('body-consumo').innerHTML = resultados.consumo.map(r => {
-      const cubre = r.diasCobertura >= DIAS_COBERTURA ? '<span class="badge-verde">✓ ' + (r.diasCobertura === 999 ? '∞' : r.diasCobertura.toFixed(0)) + 'd</span>'
-        : '<span class="badge-rojo">✗ ' + r.diasCobertura.toFixed(0) + 'd</span>';
-      const consumoStr = r.consumoReal < 0 ? '<span class="badge-rojo">' + r.consumoReal.toFixed(2) + '</span>' : r.consumoReal.toFixed(2);
-      return '<tr><td>' + r.prod + '</td><td>' + r.sa + '</td><td>' + r.ing + '</td><td>' + r.sb + '</td><td>' + consumoStr + '</td><td>' + r.cd.toFixed(2) + '</td><td>' + r.stockAlRecibo.toFixed(1) + '</td><td>' + cubre + '</td></tr>';
-    }).join('');
-
-    renderPedido();
-
-    // No se piden
-    document.getElementById('body-no-piden').innerHTML = resultados.noPiden.length === 0
-      ? '<p style="color:#aaa;font-size:13px;">—</p>'
-      : resultados.noPiden.map(r => '<div style="padding:6px 0;border-bottom:1px solid #f0f0f0;display:flex;justify-content:space-between;"><span>' + r.prod + '</span><span class="badge-gris">' + r.motivo + '</span></div>').join('');
-
-    document.getElementById('btn-excel').style.display = 'block';
-    document.getElementById('btn-guardar').style.display = 'block';
-  }
-
-  function renderPedido() {
-    document.getElementById('body-pedido').innerHTML = resultados.pedido.map((r, i) => {
-      const ajustadoBadge = r.cajasOriginales !== undefined
-        ? ' <span class="badge-azul" style="background:#f0f4ff;color:#1a3a8e;border-radius:20px;padding:2px 6px;font-size:10px;">IA: era ' + r.cajasOriginales + '</span>' : '';
-      return '<tr><td>' + r.prod + ajustadoBadge + '</td><td>' + r.consumoReal.toFixed(2) + '</td><td>' + r.sb + '</td><td>' + r.stockAlRecibo.toFixed(1) + '</td>' +
-        '<td><input type="number" class="pedido-input tiene-pedido" value="' + r.cajas + '" min="0" data-idx="' + i + '" onchange="actualizarPedido(this)"></td></tr>';
-    }).join('');
-  }
-
-  window.actualizarPedido = function(inp) {
-    const idx = Number(inp.dataset.idx);
-    const anterior = resultados.pedido[idx].cajas;
-    resultados.pedido[idx].cajas = Number(inp.value);
-    // Guardar ajuste del usuario para aprendizaje
-    resultados.ajustesUsuario[resultados.pedido[idx].prod] = {
-      calculado: resultados.pedido[idx].cajasOriginales || anterior,
-      elegido: Number(inp.value)
-    };
-    inp.className = 'pedido-input ' + (Number(inp.value) > 0 ? 'tiene-pedido' : '');
-  }
-
-  // ─── EXCEL ───────────────────────────────────────────────────────
-  window.exportarExcel = function() {
-    if (!resultados) return;
-    const wb = XLSX.utils.book_new();
-    const desde = document.getElementById('fecha-desde').value;
-    const hasta = document.getElementById('fecha-hasta').value;
-
-    const ws1 = XLSX.utils.aoa_to_sheet([
-      ['Producto', 'Stock A', 'Ingreso', 'Stock B', 'Consumo', 'CD', 'Stock Recibo', 'Días Cobertura'],
-      ...resultados.consumo.map(r => [r.prod, r.sa, r.ing, r.sb, r.consumoReal.toFixed(2), r.cd.toFixed(2), r.stockAlRecibo.toFixed(1), r.diasCobertura === 999 ? '∞' : r.diasCobertura.toFixed(0)])
-    ]);
-    ws1['!cols'] = [{wch:18},{wch:9},{wch:9},{wch:9},{wch:10},{wch:8},{wch:12},{wch:14}];
-    XLSX.utils.book_append_sheet(wb, ws1, '1. Consumo');
-
-    const ws2 = XLSX.utils.aoa_to_sheet([
-      ['Producto', 'Consumo', 'Stock B', 'Stock Recibo', 'Cajas a pedir', 'Motivo'],
-      ...resultados.pedido.map(r => [r.prod, r.consumoReal.toFixed(2), r.sb, r.stockAlRecibo.toFixed(1), r.cajas, r.motivo])
-    ]);
-    ws2['!cols'] = [{wch:18},{wch:10},{wch:10},{wch:12},{wch:14},{wch:20}];
-    XLSX.utils.book_append_sheet(wb, ws2, '2. Pedido');
-
-    const ws3 = XLSX.utils.aoa_to_sheet([
-      ['RESUMEN EJECUTIVO', ''],
-      ['Local', localActual], ['Semana', desde + ' al ' + hasta],
-      ['Total ítems a pedir', resultados.pedido.length],
-      ['Alertas', resultados.alertas.length],
-      ['', ''], ['PEDIDO CONSOLIDADO', ''],
-      ...resultados.pedido.map(r => [r.prod, r.cajas + ' cajas']),
-      ['', ''], ['NO SE PIDEN', ''],
-      ...resultados.noPiden.map(r => [r.prod, r.motivo])
-    ]);
-    ws3['!cols'] = [{wch:25},{wch:20}];
-    XLSX.utils.book_append_sheet(wb, ws3, '3. Resumen');
-
-    XLSX.writeFile(wb, 'Axionlog-' + localActual + '-' + desde + '.xlsx');
-  }
-
-  // ─── FIREBASE ────────────────────────────────────────────────────
-  window.guardarEnFirebase = async function() {
-    if (!resultados) return;
-    const desde = document.getElementById('fecha-desde').value;
-    const hasta = document.getElementById('fecha-hasta').value;
-    const btn = document.getElementById('btn-guardar');
-    btn.disabled = true; btn.textContent = 'Guardando...';
-    try {
-      await addDoc(collection(db, "axionlog_historial"), {
-        local: localActual, fechaDesde: desde, fechaHasta: hasta,
-        timestamp: Date.now(),
-        stockB: resultados.stockB,
-        pedido: resultados.pedido,
-        ajustesUsuario: resultados.ajustesUsuario,
-        alertas: resultados.alertas
-      });
-      btn.textContent = '✅ Guardado';
-      setTimeout(() => { btn.textContent = '💾 Guardar'; btn.disabled = false; }, 2000);
-      cargarHistorial();
-    } catch(e) {
-      btn.textContent = '💾 Guardar'; btn.disabled = false;
-      alert('Error al guardar.');
-    }
-  }
-
-  async function cargarHistorial() {
-    const lista = document.getElementById('lista-historial');
-    lista.innerHTML = '<div class="sin-historial">Cargando...</div>';
-    try {
-      const q = query(collection(db, "axionlog_historial"), where("local", "==", localActual), orderBy("timestamp", "desc"));
-      const snap = await getDocs(q);
-      if (snap.empty) { lista.innerHTML = '<div class="sin-historial">Sin historial aún</div>'; return; }
-      lista.innerHTML = '';
-      snap.forEach(d => {
-        const dat = d.data();
-        const totalCajas = (dat.pedido || []).reduce((a, r) => a + r.cajas, 0);
-        const ajustes = Object.keys(dat.ajustesUsuario || {}).length;
-        const rangoFecha = dat.fechaDesde ? dat.fechaDesde + ' → ' + (dat.fechaHasta || '') : (dat.fecha || '—');
-        const div = document.createElement('div');
-        div.className = 'historial-item';
-        div.innerHTML = '<div class="hist-header"><div><div class="hist-fecha">📅 ' + rangoFecha + '</div><div class="hist-local">' + dat.local + '</div></div><button class="btn-eliminar-hist" onclick="window.eliminarHistorial(\'' + d.id + '\')">🗑</button></div>' +
-          '<div class="hist-resumen"><div class="hist-kpi"><span>Ítems pedidos</span><strong>' + (dat.pedido || []).length + '</strong></div>' +
-          '<div class="hist-kpi"><span>Total cajas</span><strong>' + totalCajas + '</strong></div>' +
-          '<div class="hist-kpi"><span>🤖 Ajustes IA</span><strong>' + ajustes + '</strong></div></div>';
-        lista.appendChild(div);
-      });
-    } catch(e) { lista.innerHTML = '<div class="sin-historial">Error al cargar</div>'; }
-  }
-
-  window.eliminarHistorial = async function(id) {
-    if (!confirm('¿Eliminar este registro?')) return;
-    await deleteDoc(doc(db, "axionlog_historial", id));
-    cargarHistorial();
-  }
+// ── TOAST ────────────────────────────────────────────
+function toast(msg, tipo='') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'toast ' + tipo;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 4000);
+}
 </script>
 </body>
 </html>
