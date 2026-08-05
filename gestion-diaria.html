@@ -150,13 +150,13 @@ async function cargarCierres() {
 }
 
 // La "Diferencia" se calcula igual que el cartel "Resultado de caja" que ve
-// el cajero en pantalla al cerrar (cierre + tarjetas + posnet Balcarce + gastos
-// + delivery − apertura − ventas IVA). No se usa el campo guardado
+// el cajero en pantalla al cerrar (cierre + tarjetas + gastos + delivery
+// − apertura − ventas IVA − posnet Balcarce). No se usa el campo guardado
 // "resultadoCaja" porque tiene un error conocido en cajero.html (no suma las
 // tarjetas), así que ese campo no coincide con lo que el cajero vio en pantalla.
 function diferenciaDeCierre(c) {
-  return (c.cierreContado || 0) + (c.importeTarjetas || 0) + (c.posnetBalcarce || 0) + (c.totalGastos || 0) + (c.totalDelivery || 0)
-       - (c.apertura || 0) - (c.ventasIva || 0);
+  return (c.cierreContado || 0) + (c.importeTarjetas || 0) + (c.totalGastos || 0) + (c.totalDelivery || 0)
+       - (c.apertura || 0) - (c.ventasIva || 0) - (c.posnetBalcarce || 0);
 }
 
 function generarRangoFechas(desde, hasta) {
