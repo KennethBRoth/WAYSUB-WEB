@@ -210,6 +210,7 @@
         <div class="res-item"><div class="ri-label">IVA (ventas sistema)</div><div class="ri-val resta" id="res-iva">$0</div></div>
         <div class="res-item"><div class="ri-label">Gastos</div><div class="ri-val suma" id="res-gastos">$0</div></div>
         <div class="res-item"><div class="ri-label">Vouchers (info)</div><div class="ri-val" id="res-vouchers" style="color:white;">$0</div></div>
+        <div class="res-item" id="res-item-posnet" style="display:none;"><div class="ri-label">Posnet Balcarce</div><div class="ri-val suma" id="res-posnet">$0</div></div>
       </div>
     </div>
 
@@ -272,6 +273,18 @@
         <div style="display:flex;justify-content:space-between;align-items:center;background:#e8f8f0;border-radius:10px;padding:10px 14px;margin-top:8px;">
           <span style="font-size:13px;font-weight:700;color:#555;">Total tarjetas</span>
           <span style="font-size:16px;font-weight:800;color:#2a9d5c;" id="total-tarjetas-label">$0 · 0 tarjetas</span>
+        </div>
+      </div>
+
+      <!-- POSNET BALCARCE (solo Subway Morón) -->
+      <div id="bloque-posnet-balcarce" style="display:none;margin-top:14px;">
+        <div class="field-label-row" style="margin-bottom:10px;">
+          <label style="font-size:13px;font-weight:700;color:#555;">Posnet Balcarce</label>
+          <span class="tag-suma">SUMA</span>
+        </div>
+        <div class="field">
+          <label>Monto ($)</label>
+          <input type="number" id="posnet-balcarce" placeholder="0" inputmode="decimal" oninput="recalcular()">
         </div>
       </div>
 
@@ -457,6 +470,11 @@ function entrarALocal(key) {
   document.getElementById('seccion-panes').style.display = esSubway ? 'block' : 'none';
   document.getElementById('seccion-egresos').style.display = 'block';
   document.getElementById('btn-cambiar').style.display = esMultiLocal ? 'block' : 'none';
+
+  // El posnet Balcarce solo aplica al local Subway Morón
+  const esPosnetBalcarce = (key === 'cajero_subway_moron');
+  document.getElementById('bloque-posnet-balcarce').style.display = esPosnetBalcarce ? 'block' : 'none';
+  document.getElementById('res-item-posnet').style.display = esPosnetBalcarce ? 'block' : 'none';
 
   mostrarPantalla(null);
   document.getElementById('app').style.display = 'block';
@@ -666,6 +684,7 @@ window.recalcular = function() {
   if (elCi) elCi.textContent = formatPeso(cierre);
   const tarjetas    = tarjetasActuales.reduce((acc, t) => acc + (parseFloat(t.importe) || 0), 0);
   const mp          = 0;
+  const posnetBalcarce = getNum('posnet-balcarce');
   const iva         = getNum('ventas-iva');
   const vouchers    = getNum('vouchers');
   const totalGastos = gastosActuales.reduce((acc, g) => acc + (parseFloat(g.monto) || 0), 0);
@@ -675,8 +694,8 @@ window.recalcular = function() {
   const totalDel = deliveryBloques.reduce((acc, bloque) =>
     acc + bloque.canales.reduce((a, c) => a + (parseFloat(c.monto) || 0), 0), 0) - difDelInput;
 
-  // Resultado = Cierre + Tarjetas + MP + Gastos + Delivery - Apertura - IVA
-  const resultado = cierre + tarjetas + mp + totalGastos + totalDel - apertura - iva;
+  // Resultado = Cierre + Tarjetas + MP + Posnet Balcarce + Gastos + Delivery - Apertura - IVA
+  const resultado = cierre + tarjetas + mp + posnetBalcarce + totalGastos + totalDel - apertura - iva;
 
   // Actualizar resultado principal
   const elRes = document.getElementById('res-total');
@@ -689,6 +708,8 @@ window.recalcular = function() {
   document.getElementById('res-iva').textContent      = formatPeso(iva);
   document.getElementById('res-gastos').textContent   = formatPeso(totalGastos);
   document.getElementById('res-vouchers').textContent = formatPeso(vouchers);
+  const elPosnet = document.getElementById('res-posnet');
+  if (elPosnet) elPosnet.textContent = formatPeso(posnetBalcarce);
 
   // Delivery
   const elTotalDel = document.getElementById('total-delivery-label');
@@ -759,7 +780,7 @@ function unificarTurnos(registros) {
   // Suma todos los valores numéricos, combina gastos
   const base = registros[0];
   const campos = ['aperturaFuerte','aperturaRegistradora','cierreFuerte','cierreRegistradora','apertura','cierreContado','importeTarjetas','cantidadTarjetas','totalGastos',
-    'mercadoPago','gastosDiarios','ventasIva','vouchers',
+    'mercadoPago','posnetBalcarce','gastosDiarios','ventasIva','vouchers',
     'mercadoDelivery','rappi','pedidosYa','uberEats'];
 
   const resultado = { ...base };
@@ -787,6 +808,7 @@ function cargarDatos(data) {
   tarjetasActuales = data.tarjetas || (data.importeTarjetas ? [{ importe: data.importeTarjetas, cantidad: data.cantidadTarjetas || '' }] : []);
   renderTarjetas();
 
+  set('posnet-balcarce',  data.posnetBalcarce);
   set('ventas-iva',       data.ventasIva);
   set('vouchers',         data.vouchers);
   // Delivery
@@ -832,7 +854,7 @@ function cargarDatos(data) {
 
 function limpiarFormulario() {
   ['apertura-fuerte','apertura-registradora','cierre-fuerte','cierre-registradora','mercado-pago',
-   'ventas-iva','vouchers','dif-delivery-input',
+   'posnet-balcarce','ventas-iva','vouchers','dif-delivery-input',
    'panes-sistema','sobrantes-anterior','retardador',
    'panes-egresados','desperdicios','sobrantes-dia'
   ].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
@@ -872,6 +894,7 @@ window.guardarCierre = async function() {
       tarjetas:        tarjetasActuales.filter(t => t.importe || t.cantidad),
       importeTarjetas: tarjetasActuales.reduce((acc, t) => acc + (parseFloat(t.importe) || 0), 0),
       cantidadTarjetas:tarjetasActuales.reduce((acc, t) => acc + (parseInt(t.cantidad) || 0), 0),
+      posnetBalcarce:  getNum('posnet-balcarce'),
 
       ventasIva:       getNum('ventas-iva'),
       vouchers:        getNum('vouchers'),
@@ -882,7 +905,7 @@ window.guardarCierre = async function() {
       deliveryBloques: deliveryBloques,
       difDelivery:     getNum('dif-delivery-input'),
       totalDelivery:   deliveryBloques.reduce((acc, b) => acc + b.canales.reduce((a, c) => a + (parseFloat(c.monto)||0), 0), 0) - getNum('dif-delivery-input'),
-      resultadoCaja:   (getNum('cierre-fuerte') + getNum('cierre-registradora')) + getNum('importe-tarjetas') + getNum('mercado-pago') + totalGastos - (getNum('apertura-fuerte') + getNum('apertura-registradora')) - getNum('ventas-iva')
+      resultadoCaja:   (getNum('cierre-fuerte') + getNum('cierre-registradora')) + getNum('importe-tarjetas') + getNum('mercado-pago') + getNum('posnet-balcarce') + totalGastos - (getNum('apertura-fuerte') + getNum('apertura-registradora')) - getNum('ventas-iva')
     };
 
     if (esSubway) {
