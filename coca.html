@@ -54,7 +54,7 @@
     .fecha-rango { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .fecha-campo label { font-size: 11px; color: #999; display: block; margin-bottom: 4px; font-weight: 600; text-transform: uppercase; }
     .fecha-campo input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; }
-    .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(60px); background: #1a1a2e; color: white; padding: 12px 24px; border-radius: 10px; font-size: 14px; font-weight: 600; transition: transform 0.3s; z-index: 999; white-space: nowrap; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+    .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(60px); background: #1a1a2e; color: white; padding: 12px 24px; border-radius: 10px; font-size: 14px; font-weight: 600; transition: transform 0.3s; z-index: 999; white-space: normal; max-width: 85vw; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
     .toast.show { transform: translateX(-50%) translateY(0); }
     .toast.ok { background: #2ecc71; color: #1a1a2e; }
     .toast.err { background: #e74c3c; }
@@ -690,7 +690,7 @@ window.guardarEnFirebase = async function() {
     cargarHistorial();
   } catch(e) {
     console.error('Error guardando historial:', e);
-    toast('❌ Error al guardar', 'err');
+    toast('❌ Error: ' + (e && e.message ? e.message : e), 'err');
     btn.textContent = '💾 Guardar'; btn.disabled = false;
   }
 };
@@ -755,7 +755,7 @@ function toast(msg, tipo='') {
   const t = document.getElementById('toast');
   t.textContent = msg; t.className = 'toast '+(tipo||'');
   t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 3000);
+  setTimeout(() => t.classList.remove('show'), tipo === 'err' ? 6000 : 3000);
 }
 </script>
 </body>
