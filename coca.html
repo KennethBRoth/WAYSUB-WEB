@@ -91,6 +91,9 @@
     <h3 style="font-size:15px;color:#1a1a2e;font-weight:800;text-transform:none;letter-spacing:0;border-left:4px solid #1a1a2e;padding-left:10px;">
       📦 Stock Inicial <span style="font-size:11px;color:#2a9d5c;font-weight:400;">(cargado automáticamente)</span>
     </h3>
+    <button onclick="cargarStockInicial()" style="width:100%;background:#f0f4ff;color:#1a1a2e;border:1px solid #c5cff5;border-radius:8px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;margin-bottom:12px;">
+      📥 Cargar Stock (lo que guardé como Stock Actual la semana pasada)
+    </button>
     <div style="margin-bottom:12px;">
       <p style="font-size:11px;color:#999;margin-bottom:6px;font-weight:600;">PEGÁ EL REPORTE DE LINISCO (CONTEO):</p>
       <textarea id="linisco-si-paste" rows="4" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:12px;font-family:monospace;resize:vertical;" placeholder="COCA COLA&#10;Común:123&#10;Zero:110&#10;..."></textarea>
@@ -395,10 +398,10 @@ function actualizarTotal(prefijo) {
 async function cargarStockInicial() {
   try {
     const snap = await getDoc(doc(db, 'coca_stock_inicial', docId(localActual)));
-    if (!snap.exists()) return;
+    if (!snap.exists()) { toast('Todavía no guardaste ningún Stock Actual anterior', 'err'); return; }
     const data = snap.data();
     const stock = data.stockActual || {};
-    if (!Object.keys(stock).length) return;
+    if (!Object.keys(stock).length) { toast('Todavía no guardaste ningún Stock Actual anterior', 'err'); return; }
 
     // Llenar tabla stock-inicial
     document.querySelectorAll('input[data-tabla="si"]').forEach(inp => {
@@ -411,11 +414,15 @@ async function cargarStockInicial() {
     const fecha = data.timestamp ? new Date(data.timestamp).toLocaleDateString('es-AR') : '—';
     const banner = document.getElementById('banner-auto');
     banner.style.display = 'block';
-    banner.textContent = '✅ Stock Inicial cargado automáticamente — guardado el ' + fecha;
+    banner.textContent = '✅ Stock Inicial cargado — guardado el ' + fecha;
+    toast('✅ Stock Inicial cargado', 'ok');
   } catch(e) {
     console.error('Error cargando stock inicial:', e);
+    toast('❌ Error al cargar: ' + (e && e.message ? e.message : e), 'err');
   }
 }
+
+window.cargarStockInicial = cargarStockInicial;
 
 // ── LINISCO ──────────────────────────────────────────────
 window.interpretarLinisco = function(tipo) {
