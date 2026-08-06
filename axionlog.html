@@ -249,13 +249,15 @@ let stockA = {};
 let historialLocal = [];
 let resultadoCalculo = null;
 let transfers = [];
+let datosListos = null; // Promise que resuelve cuando productos/reglas/historial ya están cargados
 
 // ── AUTH ─────────────────────────────────────────────
 onAuthStateChanged(auth, async (user) => {
   if (!user) { window.location.href = 'login.html'; return; }
   const snap = await getDoc(doc(db, 'usuarios', user.uid));
   if (!snap.exists() || !snap.data().aprobado) { window.location.href = 'login.html'; return; }
-  await Promise.all([cargarProductos(), cargarReglas(), cargarHistorial()]);
+  datosListos = Promise.all([cargarProductos(), cargarReglas(), cargarHistorial()]);
+  await datosListos;
 });
 
 // ── TABS ─────────────────────────────────────────────
@@ -369,6 +371,11 @@ window.seleccionarLocal = async function(local) {
   document.getElementById('sin-local').style.display = 'none';
   document.getElementById('card-stock-a').style.display = 'block';
   document.getElementById('footer-btns').style.display = 'flex';
+  document.getElementById('stock-a-resumen').textContent = 'Cargando...';
+
+  // Esperar a que productos/reglas/historial ya estén descargados de Firebase,
+  // aunque se haya tocado el botón de local apenas se abrió la página.
+  if (datosListos) await datosListos;
 
   // Cargar stock A
   const ultimo = await cargarStockA(local);
@@ -384,6 +391,12 @@ function construirFormulario() {
   cont.innerHTML = '';
   transfers = [];
   renderTransfers();
+
+  if (!productos.length) {
+    cont.innerHTML = '<p style="text-align:center;color:#e67e22;padding:20px;">⚠️ No se pudo cargar el maestro de productos. Revisá tu conexión y volvé a elegir el local.</p>';
+    document.getElementById('form-carga').style.display = 'block';
+    return;
+  }
 
   // Agrupar por categoría, solo activos y externos (no excluidos)
   const grupos = {};
