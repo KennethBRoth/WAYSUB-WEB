@@ -137,6 +137,7 @@
       <span style="font-size:11px;color:#aaa;font-weight:400;text-transform:none;">cargado automáticamente</span>
     </div>
     <div id="stock-a-resumen" style="font-size:13px;color:#666;">Cargando...</div>
+    <button class="btn-secondary btn-sm" onclick="recargarStockA()" style="margin-top:10px;">📥 Cargar Stock</button>
   </div>
 
   <!-- FORMULARIO STOCK B + FACTURA -->
@@ -310,6 +311,37 @@ async function cargarStockA(local) {
   return null;
 }
 
+// Actualiza SOLO la columna "Stock A (ref.)" del formulario sin borrar lo que
+// ya se haya escrito en Stock B / Factura.
+function refrescarColumnaStockA() {
+  productos.filter(p => p.estado !== 'excluido').forEach(p => {
+    const el = document.getElementById('sa-ref-' + p.id);
+    if (!el) return;
+    const val = stockA[p.nombre] !== undefined ? stockA[p.nombre] : '—';
+    el.textContent = val !== '—' ? val + ' ' + p.unidad : '—';
+  });
+}
+
+window.recargarStockA = async function() {
+  if (!localActual) return;
+  const ultimo = await cargarStockA(localActual);
+  mostrarResumenStockA(ultimo);
+  refrescarColumnaStockA();
+  toast(ultimo ? '✅ Stock A actualizado' : 'No hay Stock A guardado todavía', ultimo ? 'ok' : 'err');
+};
+
+function mostrarResumenStockA(ultimo) {
+  if (ultimo) {
+    const fecha = ultimo.fecha || '—';
+    document.getElementById('stock-a-resumen').innerHTML =
+      `<span style="color:#2a9d5c;font-weight:700;">✅ Stock del ${fecha} cargado automáticamente</span><br>
+       <span style="font-size:12px;">${Object.keys(stockA).length} productos con datos anteriores</span>`;
+  } else {
+    document.getElementById('stock-a-resumen').innerHTML =
+      '<span style="color:#e67e22;">⚠️ Sin historial previo — primera vez para este local</span>';
+  }
+}
+
 async function cargarHistorial() {
   try {
     const snap = await getDocs(collection(db, 'axionlog_historial_v2'));
@@ -340,15 +372,7 @@ window.seleccionarLocal = async function(local) {
 
   // Cargar stock A
   const ultimo = await cargarStockA(local);
-  if (ultimo) {
-    const fecha = ultimo.fecha || '—';
-    document.getElementById('stock-a-resumen').innerHTML =
-      `<span style="color:#2a9d5c;font-weight:700;">✅ Stock del ${fecha} cargado automáticamente</span><br>
-       <span style="font-size:12px;">${Object.keys(stockA).length} productos con datos anteriores</span>`;
-  } else {
-    document.getElementById('stock-a-resumen').innerHTML =
-      '<span style="color:#e67e22;">⚠️ Sin historial previo — primera vez para este local</span>';
-  }
+  mostrarResumenStockA(ultimo);
 
   // Construir formulario
   construirFormulario();
@@ -384,7 +408,7 @@ function construirFormulario() {
           <div class="prod-nombre">${p.nombre}</div>
           ${esExterno ? '<div style="font-size:10px;color:#e67e22;">Gestión externa</div>' : ''}
         </div>
-        <div class="prod-stock-a">${stockAVal !== '—' ? stockAVal + ' ' + p.unidad : '—'}</div>
+        <div class="prod-stock-a" id="sa-ref-${p.id}">${stockAVal !== '—' ? stockAVal + ' ' + p.unidad : '—'}</div>
         <div>
           <input type="number" class="prod-input" id="sb-${p.id}" placeholder="0" inputmode="decimal" step="any" ${esExterno ? 'disabled style="background:#f8f9fa;color:#ccc;"' : ''}>
           <div class="prod-unidad">${p.unidad}</div>
