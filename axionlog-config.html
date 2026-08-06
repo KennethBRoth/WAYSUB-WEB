@@ -3,11 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Config Axionlog — Waysub Panel</title>
+<title>Configuración Axionlog — Waysub Panel</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f0f2f5; color: #1a1a2e; min-height: 100vh; }
-  .header { background: #1a1a2e; color: white; padding: 16px 20px; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 100; }
+
+  .header { background: #1a1a2e; color: white; padding: 16px 20px; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
   .btn-back { background: rgba(255,255,255,0.1); border: none; color: white; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 14px; }
   .header h1 { font-size: 18px; font-weight: 600; flex: 1; }
 
@@ -15,282 +16,176 @@
   .tab { flex: 1; padding: 13px 8px; text-align: center; font-size: 13px; font-weight: 600; color: #999; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; }
   .tab.activo { color: #1a1a2e; border-bottom-color: #1a1a2e; }
 
-  .seccion { display: none; padding: 16px 16px 80px; max-width: 900px; margin: 0 auto; }
+  .container { max-width: 900px; margin: 0 auto; padding: 16px 16px 80px; }
+  .seccion { display: none; }
   .seccion.activa { display: block; }
 
   .card { background: white; border-radius: 14px; padding: 18px; margin-bottom: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
   .card-title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #888; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid #f0f0f0; }
 
-  .field { margin-bottom: 12px; }
-  .field label { display: block; font-size: 12px; font-weight: 600; color: #666; margin-bottom: 5px; }
-  .field input, .field select { width: 100%; padding: 10px 12px; border: 1.5px solid #e8e8e8; border-radius: 9px; font-size: 14px; color: #1a1a2e; background: #fafafa; outline: none; font-family: inherit; }
-  .field input:focus, .field select:focus { border-color: #1a1a2e; background: white; }
-  .field input[type="number"] { appearance: textfield; }
-  .field input[type="number"]::-webkit-inner-spin-button { display: none; }
-
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-size: 13px; font-weight: 600; color: #555; margin-bottom: 6px; }
+  .field .ayuda { font-size: 11px; color: #aaa; font-weight: 400; display: block; margin-top: 3px; }
+  .field input { width: 100%; padding: 10px 12px; border: 1.5px solid #e8e8e8; border-radius: 10px; font-size: 14px; color: #1a1a2e; background: #fafafa; outline: none; font-family: inherit; }
+  .field input:focus { border-color: #1a1a2e; background: white; }
   .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
-  .four-col { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; }
 
-  .btn-primary { background: #1a1a2e; color: white; border: none; padding: 12px 20px; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; }
-  .btn-secondary { background: white; color: #1a1a2e; border: 1.5px solid #e8e8e8; padding: 10px 16px; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; }
-  .btn-danger { background: #fff0f0; color: #e63946; border: 1px solid #ffd0d0; padding: 7px 12px; border-radius: 8px; font-size: 12px; cursor: pointer; }
-  .btn-sm { padding: 6px 12px; font-size: 12px; }
+  .btn-save { width: 100%; padding: 16px; background: #1a1a2e; color: white; border: none; border-radius: 14px; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 4px; }
+  .btn-save:disabled { background: #ccc; cursor: not-allowed; }
 
-  /* TABLA PRODUCTOS */
-  .prod-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  .prod-table th { text-align: left; padding: 8px 10px; font-size: 11px; color: #999; font-weight: 700; text-transform: uppercase; border-bottom: 2px solid #f0f2f5; white-space: nowrap; }
-  .prod-table td { padding: 8px 10px; border-bottom: 1px solid #f8f8f8; vertical-align: middle; }
-  .prod-table tr:last-child td { border-bottom: none; }
-  .prod-table input { width: 100%; padding: 6px 8px; border: 1px solid #e8e8e8; border-radius: 6px; font-size: 12px; font-family: inherit; }
-  .prod-table select { padding: 6px 8px; border: 1px solid #e8e8e8; border-radius: 6px; font-size: 12px; font-family: inherit; width: 100%; }
-  .prod-table input:focus, .prod-table select:focus { outline: none; border-color: #1a1a2e; }
+  /* PRODUCTOS */
+  .filtro-cat { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 14px; padding-bottom: 4px; }
+  .chip-cat { flex-shrink: 0; padding: 7px 12px; border-radius: 20px; background: white; border: 1.5px solid #e8e8e8; color: #888; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+  .chip-cat.activo { background: #1a1a2e; color: white; border-color: #1a1a2e; }
 
-  .grupo-header { background: #f8f9ff; }
-  .grupo-header td { font-weight: 700; font-size: 11px; color: #1a1a2e; text-transform: uppercase; letter-spacing: 0.5px; padding: 8px 10px; }
+  .btn-add-prod { width: 100%; padding: 12px; background: #f0f4ff; color: #1a1a2e; border: 1.5px dashed #c5cff5; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; margin-bottom: 14px; }
 
-  .badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 700; }
-  .badge-ext { background: #fff8ee; color: #e67e22; }
-  .badge-excl { background: #fff0f0; color: #e63946; }
-  .badge-ok { background: #f0fff4; color: #2a9d5c; }
+  .prod-card { background: white; border-radius: 12px; padding: 14px; margin-bottom: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+  .prod-card-top { display: flex; gap: 8px; margin-bottom: 8px; }
+  .prod-card input.nombre { flex: 2; font-weight: 700; }
+  .prod-card input.sku { flex: 1; font-size: 12px; }
+  .prod-grid { display: grid; grid-template-columns: 1.3fr 0.8fr 0.8fr 1fr; gap: 8px; }
+  .prod-card select, .prod-card input { padding: 8px 10px; border: 1.5px solid #e8e8e8; border-radius: 8px; font-size: 13px; color: #1a1a2e; background: #fafafa; outline: none; font-family: inherit; }
+  .prod-card select:focus, .prod-card input:focus { border-color: #1a1a2e; background: white; }
+  .prod-card-footer { display: flex; justify-content: flex-end; margin-top: 8px; }
+  .btn-del-prod { background: #fff0f0; border: none; color: #e63946; border-radius: 8px; padding: 6px 12px; cursor: pointer; font-size: 12px; font-weight: 600; }
+  .badge-estado { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; margin-left: 6px; }
+  .badge-estado.activo { background: #f0fff4; color: #2a9d5c; }
+  .badge-estado.externo { background: #fff8ee; color: #e67e22; }
+  .badge-estado.excluido { background: #f0f0f0; color: #999; }
 
-  .regla-item { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #f0f0f0; gap: 12px; }
-  .regla-item:last-child { border-bottom: none; }
-  .regla-label { font-size: 13px; font-weight: 600; color: #333; flex: 1; }
-  .regla-desc { font-size: 11px; color: #999; margin-top: 2px; }
-  .regla-input { display: flex; align-items: center; gap: 8px; }
-  .regla-input input { width: 80px; padding: 8px 10px; border: 1.5px solid #e8e8e8; border-radius: 8px; font-size: 14px; font-weight: 700; text-align: center; outline: none; appearance: textfield; }
-  .regla-input input:focus { border-color: #1a1a2e; }
-  .regla-input span { font-size: 12px; color: #888; }
+  .loading-box { text-align: center; padding: 40px; color: #999; }
+  .spinner { width: 36px; height: 36px; border: 3px solid #ddd; border-top-color: #1a1a2e; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
 
-  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); background: #1a1a2e; color: white; padding: 14px 24px; border-radius: 12px; font-size: 14px; font-weight: 600; transition: transform 0.3s; z-index: 999; white-space: nowrap; }
+  .error-box { max-width: 400px; margin: 60px auto; background: white; border-radius: 16px; padding: 40px; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+  .error-box .icon { font-size: 48px; margin-bottom: 16px; }
+
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); background: #1a1a2e; color: white; padding: 14px 24px; border-radius: 12px; font-size: 14px; font-weight: 600; transition: transform 0.3s; z-index: 999; white-space: normal; max-width: 85vw; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
   .toast.show { transform: translateX(-50%) translateY(0); }
   .toast.ok { background: #2ecc71; color: #1a1a2e; }
   .toast.err { background: #e74c3c; }
 
-  .loading { text-align: center; padding: 40px; color: #999; }
-  .spinner { width: 36px; height: 36px; border: 3px solid #ddd; border-top-color: #1a1a2e; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  @media (max-width: 600px) {
-    .two-col, .three-col, .four-col { grid-template-columns: 1fr; }
+  @media (max-width: 480px) {
+    .two-col { grid-template-columns: 1fr; }
+    .prod-grid { grid-template-columns: 1fr 1fr; }
   }
 </style>
 </head>
 <body>
 
-<div class="header">
-  <button class="btn-back" onclick="window.location.href='axionlog.html'">← Axionlog</button>
-  <h1>⚙️ Configuración Axionlog</h1>
-</div>
-
-<div class="tabs">
-  <div class="tab activo" onclick="cambiarTab('reglas', this)">📐 Reglas de cálculo</div>
-  <div class="tab" onclick="cambiarTab('productos', this)">📦 Maestro de productos</div>
-</div>
-
-<!-- TAB REGLAS -->
-<div class="seccion activa" id="tab-reglas">
-
-  <div class="card">
-    <div class="card-title">🔢 Parámetros generales</div>
-    <div class="regla-item">
-      <div>
-        <div class="regla-label">Días objetivo de cobertura</div>
-        <div class="regla-desc">Cuántos días de stock debe durar el pedido</div>
-      </div>
-      <div class="regla-input"><input type="number" id="r-dias-objetivo" value="7"><span>días</span></div>
-    </div>
-    <div class="regla-item">
-      <div>
-        <div class="regla-label">Días de lead time</div>
-        <div class="regla-desc">Días entre el pedido y la llegada del nuevo stock</div>
-      </div>
-      <div class="regla-input"><input type="number" id="r-lead-time" value="2"><span>días</span></div>
-    </div>
-    <div class="regla-item">
-      <div>
-        <div class="regla-label">Margen de seguridad</div>
-        <div class="regla-desc">Dispara el pedido este margen antes de llegar justo</div>
-      </div>
-      <div class="regla-input"><input type="number" id="r-margen" value="1"><span>días</span></div>
-    </div>
-    <div class="regla-item">
-      <div>
-        <div class="regla-label">Alerta desvío alto (no calcular)</div>
-        <div class="regla-desc">Si el consumo diario varía más de este % vs semana anterior → alerta roja</div>
-      </div>
-      <div class="regla-input"><input type="number" id="r-desvio-rojo" value="80"><span>%</span></div>
-    </div>
-    <div class="regla-item">
-      <div>
-        <div class="regla-label">Alerta desvío moderado</div>
-        <div class="regla-desc">Si varía entre este % y el anterior → alerta amarilla (igual calcula)</div>
-      </div>
-      <div class="regla-input"><input type="number" id="r-desvio-amarillo" value="40"><span>%</span></div>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-title">🍞 Panes (objetivo fijo)</div>
-    <div class="regla-item">
-      <div>
-        <div class="regla-label">Pan Blanco — stock objetivo al recibo</div>
-        <div class="regla-desc">Ignora la fórmula general y apunta a este stock</div>
-      </div>
-      <div class="regla-input"><input type="number" id="r-pan-blanco" value="220"><span>un</span></div>
-    </div>
-    <div class="regla-item">
-      <div>
-        <div class="regla-label">Pan Integral — stock objetivo al recibo</div>
-      </div>
-      <div class="regla-input"><input type="number" id="r-pan-integral" value="165"><span>un</span></div>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-title">🥩 Proteínas secundarias</div>
-    <div class="regla-item">
-      <div>
-        <div class="regla-label">Umbral de cobertura para pedir</div>
-        <div class="regla-desc">Costillita BBQ, C y Queso, Pavo — solo pedir si cubre menos de X días</div>
-      </div>
-      <div class="regla-input"><input type="number" id="r-prot-sec" value="5"><span>días</span></div>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-title">🥫 Salsas</div>
-    <div class="regla-item">
-      <div>
-        <div class="regla-label">Umbral para sugerir 2 cajas</div>
-        <div class="regla-desc">Si cubre menos de X días → 2 cajas. Si no → 1 caja</div>
-      </div>
-      <div class="regla-input"><input type="number" id="r-salsas-2caj" value="2"><span>días</span></div>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-title">🍪 Snacks</div>
-    <div class="regla-item">
-      <div>
-        <div class="regla-label">Stock mínimo preventivo</div>
-        <div class="regla-desc">Cookie Vainilla/Choc, Lays, Doritos — pedir 1 caja si el stock al recibo es menor a X unidades</div>
-      </div>
-      <div class="regla-input"><input type="number" id="r-snacks-min" value="35"><span>un</span></div>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-title">📦 Otras reglas</div>
-    <div class="regla-item">
-      <div>
-        <div class="regla-label">Pap Deli — máximo por semana</div>
-        <div class="regla-desc">Máximo de cajas a pedir (salvo que stock = 0)</div>
-      </div>
-      <div class="regla-input"><input type="number" id="r-pap-deli-max" value="1"><span>cajas</span></div>
-    </div>
-    <div class="regla-item">
-      <div>
-        <div class="regla-label">Quesos — alerta si supera</div>
-        <div class="regla-desc">Dambo, Cheddar, Crema — alerta manual si el cálculo da más de X cajas</div>
-      </div>
-      <div class="regla-input"><input type="number" id="r-quesos-alerta" value="6"><span>cajas</span></div>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-title">🔄 Reposición preventiva mínima semanal (siempre 1 caja)</div>
-    <p style="font-size:13px;color:#666;margin-bottom:12px;">Estos productos siempre se piden al menos 1 caja, sin importar el cálculo.</p>
-    <div id="lista-preventivos"></div>
-    <div style="display:flex;gap:8px;margin-top:12px;">
-      <input type="text" id="inp-preventivo" placeholder="Nombre del producto" style="flex:1;padding:10px;border:1.5px solid #e8e8e8;border-radius:9px;font-size:14px;outline:none;">
-      <button class="btn-primary btn-sm" onclick="agregarPreventivo()">+ Agregar</button>
-    </div>
-  </div>
-
-  <button class="btn-primary" style="width:100%;padding:16px;" onclick="guardarReglas()">💾 Guardar todas las reglas</button>
-</div>
-
-<!-- TAB PRODUCTOS -->
-<div class="seccion" id="tab-productos">
-  <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;">
-    <button class="btn-primary" onclick="abrirModalProducto()">+ Nuevo producto</button>
-    <button class="btn-secondary" onclick="cargarProductos()">🔄 Recargar</button>
-  </div>
-
-  <div class="card" style="padding:0;overflow:hidden;">
-    <div style="overflow-x:auto;">
-      <table class="prod-table">
-        <thead>
-          <tr>
-            <th>Producto</th>
-            <th>SKU</th>
-            <th>Categoría</th>
-            <th>Tam. caja</th>
-            <th>Unidad</th>
-            <th>Estado</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody id="tbody-productos">
-          <tr><td colspan="7"><div class="loading"><div class="spinner"></div></div></td></tr>
-        </tbody>
-      </table>
-    </div>
+<div id="screen-error" style="display:none;">
+  <div class="error-box">
+    <div class="icon">🔒</div>
+    <h2>Sin acceso</h2>
+    <p style="color:#666;font-size:14px;margin:8px 0 20px;">Este módulo es solo para administradores.</p>
+    <button style="background:#1a1a2e;color:white;padding:12px 24px;border-radius:10px;font-size:14px;border:none;cursor:pointer;" onclick="window.location.href='index.html'">Volver al inicio</button>
   </div>
 </div>
 
-<!-- MODAL PRODUCTO -->
-<div id="modal-bg" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;align-items:flex-end;justify-content:center;">
-  <div style="background:white;border-radius:20px 20px 0 0;width:100%;max-width:560px;padding:24px;max-height:85vh;overflow-y:auto;">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-      <h3 style="font-size:16px;font-weight:700;" id="modal-title">Nuevo producto</h3>
-      <button onclick="cerrarModal()" style="background:#f0f2f5;border:none;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:16px;">✕</button>
-    </div>
-    <div class="field"><label>Nombre</label><input type="text" id="m-nombre" placeholder="Ej: Suprema"></div>
-    <div class="field"><label>SKU</label><input type="text" id="m-sku" placeholder="Ej: SBW-00421A"></div>
-    <div class="two-col">
-      <div class="field">
-        <label>Categoría</label>
-        <select id="m-categoria">
-          <option value="Proteínas principales">Proteínas principales</option>
-          <option value="Proteínas secundarias">Proteínas secundarias</option>
-          <option value="Fiambres">Fiambres</option>
-          <option value="Quesos">Quesos</option>
-          <option value="Panes">Panes</option>
-          <option value="Salsas">Salsas</option>
-          <option value="Toppings de pan">Toppings de pan</option>
-          <option value="Conservas">Conservas</option>
-          <option value="Snacks">Snacks</option>
-          <option value="Packaging">Packaging</option>
-          <option value="Otros">Otros</option>
-        </select>
+<div id="app" style="display:none;">
+  <div class="header">
+    <button class="btn-back" onclick="window.location.href='axionlog.html'">← Volver</button>
+    <h1>⚙️ Configuración Axionlog</h1>
+  </div>
+
+  <div class="tabs">
+    <div class="tab activo" onclick="cambiarTab('reglas', this)">🎛️ Reglas</div>
+    <div class="tab" onclick="cambiarTab('productos', this)">📦 Productos</div>
+  </div>
+
+  <div class="container">
+
+    <!-- TAB REGLAS -->
+    <div class="seccion activa" id="tab-reglas">
+      <div class="card">
+        <div class="card-title">⏱️ Tiempos y cobertura</div>
+        <div class="two-col">
+          <div class="field">
+            <label>Días objetivo de cobertura</label>
+            <input type="number" id="r-diasObjetivo">
+          </div>
+          <div class="field">
+            <label>Lead time (días)</label>
+            <input type="number" id="r-leadTime">
+          </div>
+        </div>
+        <div class="field">
+          <label>Margen extra (días)</label>
+          <input type="number" id="r-margen">
+        </div>
       </div>
-      <div class="field">
-        <label>Unidad de medida</label>
-        <select id="m-unidad">
-          <option value="kg">kg</option>
-          <option value="un">unidades</option>
-        </select>
+
+      <div class="card">
+        <div class="card-title">🔔 Alertas de desvío vs. semana anterior</div>
+        <div class="two-col">
+          <div class="field">
+            <label>Umbral rojo (%) <span class="ayuda">para y pregunta</span></label>
+            <input type="number" id="r-desvioRojo">
+          </div>
+          <div class="field">
+            <label>Umbral amarillo (%) <span class="ayuda">avisa pero calcula</span></label>
+            <input type="number" id="r-desvioAmarillo">
+          </div>
+        </div>
       </div>
-    </div>
-    <div class="two-col">
-      <div class="field"><label>Tamaño de caja</label><input type="number" id="m-tam-caja" placeholder="Ej: 10"></div>
-      <div class="field">
-        <label>Estado</label>
-        <select id="m-estado">
-          <option value="activo">Activo (incluido en cálculo)</option>
-          <option value="externo">Gestión externa (trackear, no pedir)</option>
-          <option value="excluido">Excluido (no trackear)</option>
-        </select>
+
+      <div class="card">
+        <div class="card-title">🍞 Panes — objetivo de stock al recibo</div>
+        <div class="two-col">
+          <div class="field">
+            <label>Pan Blanco (un)</label>
+            <input type="number" id="r-panBlanco">
+          </div>
+          <div class="field">
+            <label>Pan Integral (un)</label>
+            <input type="number" id="r-panIntegral">
+          </div>
+        </div>
       </div>
+
+      <div class="card">
+        <div class="card-title">📐 Reglas por categoría</div>
+        <div class="field">
+          <label>Proteínas secundarias <span class="ayuda">se piden solo si cubren menos de estos días al recibo</span></label>
+          <input type="number" id="r-protSecUmbral">
+        </div>
+        <div class="field">
+          <label>Salsas <span class="ayuda">si cubre menos de estos días al recibo, pedir 2 cajas (si no, 1)</span></label>
+          <input type="number" id="r-salsas2Cajas">
+        </div>
+        <div class="field">
+          <label>Snacks <span class="ayuda">mínimo de unidades al recibo antes de pedir</span></label>
+          <input type="number" id="r-snacksMin">
+        </div>
+        <div class="field">
+          <label>Pap Deli <span class="ayuda">tope de cajas por pedido (salvo stock en 0)</span></label>
+          <input type="number" id="r-papDeliMax">
+        </div>
+        <div class="field">
+          <label>Quesos <span class="ayuda">si el cálculo sugiere más de esta cantidad de cajas, avisa para validar</span></label>
+          <input type="number" id="r-quesosAlerta">
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">⭐ Preventivos <span style="font-size:11px;color:#aaa;font-weight:400;text-transform:none;">siempre piden mínimo 1 caja si el cálculo da 0</span></div>
+        <div class="field">
+          <label>Productos (uno por línea)</label>
+          <textarea id="r-preventivos" rows="3" style="width:100%;padding:10px 12px;border:1.5px solid #e8e8e8;border-radius:10px;font-size:14px;color:#1a1a2e;background:#fafafa;outline:none;font-family:inherit;resize:vertical;"></textarea>
+        </div>
+      </div>
+
+      <button class="btn-save" id="btn-guardar-reglas" onclick="guardarReglas()">Guardar reglas</button>
     </div>
-    <div class="field"><label>Notas (opcional)</label><input type="text" id="m-notas" placeholder="Ej: confirmar con usuario si es el mismo que Bolsa SUB"></div>
-    <div style="display:flex;gap:10px;margin-top:16px;">
-      <button class="btn-secondary" style="flex:1;" onclick="cerrarModal()">Cancelar</button>
-      <button class="btn-primary" style="flex:2;" onclick="guardarProducto()">Guardar producto</button>
+
+    <!-- TAB PRODUCTOS -->
+    <div class="seccion" id="tab-productos">
+      <button class="btn-add-prod" onclick="agregarProducto()">+ Agregar producto</button>
+      <div class="filtro-cat" id="filtro-cat"></div>
+      <div id="lista-productos"><div class="loading-box"><div class="spinner"></div><p>Cargando...</p></div></div>
     </div>
+
   </div>
 </div>
 
@@ -299,7 +194,7 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, collection, getDocs, doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAB2-btgFqGiCe1YdZSDv4EShV601N-uQs",
@@ -314,75 +209,108 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-let productos = [];
-let preventivos = [];
-let editandoId = null;
-
-const MAESTRO_INICIAL = [
-  { nombre:'Suprema', sku:'SBW-00421A', categoria:'Proteínas principales', unidad:'kg', tamCaja:10, estado:'activo' },
-  { nombre:'Pollo (Chicken Patty)', sku:'SBW-00418', categoria:'Proteínas principales', unidad:'kg', tamCaja:10, estado:'activo' },
-  { nombre:'Pollo Cortado', sku:'SBW-00422', categoria:'Proteínas principales', unidad:'kg', tamCaja:10, estado:'activo' },
-  { nombre:'Criollo (Churrasquito)', sku:'SBW-200441', categoria:'Proteínas principales', unidad:'kg', tamCaja:5, estado:'activo' },
-  { nombre:'Milanesa Res', sku:'SBW-200450', categoria:'Proteínas principales', unidad:'kg', tamCaja:5, estado:'activo' },
-  { nombre:'Costillita BBQ', sku:'SBW-77981383300', categoria:'Proteínas secundarias', unidad:'kg', tamCaja:5, estado:'activo' },
-  { nombre:'C y Queso (Beef Steak)', sku:'SBW-77981383301', categoria:'Proteínas secundarias', unidad:'kg', tamCaja:5, estado:'activo' },
-  { nombre:'Pavo', sku:'SBW-00036A-3', categoria:'Proteínas secundarias', unidad:'kg', tamCaja:3, estado:'activo' },
-  { nombre:'Atún', sku:'SBW-11675', categoria:'Fiambres', unidad:'kg', tamCaja:5.4, estado:'activo' },
-  { nombre:'Jamón', sku:'SBW-00622A', categoria:'Fiambres', unidad:'kg', tamCaja:10, estado:'activo' },
-  { nombre:'Panceta/Bacon', sku:'SBW-95520', categoria:'Fiambres', unidad:'un', tamCaja:300, estado:'activo' },
-  { nombre:'Salame', sku:'SBW-96013A', categoria:'Fiambres', unidad:'kg', tamCaja:3, estado:'activo' },
-  { nombre:'Cantimpalo (Pepperoni)', sku:'SBW-96014A', categoria:'Fiambres', unidad:'kg', tamCaja:3, estado:'activo' },
-  { nombre:'Queso Dambo', sku:'SBW-1012485', categoria:'Quesos', unidad:'kg', tamCaja:2.16, estado:'activo' },
-  { nombre:'Queso Cheddar', sku:'SBW-30944', categoria:'Quesos', unidad:'kg', tamCaja:9.48, estado:'activo' },
-  { nombre:'Queso Crema', sku:'SBW-2917', categoria:'Quesos', unidad:'kg', tamCaja:6, estado:'activo' },
-  { nombre:'Pan Blanco', sku:'SBW-C237', categoria:'Panes', unidad:'un', tamCaja:50, estado:'activo' },
-  { nombre:'Pan Integral/Baguetín', sku:'SBW-C238', categoria:'Panes', unidad:'un', tamCaja:40, estado:'activo' },
-  { nombre:'Tortillas', sku:'SBW-07546975051', categoria:'Panes', unidad:'un', tamCaja:60, estado:'activo' },
-  { nombre:'Mayonesa', sku:'SBW-58576', categoria:'Salsas', unidad:'kg', tamCaja:8.265, estado:'activo' },
-  { nombre:'Mostaza', sku:'SBW-86158', categoria:'Salsas', unidad:'kg', tamCaja:9, estado:'activo' },
-  { nombre:'Mostaza DCE', sku:'SBW-02764', categoria:'Salsas', unidad:'kg', tamCaja:6, estado:'activo' },
-  { nombre:'Ketchup', sku:'SBW-44406', categoria:'Salsas', unidad:'kg', tamCaja:9, estado:'activo' },
-  { nombre:'Cebolla DCE', sku:'SBW-02762', categoria:'Salsas', unidad:'kg', tamCaja:6, estado:'activo' },
-  { nombre:'Barbacoa', sku:'SBW-30968', categoria:'Salsas', unidad:'kg', tamCaja:6, estado:'activo' },
-  { nombre:'Caesar', sku:'SBW-02765', categoria:'Salsas', unidad:'kg', tamCaja:6, estado:'activo' },
-  { nombre:'Ranch', sku:'SBW-02763', categoria:'Salsas', unidad:'kg', tamCaja:6, estado:'activo' },
-  { nombre:'Teriyaki', sku:'SBW-02761', categoria:'Salsas', unidad:'kg', tamCaja:6, estado:'activo' },
-  { nombre:'Ají Picante', sku:'SBW-51022', categoria:'Salsas', unidad:'kg', tamCaja:6, estado:'activo' },
-  { nombre:'Avena Dulce', sku:'SBW-04228', categoria:'Toppings de pan', unidad:'kg', tamCaja:6.6, estado:'activo' },
-  { nombre:'Ajo', sku:'SBW-11539', categoria:'Toppings de pan', unidad:'kg', tamCaja:6.6, estado:'activo' },
-  { nombre:'Orégano', sku:'SBW-04257', categoria:'Toppings de pan', unidad:'kg', tamCaja:6.6, estado:'activo' },
-  { nombre:'Pepinillos', sku:'SBW-02788', categoria:'Conservas', unidad:'kg', tamCaja:6, estado:'activo' },
-  { nombre:'Aceitunas', sku:'SBW-601306', categoria:'Conservas', unidad:'kg', tamCaja:5, estado:'activo' },
-  { nombre:'Guacamole', sku:'SBW-96022', categoria:'Conservas', unidad:'kg', tamCaja:5.436, estado:'activo' },
-  { nombre:'Cookie Vainilla', sku:'SBW-T743', categoria:'Snacks', unidad:'un', tamCaja:80, estado:'activo' },
-  { nombre:'Cookie Choc', sku:'SBW-T744', categoria:'Snacks', unidad:'un', tamCaja:80, estado:'activo' },
-  { nombre:'Lays', sku:'SBW-300059432', categoria:'Snacks', unidad:'un', tamCaja:68, estado:'activo' },
-  { nombre:'Doritos', sku:'SBW-300059545', categoria:'Snacks', unidad:'un', tamCaja:70, estado:'activo' },
-  { nombre:'Bolsa SUB/PYA', sku:'SBW-81100', categoria:'Packaging', unidad:'un', tamCaja:200, estado:'activo', notas:'Verificar si Bolsa SUB y Bolsa PYA son el mismo producto' },
-  { nombre:'Pap Env CH', sku:'SBW-52540', categoria:'Packaging', unidad:'un', tamCaja:2000, estado:'activo' },
-  { nombre:'Pap Env GDE', sku:'SBW-53753', categoria:'Packaging', unidad:'un', tamCaja:2000, estado:'activo' },
-  { nombre:'Pap Deli', sku:'SBW-3027-1', categoria:'Packaging', unidad:'un', tamCaja:2000, estado:'activo' },
-  { nombre:'Ensaladera', sku:'SBW-05526', categoria:'Packaging', unidad:'un', tamCaja:150, estado:'activo' },
-  { nombre:'Film PVC', sku:'SBW-06119', categoria:'Packaging', unidad:'un', tamCaja:1, estado:'activo' },
-  { nombre:'Tapa Ensaladera', sku:'', categoria:'Packaging', unidad:'un', tamCaja:1, estado:'externo', notas:'No se gestiona por Axionlog — pedir por otro canal' },
-  { nombre:'Leche', sku:'SBW-15108', categoria:'Otros', unidad:'un', tamCaja:12, estado:'activo' },
-  { nombre:'Aceite', sku:'SBW-96017', categoria:'Otros', unidad:'un', tamCaja:198, estado:'activo' },
-];
+const CATEGORIAS = ['Proteínas principales','Proteínas secundarias','Fiambres','Quesos','Panes','Salsas','Toppings de pan','Conservas','Snacks','Packaging','Otros'];
 
 const REGLAS_DEFAULT = {
-  diasObjetivo: 7, leadTime: 2, margen: 1,
+  diasObjetivo: 8, leadTime: 2, margen: 0,
   desvioRojo: 80, desvioAmarillo: 40,
   panBlanco: 220, panIntegral: 165,
-  protSecUmbral: 5, salsas2Cajas: 2,
-  snacksMin: 35, papDeliMax: 1, quesosAlerta: 6,
+  protSecUmbral: 5, salsas2Cajas: 2, snacksMin: 35, papDeliMax: 1, quesosAlerta: 6,
   preventivos: ['Mayonesa', 'Film PVC']
 };
+
+// 📦 Maestro inicial — solo se usa la primera vez, si axionlog_productos está vacía.
+// { nombre, sku, categoria, tamCaja, unidad, estado: 'activo'|'externo'|'excluido' }
+const MAESTRO_INICIAL = [
+  // Proteínas principales
+  { nombre:'Suprema (Mila Pollo)', sku:'SBW-00421A / SBW-200352', categoria:'Proteínas principales', tamCaja:10, unidad:'kg', estado:'activo' },
+  { nombre:'Pollo (Chicken Patty)', sku:'SBW-00418', categoria:'Proteínas principales', tamCaja:10, unidad:'kg', estado:'activo' },
+  { nombre:'Pollo Cortado', sku:'SBW-00422', categoria:'Proteínas principales', tamCaja:10, unidad:'kg', estado:'activo' },
+  { nombre:'Milanesa Res', sku:'SBW-200450', categoria:'Proteínas principales', tamCaja:5, unidad:'kg', estado:'activo' },
+  // Proteínas secundarias
+  { nombre:'Criollo (Churrasquito)', sku:'SBW-200441', categoria:'Proteínas secundarias', tamCaja:5, unidad:'kg', estado:'activo' },
+  { nombre:'Costillita BBQ', sku:'SBW-77981383300', categoria:'Proteínas secundarias', tamCaja:5, unidad:'kg', estado:'activo' },
+  { nombre:'C y Queso (Beef Steak)', sku:'SBW-77981383301', categoria:'Proteínas secundarias', tamCaja:5, unidad:'kg', estado:'activo' },
+  { nombre:'Pavo', sku:'SBW-00036A-3', categoria:'Proteínas secundarias', tamCaja:3, unidad:'kg', estado:'activo' },
+  // Fiambres
+  { nombre:'Atún', sku:'SBW-11675', categoria:'Fiambres', tamCaja:5.4, unidad:'kg', estado:'activo' },
+  { nombre:'Jamón', sku:'SBW-00622A', categoria:'Fiambres', tamCaja:10, unidad:'kg', estado:'activo' },
+  { nombre:'Panceta/Bacon', sku:'SBW-95520', categoria:'Fiambres', tamCaja:300, unidad:'un', estado:'activo' },
+  { nombre:'Salame', sku:'SBW-96013A', categoria:'Fiambres', tamCaja:3, unidad:'kg', estado:'activo' },
+  { nombre:'Cantimpalo (Pepperoni)', sku:'SBW-96014A', categoria:'Fiambres', tamCaja:3, unidad:'kg', estado:'activo' },
+  // Quesos
+  { nombre:'Queso Dambo', sku:'SBW-1012485', categoria:'Quesos', tamCaja:2.16, unidad:'kg', estado:'activo' },
+  { nombre:'Queso Cheddar (CH)', sku:'SBW-30944', categoria:'Quesos', tamCaja:9.48, unidad:'kg', estado:'activo' },
+  { nombre:'Queso Crema', sku:'SBW-2917', categoria:'Quesos', tamCaja:6, unidad:'kg', estado:'activo' },
+  // Panes
+  { nombre:'Pan Blanco', sku:'SBW-C237', categoria:'Panes', tamCaja:50, unidad:'un', estado:'activo' },
+  { nombre:'Pan Integral/Baguetín', sku:'SBW-C238 / SBW-T742', categoria:'Panes', tamCaja:40, unidad:'un', estado:'activo' },
+  { nombre:'Tortillas', sku:'SBW-07546975051', categoria:'Panes', tamCaja:60, unidad:'un', estado:'activo' },
+  // Salsas
+  { nombre:'Mayonesa', sku:'SBW-58576', categoria:'Salsas', tamCaja:8.265, unidad:'kg', estado:'activo' },
+  { nombre:'Mostaza', sku:'SBW-86158', categoria:'Salsas', tamCaja:9, unidad:'kg', estado:'activo' },
+  { nombre:'Mostaza DCE', sku:'SBW-02764', categoria:'Salsas', tamCaja:6, unidad:'kg', estado:'activo' },
+  { nombre:'Ketchup', sku:'SBW-44406', categoria:'Salsas', tamCaja:9, unidad:'kg', estado:'activo' },
+  { nombre:'Cebolla DCE', sku:'SBW-02762', categoria:'Salsas', tamCaja:6, unidad:'kg', estado:'activo' },
+  { nombre:'Barbacoa', sku:'SBW-30968', categoria:'Salsas', tamCaja:6, unidad:'kg', estado:'activo' },
+  { nombre:'Caesar', sku:'SBW-02765', categoria:'Salsas', tamCaja:6, unidad:'kg', estado:'activo' },
+  { nombre:'Ranch', sku:'SBW-02763', categoria:'Salsas', tamCaja:6, unidad:'kg', estado:'activo' },
+  { nombre:'Teriyaki', sku:'SBW-02761', categoria:'Salsas', tamCaja:6, unidad:'kg', estado:'activo' },
+  { nombre:'Ají Picante', sku:'SBW-51022', categoria:'Salsas', tamCaja:6, unidad:'kg', estado:'activo' },
+  // Toppings de pan
+  { nombre:'Avena Dulce', sku:'SBW-04228', categoria:'Toppings de pan', tamCaja:6.6, unidad:'kg', estado:'activo' },
+  { nombre:'Ajo', sku:'SBW-11539', categoria:'Toppings de pan', tamCaja:6.6, unidad:'kg', estado:'activo' },
+  { nombre:'Orégano', sku:'SBW-04257', categoria:'Toppings de pan', tamCaja:6.6, unidad:'kg', estado:'activo' },
+  // Conservas
+  { nombre:'Pepinillos', sku:'SBW-02788', categoria:'Conservas', tamCaja:6, unidad:'kg', estado:'activo' },
+  { nombre:'Aceitunas', sku:'SBW-601306', categoria:'Conservas', tamCaja:5, unidad:'kg', estado:'activo' },
+  { nombre:'Guacamole', sku:'SBW-96022', categoria:'Conservas', tamCaja:5.436, unidad:'kg', estado:'activo' },
+  // Snacks
+  { nombre:'Cookie Vainilla', sku:'SBW-T743', categoria:'Snacks', tamCaja:80, unidad:'un', estado:'activo' },
+  { nombre:'Cookie Choc', sku:'SBW-T744', categoria:'Snacks', tamCaja:80, unidad:'un', estado:'activo' },
+  { nombre:'Lays', sku:'SBW-300059432', categoria:'Snacks', tamCaja:68, unidad:'un', estado:'activo' },
+  { nombre:'Doritos', sku:'SBW-300059545', categoria:'Snacks', tamCaja:70, unidad:'un', estado:'activo' },
+  // Packaging
+  { nombre:'Bolsa PYA', sku:'SBW-81100', categoria:'Packaging', tamCaja:200, unidad:'un', estado:'activo' },
+  { nombre:'Pap Env CH', sku:'SBW-52540', categoria:'Packaging', tamCaja:2000, unidad:'un', estado:'activo' },
+  { nombre:'Pap Env GDE', sku:'SBW-53753', categoria:'Packaging', tamCaja:2000, unidad:'un', estado:'activo' },
+  { nombre:'Pap Deli (Sulfito)', sku:'SBW-3027-1', categoria:'Packaging', tamCaja:2000, unidad:'un', estado:'activo' },
+  { nombre:'Ensaladera', sku:'SBW-05526', categoria:'Packaging', tamCaja:150, unidad:'un', estado:'activo' },
+  { nombre:'Film PVC', sku:'SBW-06119', categoria:'Packaging', tamCaja:1, unidad:'rollo', estado:'activo' },
+  { nombre:'Tapa Ensaladera', sku:'SBW-00022', categoria:'Packaging', tamCaja:150, unidad:'un', estado:'externo' },
+  // Otros / descartables esporádicos
+  { nombre:'Leche', sku:'SBW-15108', categoria:'Otros', tamCaja:12, unidad:'L', estado:'activo' },
+  { nombre:'Aceite', sku:'SBW-96017', categoria:'Otros', tamCaja:198, unidad:'un', estado:'activo' },
+  { nombre:'Guantes', sku:'', categoria:'Otros', tamCaja:5000, unidad:'un', estado:'activo' },
+  // Excluidos (sin SKU/caja — no se trackean)
+  { nombre:'Servilleta', sku:'', categoria:'Otros', tamCaja:0, unidad:'un', estado:'excluido' },
+  { nombre:'Vaso Cortesía', sku:'', categoria:'Otros', tamCaja:0, unidad:'un', estado:'excluido' },
+  { nombre:'Etiqueta', sku:'', categoria:'Otros', tamCaja:0, unidad:'un', estado:'excluido' },
+  { nombre:'Posnet', sku:'', categoria:'Otros', tamCaja:0, unidad:'un', estado:'excluido' },
+  { nombre:'Bolsa Cons', sku:'', categoria:'Otros', tamCaja:0, unidad:'un', estado:'excluido' },
+  { nombre:'Cuchillos', sku:'', categoria:'Otros', tamCaja:0, unidad:'un', estado:'excluido' },
+  { nombre:'Tenedor', sku:'', categoria:'Otros', tamCaja:0, unidad:'un', estado:'excluido' },
+  { nombre:'Cinta', sku:'', categoria:'Otros', tamCaja:0, unidad:'un', estado:'excluido' },
+  { nombre:'Rollo Fiscal', sku:'', categoria:'Otros', tamCaja:0, unidad:'un', estado:'excluido' },
+  { nombre:'Sal', sku:'', categoria:'Otros', tamCaja:0, unidad:'un', estado:'excluido' },
+];
+
+let productos = [];
+let filtroCategoria = 'todas';
 
 // ── AUTH ─────────────────────────────────────────────
 onAuthStateChanged(auth, async (user) => {
   if (!user) { window.location.href = 'login.html'; return; }
   const snap = await getDoc(doc(db, 'usuarios', user.uid));
-  if (!snap.exists() || snap.data().rol !== 'admin') { window.location.href = 'index.html'; return; }
+  if (!snap.exists() || !snap.data().aprobado) { window.location.href = 'login.html'; return; }
+
+  const userData = snap.data();
+  if (userData.rol !== 'admin') {
+    document.getElementById('screen-error').style.display = 'block';
+    return;
+  }
+
+  document.getElementById('app').style.display = 'block';
   await cargarReglas();
   await cargarProductos();
 });
@@ -397,186 +325,170 @@ window.cambiarTab = function(tab, el) {
 
 // ── REGLAS ───────────────────────────────────────────
 async function cargarReglas() {
-  try {
-    const snap = await getDoc(doc(db, 'axionlog_config', 'reglas'));
-    const r = snap.exists() ? snap.data() : REGLAS_DEFAULT;
-    document.getElementById('r-dias-objetivo').value = r.diasObjetivo ?? 7;
-    document.getElementById('r-lead-time').value = r.leadTime ?? 2;
-    document.getElementById('r-margen').value = r.margen ?? 1;
-    document.getElementById('r-desvio-rojo').value = r.desvioRojo ?? 80;
-    document.getElementById('r-desvio-amarillo').value = r.desvioAmarillo ?? 40;
-    document.getElementById('r-pan-blanco').value = r.panBlanco ?? 220;
-    document.getElementById('r-pan-integral').value = r.panIntegral ?? 165;
-    document.getElementById('r-prot-sec').value = r.protSecUmbral ?? 5;
-    document.getElementById('r-salsas-2caj').value = r.salsas2Cajas ?? 2;
-    document.getElementById('r-snacks-min').value = r.snacksMin ?? 35;
-    document.getElementById('r-pap-deli-max').value = r.papDeliMax ?? 1;
-    document.getElementById('r-quesos-alerta').value = r.quesosAlerta ?? 6;
-    preventivos = r.preventivos || ['Mayonesa', 'Film PVC'];
-    renderPreventivos();
-  } catch(e) { console.error(e); }
+  const snap = await getDoc(doc(db, 'axionlog_config', 'reglas'));
+  const r = snap.exists() ? { ...REGLAS_DEFAULT, ...snap.data() } : REGLAS_DEFAULT;
+  const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
+  set('r-diasObjetivo', r.diasObjetivo);
+  set('r-leadTime', r.leadTime);
+  set('r-margen', r.margen);
+  set('r-desvioRojo', r.desvioRojo);
+  set('r-desvioAmarillo', r.desvioAmarillo);
+  set('r-panBlanco', r.panBlanco);
+  set('r-panIntegral', r.panIntegral);
+  set('r-protSecUmbral', r.protSecUmbral);
+  set('r-salsas2Cajas', r.salsas2Cajas);
+  set('r-snacksMin', r.snacksMin);
+  set('r-papDeliMax', r.papDeliMax);
+  set('r-quesosAlerta', r.quesosAlerta);
+  document.getElementById('r-preventivos').value = (r.preventivos || []).join('\n');
+
+  // Si todavía no existía el documento, lo creamos con los valores por defecto
+  if (!snap.exists()) {
+    await setDoc(doc(db, 'axionlog_config', 'reglas'), REGLAS_DEFAULT);
+  }
 }
-
-function renderPreventivos() {
-  document.getElementById('lista-preventivos').innerHTML = preventivos.map((p, i) =>
-    `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f0f0f0;">
-      <span style="font-size:13px;font-weight:600;">${p}</span>
-      <button class="btn-danger" onclick="window.quitarPreventivo(${i})">✕ Quitar</button>
-    </div>`
-  ).join('') || '<p style="color:#bbb;font-size:13px;">Sin productos preventivos</p>';
-}
-
-window.agregarPreventivo = function() {
-  const val = document.getElementById('inp-preventivo').value.trim();
-  if (!val || preventivos.includes(val)) return;
-  preventivos.push(val);
-  renderPreventivos();
-  document.getElementById('inp-preventivo').value = '';
-};
-
-window.quitarPreventivo = function(i) {
-  preventivos.splice(i, 1);
-  renderPreventivos();
-};
 
 window.guardarReglas = async function() {
+  const btn = document.getElementById('btn-guardar-reglas');
+  btn.disabled = true; btn.textContent = 'Guardando...';
+  const getNum = id => parseFloat(document.getElementById(id).value) || 0;
   const reglas = {
-    diasObjetivo:    parseInt(document.getElementById('r-dias-objetivo').value) || 7,
-    leadTime:        parseInt(document.getElementById('r-lead-time').value) || 2,
-    margen:          parseInt(document.getElementById('r-margen').value) || 1,
-    desvioRojo:      parseInt(document.getElementById('r-desvio-rojo').value) || 80,
-    desvioAmarillo:  parseInt(document.getElementById('r-desvio-amarillo').value) || 40,
-    panBlanco:       parseInt(document.getElementById('r-pan-blanco').value) || 220,
-    panIntegral:     parseInt(document.getElementById('r-pan-integral').value) || 165,
-    protSecUmbral:   parseInt(document.getElementById('r-prot-sec').value) || 5,
-    salsas2Cajas:    parseInt(document.getElementById('r-salsas-2caj').value) || 2,
-    snacksMin:       parseInt(document.getElementById('r-snacks-min').value) || 35,
-    papDeliMax:      parseInt(document.getElementById('r-pap-deli-max').value) || 1,
-    quesosAlerta:    parseInt(document.getElementById('r-quesos-alerta').value) || 6,
-    preventivos,
+    diasObjetivo: getNum('r-diasObjetivo'),
+    leadTime: getNum('r-leadTime'),
+    margen: getNum('r-margen'),
+    desvioRojo: getNum('r-desvioRojo'),
+    desvioAmarillo: getNum('r-desvioAmarillo'),
+    panBlanco: getNum('r-panBlanco'),
+    panIntegral: getNum('r-panIntegral'),
+    protSecUmbral: getNum('r-protSecUmbral'),
+    salsas2Cajas: getNum('r-salsas2Cajas'),
+    snacksMin: getNum('r-snacksMin'),
+    papDeliMax: getNum('r-papDeliMax'),
+    quesosAlerta: getNum('r-quesosAlerta'),
+    preventivos: document.getElementById('r-preventivos').value.split('\n').map(s => s.trim()).filter(Boolean)
   };
   try {
     await setDoc(doc(db, 'axionlog_config', 'reglas'), reglas);
     toast('✅ Reglas guardadas', 'ok');
-  } catch(e) { toast('❌ Error al guardar', 'err'); }
+  } catch(e) {
+    toast('❌ Error: ' + (e && e.message ? e.message : e), 'err');
+  }
+  btn.disabled = false; btn.textContent = 'Guardar reglas';
 };
 
 // ── PRODUCTOS ────────────────────────────────────────
-window.cargarProductos = async function() {
-  try {
-    const snap = await getDocs(collection(db, 'axionlog_productos'));
+async function cargarProductos() {
+  const snap = await getDocs(collection(db, 'axionlog_productos'));
+  if (snap.empty) {
+    // Primera vez: cargamos el maestro inicial
+    for (const p of MAESTRO_INICIAL) {
+      await addDoc(collection(db, 'axionlog_productos'), p);
+    }
+    const snap2 = await getDocs(collection(db, 'axionlog_productos'));
+    productos = [];
+    snap2.forEach(d => productos.push({ id: d.id, ...d.data() }));
+    toast('✅ Maestro de productos cargado por primera vez', 'ok');
+  } else {
     productos = [];
     snap.forEach(d => productos.push({ id: d.id, ...d.data() }));
-
-    // Si no hay productos, cargar el maestro inicial
-    if (productos.length === 0) {
-      await cargarMaestroInicial();
-      return;
-    }
-    renderProductos();
-  } catch(e) { console.error(e); toast('Error al cargar productos', 'err'); }
-};
-
-async function cargarMaestroInicial() {
-  toast('Cargando maestro de productos...', '');
-  for (const p of MAESTRO_INICIAL) {
-    await addDoc(collection(db, 'axionlog_productos'), { ...p, timestamp: serverTimestamp() });
   }
-  await cargarProductos();
-  toast('✅ Maestro cargado', 'ok');
+  ordenarProductos();
+  renderFiltroCategorias();
+  renderProductos();
 }
+
+function ordenarProductos() {
+  productos.sort((a, b) => {
+    const ia = CATEGORIAS.indexOf(a.categoria), ib = CATEGORIAS.indexOf(b.categoria);
+    if (ia !== ib) return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+    return (a.nombre || '').localeCompare(b.nombre || '');
+  });
+}
+
+function renderFiltroCategorias() {
+  const cont = document.getElementById('filtro-cat');
+  const cats = ['todas', ...CATEGORIAS];
+  cont.innerHTML = cats.map(c =>
+    `<div class="chip-cat ${c === filtroCategoria ? 'activo' : ''}" onclick="window.filtrarCategoria('${c}')">${c === 'todas' ? 'Todas' : c}</div>`
+  ).join('');
+}
+
+window.filtrarCategoria = function(cat) {
+  filtroCategoria = cat;
+  renderFiltroCategorias();
+  renderProductos();
+};
 
 function renderProductos() {
-  const tbody = document.getElementById('tbody-productos');
-  // Agrupar por categoría
-  const grupos = {};
-  productos.forEach(p => {
-    if (!grupos[p.categoria]) grupos[p.categoria] = [];
-    grupos[p.categoria].push(p);
-  });
+  const cont = document.getElementById('lista-productos');
+  const vista = filtroCategoria === 'todas' ? productos : productos.filter(p => p.categoria === filtroCategoria);
 
-  let html = '';
-  Object.entries(grupos).forEach(([cat, prods]) => {
-    html += `<tr class="grupo-header"><td colspan="7">📂 ${cat}</td></tr>`;
-    prods.forEach(p => {
-      const badgeEstado = p.estado === 'externo'
-        ? '<span class="badge badge-ext">Externo</span>'
-        : p.estado === 'excluido'
-          ? '<span class="badge badge-excl">Excluido</span>'
-          : '<span class="badge badge-ok">Activo</span>';
-      html += `<tr>
-        <td style="font-weight:600;">${p.nombre}${p.notas ? `<br><span style="font-size:10px;color:#aaa;">${p.notas}</span>` : ''}</td>
-        <td style="font-size:11px;color:#888;">${p.sku || '—'}</td>
-        <td style="font-size:12px;">${p.categoria}</td>
-        <td style="font-size:12px;">${p.tamCaja} ${p.unidad}</td>
-        <td style="font-size:12px;">${p.unidad}</td>
-        <td>${badgeEstado}</td>
-        <td style="text-align:right;white-space:nowrap;">
-          <button class="btn-secondary btn-sm" onclick="window.editarProducto('${p.id}')">✏️</button>
-          <button class="btn-danger" onclick="window.eliminarProducto('${p.id}')">🗑</button>
-        </td>
-      </tr>`;
-    });
-  });
-  tbody.innerHTML = html;
+  if (!vista.length) {
+    cont.innerHTML = '<p style="text-align:center;color:#bbb;padding:30px;">Sin productos en esta categoría</p>';
+    return;
+  }
+
+  cont.innerHTML = vista.map(p => `
+    <div class="prod-card" data-id="${p.id}">
+      <div class="prod-card-top">
+        <input class="nombre" type="text" value="${p.nombre || ''}" placeholder="Nombre del producto" onchange="window.actualizarProducto('${p.id}','nombre',this.value)">
+        <input class="sku" type="text" value="${p.sku || ''}" placeholder="SKU" onchange="window.actualizarProducto('${p.id}','sku',this.value)">
+      </div>
+      <div class="prod-grid">
+        <select onchange="window.actualizarProducto('${p.id}','categoria',this.value)">
+          ${CATEGORIAS.map(c => `<option value="${c}" ${c === p.categoria ? 'selected' : ''}>${c}</option>`).join('')}
+        </select>
+        <input type="number" step="any" value="${p.tamCaja ?? 0}" placeholder="Cant/caja" onchange="window.actualizarProducto('${p.id}','tamCaja',parseFloat(this.value)||0)">
+        <input type="text" value="${p.unidad || ''}" placeholder="Unidad" onchange="window.actualizarProducto('${p.id}','unidad',this.value)">
+        <select onchange="window.actualizarProducto('${p.id}','estado',this.value)">
+          <option value="activo" ${p.estado === 'activo' ? 'selected' : ''}>✅ Activo</option>
+          <option value="externo" ${p.estado === 'externo' ? 'selected' : ''}>🟠 Externo</option>
+          <option value="excluido" ${p.estado === 'excluido' ? 'selected' : ''}>⚪ Excluido</option>
+        </select>
+      </div>
+      <div class="prod-card-footer">
+        <button class="btn-del-prod" onclick="window.eliminarProducto('${p.id}')">🗑 Eliminar</button>
+      </div>
+    </div>
+  `).join('');
 }
 
-window.abrirModalProducto = function() {
-  editandoId = null;
-  document.getElementById('modal-title').textContent = 'Nuevo producto';
-  ['m-nombre','m-sku','m-notas'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('m-tam-caja').value = '';
-  document.getElementById('m-categoria').value = 'Proteínas principales';
-  document.getElementById('m-unidad').value = 'kg';
-  document.getElementById('m-estado').value = 'activo';
-  document.getElementById('modal-bg').style.display = 'flex';
-};
-
-window.editarProducto = function(id) {
+window.actualizarProducto = async function(id, campo, valor) {
   const p = productos.find(x => x.id === id);
-  if (!p) return;
-  editandoId = id;
-  document.getElementById('modal-title').textContent = 'Editar producto';
-  document.getElementById('m-nombre').value = p.nombre || '';
-  document.getElementById('m-sku').value = p.sku || '';
-  document.getElementById('m-tam-caja').value = p.tamCaja || '';
-  document.getElementById('m-notas').value = p.notas || '';
-  document.getElementById('m-categoria').value = p.categoria || 'Proteínas principales';
-  document.getElementById('m-unidad').value = p.unidad || 'kg';
-  document.getElementById('m-estado').value = p.estado || 'activo';
-  document.getElementById('modal-bg').style.display = 'flex';
+  if (p) p[campo] = valor;
+  try {
+    await updateDoc(doc(db, 'axionlog_productos', id), { [campo]: valor });
+    if (campo === 'categoria') { ordenarProductos(); renderFiltroCategorias(); renderProductos(); }
+    toast('✅ Guardado', 'ok');
+  } catch(e) {
+    toast('❌ Error al guardar: ' + (e && e.message ? e.message : e), 'err');
+  }
 };
 
-window.cerrarModal = function() { document.getElementById('modal-bg').style.display = 'none'; };
-
-window.guardarProducto = async function() {
-  const datos = {
-    nombre:    document.getElementById('m-nombre').value.trim(),
-    sku:       document.getElementById('m-sku').value.trim(),
-    categoria: document.getElementById('m-categoria').value,
-    unidad:    document.getElementById('m-unidad').value,
-    tamCaja:   parseFloat(document.getElementById('m-tam-caja').value) || 1,
-    estado:    document.getElementById('m-estado').value,
-    notas:     document.getElementById('m-notas').value.trim(),
-  };
-  if (!datos.nombre) { toast('Ingresá el nombre', 'err'); return; }
+window.agregarProducto = async function() {
+  const nuevo = { nombre: '', sku: '', categoria: CATEGORIAS[0], tamCaja: 0, unidad: 'un', estado: 'activo' };
   try {
-    if (editandoId) {
-      await updateDoc(doc(db, 'axionlog_productos', editandoId), datos);
-    } else {
-      await addDoc(collection(db, 'axionlog_productos'), { ...datos, timestamp: serverTimestamp() });
-    }
-    cerrarModal();
-    await cargarProductos();
-    toast('✅ Producto guardado', 'ok');
-  } catch(e) { toast('❌ Error: ' + e.message, 'err'); }
+    const ref = await addDoc(collection(db, 'axionlog_productos'), nuevo);
+    productos.unshift({ id: ref.id, ...nuevo });
+    filtroCategoria = 'todas';
+    renderFiltroCategorias();
+    renderProductos();
+    toast('✅ Producto agregado — completá los datos', 'ok');
+  } catch(e) {
+    toast('❌ Error: ' + (e && e.message ? e.message : e), 'err');
+  }
 };
 
 window.eliminarProducto = async function(id) {
   if (!confirm('¿Eliminar este producto del maestro?')) return;
-  await deleteDoc(doc(db, 'axionlog_productos', id));
-  await cargarProductos();
-  toast('Eliminado', '');
+  try {
+    await deleteDoc(doc(db, 'axionlog_productos', id));
+    productos = productos.filter(p => p.id !== id);
+    renderProductos();
+    toast('Eliminado', '');
+  } catch(e) {
+    toast('❌ Error al eliminar: ' + (e && e.message ? e.message : e), 'err');
+  }
 };
 
 // ── TOAST ────────────────────────────────────────────
@@ -584,7 +496,7 @@ function toast(msg, tipo='') {
   const t = document.getElementById('toast');
   t.textContent = msg; t.className = 'toast ' + tipo;
   t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 3000);
+  setTimeout(() => t.classList.remove('show'), tipo === 'err' ? 5000 : 2500);
 }
 </script>
 </body>
