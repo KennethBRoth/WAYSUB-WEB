@@ -201,6 +201,7 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAB2-btgFqGiCe1YdZSDv4EShV601N-uQs",
@@ -213,6 +214,7 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const auth = getAuth(app);
 
 // ── PRODUCTOS ────────────────────────────────────────────
 const GRUPOS = [
@@ -293,8 +295,15 @@ document.getElementById('fecha-desde').value = lunes.toISOString().split('T')[0]
 document.getElementById('fecha-hasta').value = domingo.toISOString().split('T')[0];
 
 construirTablas();
-cargarStockInicial();
-cargarHistorial();
+
+// Espera a que Firebase confirme la sesión antes de leer/escribir en Firestore
+// (sin esto, las reglas de seguridad rechazan los guardados con "Missing or
+// insufficient permissions" aunque el usuario esté logueado en otras pantallas).
+onAuthStateChanged(auth, (user) => {
+  if (!user) { window.location.href = 'login.html'; return; }
+  cargarStockInicial();
+  cargarHistorial();
+});
 
 // ── CONSTRUIR TABLAS ─────────────────────────────────────
 function construirTablas() {
