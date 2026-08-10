@@ -654,20 +654,28 @@ window.cargarListaFacturacion = async function() {
       return;
     }
 
-    cont.innerHTML = meses.map(m => `
+    cont.innerHTML = meses.map(m => {
+      // Recalculamos el total de pedidos y el total mensual con los datos actuales,
+      // en vez de confiar en el número que quedó guardado ese día — así, si algún
+      // pedido de viandas cambia después, o se corrige la fórmula, este número
+      // siempre está al día sin que haya que volver a guardar el mes a mano.
+      const totalPedidos = getTotalPedidosDelMes(m.mes);
+      const totalMensual = (m.ingresoAlquiler||0) + (m.ingreso5Facturacion||0) + totalPedidos - (m.costoNeteado||0);
+      return `
       <div class="vianda-card">
         <div class="vianda-info">
           <div class="vianda-productos">${formatMes(m.mes)}</div>
           <div class="vianda-costos">
             <span>Alquiler: <b>$${(m.ingresoAlquiler||0).toLocaleString('es-AR')}</b></span>
             <span>5%: <b>$${(m.ingreso5Facturacion||0).toLocaleString('es-AR')}</b></span>
-            <span>Pedidos: <b>$${(m.totalPedidos||0).toLocaleString('es-AR')}</b></span>
+            <span>Pedidos: <b>$${totalPedidos.toLocaleString('es-AR')}</b></span>
             <span>Costo: <b>-$${(m.costoNeteado||0).toLocaleString('es-AR')}</b></span>
           </div>
         </div>
-        <span class="vianda-total">$${(m.totalMensual||0).toLocaleString('es-AR')}</span>
+        <span class="vianda-total">$${totalMensual.toLocaleString('es-AR')}</span>
       </div>
-    `).join('');
+    `;
+    }).join('');
   } catch(e) {
     console.error(e);
     cont.innerHTML = '<div class="sin-datos"><div class="icon">⚠️</div><p>Error al cargar</p></div>';
