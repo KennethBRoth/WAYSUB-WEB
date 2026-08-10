@@ -569,10 +569,10 @@ function toast(msg, tipo = '') {
 // ---------- FACTURACIÓN MENSUAL ----------
 
 function getTotalPedidosDelMes(mes) {
-  // Suma Pedido + Envío de todas las viandas cargadas ese mes (formato mes: "YYYY-MM")
+  // Solo el costo de los productos (sin envío) de todas las viandas cargadas ese mes (formato mes: "YYYY-MM")
   return viandas.reduce((acc, v) => {
     if (!v.fecha || !v.fecha.startsWith(mes)) return acc;
-    return acc + getCostoEnvio(v) + getCostoPedido(v);
+    return acc + getCostoPedido(v);
   }, 0);
 }
 
