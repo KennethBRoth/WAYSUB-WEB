@@ -107,6 +107,7 @@
 <div class="tabs">
   <div class="tab activo" onclick="cambiarTab('carga', this)">➕ Cargar</div>
   <div class="tab" onclick="cambiarTab('lista', this)">📋 Lista</div>
+  <div class="tab" onclick="cambiarTab('facturacion', this)">💰 Facturación</div>
 </div>
 
 <!-- TAB CARGA -->
@@ -181,10 +182,51 @@
 
 <div class="toast" id="toast"></div>
 
+<!-- TAB FACTURACIÓN -->
+<div class="seccion" id="tab-facturacion">
+  <div class="section">
+    <div class="section-title">📅 Mes</div>
+    <input type="month" id="fact-mes" onchange="cargarFacturacionMes()" style="width:100%;padding:12px 14px;border:1.5px solid #e8e8e8;border-radius:10px;font-size:15px;color:#1a1a2e;background:#fafafa;outline:none;font-family:inherit;">
+  </div>
+
+  <div class="section">
+    <div class="section-title">✏️ Datos del mes</div>
+    <div class="field">
+      <label>Ingreso por alquiler ($)</label>
+      <input type="number" id="fact-alquiler" placeholder="0" inputmode="decimal" oninput="calcularTotalMensual()">
+    </div>
+    <div class="field">
+      <label>Ingreso por 5% de facturación ($)</label>
+      <input type="number" id="fact-cinco" placeholder="0" inputmode="decimal" oninput="calcularTotalMensual()">
+    </div>
+    <div class="field">
+      <label>Costo neteado ($) <span style="font-weight:400;color:#e63946;">· resta</span></label>
+      <input type="number" id="fact-costo" placeholder="0" inputmode="decimal" oninput="calcularTotalMensual()">
+    </div>
+    <button class="btn-save" id="btn-guardar-fact" onclick="guardarFacturacionMes()">Guardar mes</button>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-box">
+      <div class="stat-label">Total de pedidos del mes</div>
+      <div class="stat-value" id="fact-total-pedidos">$0</div>
+    </div>
+    <div class="stat-box general">
+      <div class="stat-label">Total mensual</div>
+      <div class="stat-value" id="fact-total-mensual">$0</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">📋 Meses guardados</div>
+    <div id="lista-facturacion"><div class="loading-box"><div class="spinner"></div><p>Cargando...</p></div></div>
+  </div>
+</div>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, getDocs, deleteDoc, updateDoc, doc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, deleteDoc, updateDoc, doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAB2-btgFqGiCe1YdZSDv4EShV601N-uQs",
@@ -248,6 +290,11 @@ onAuthStateChanged(auth, async (user) => {
   resetProductosContainer();
 
   await cargarViandas();
+
+  // Facturación: arranca en el mes actual
+  document.getElementById('fact-mes').value = hoy.slice(0, 7);
+  await cargarFacturacionMes();
+  await cargarListaFacturacion();
 });
 
 async function cargarViandas() {
@@ -517,6 +564,121 @@ function toast(msg, tipo = '') {
   t.textContent = msg; t.className = 'toast ' + tipo;
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ---------- FACTURACIÓN MENSUAL ----------
+
+function getTotalPedidosDelMes(mes) {
+  // Suma Pedido + Envío de todas las viandas cargadas ese mes (formato mes: "YYYY-MM")
+  return viandas.reduce((acc, v) => {
+    if (!v.fecha || !v.fecha.startsWith(mes)) return acc;
+    return acc + getCostoEnvio(v) + getCostoPedido(v);
+  }, 0);
+}
+
+window.calcularTotalMensual = function() {
+  const mes = document.getElementById('fact-mes').value;
+  if (!mes) return;
+  const alquiler = parseFloat(document.getElementById('fact-alquiler').value) || 0;
+  const cinco = parseFloat(document.getElementById('fact-cinco').value) || 0;
+  const costo = parseFloat(document.getElementById('fact-costo').value) || 0;
+  const totalPedidos = getTotalPedidosDelMes(mes);
+  const totalMensual = alquiler + cinco + totalPedidos - costo;
+
+  document.getElementById('fact-total-pedidos').textContent = '$' + totalPedidos.toLocaleString('es-AR');
+  document.getElementById('fact-total-mensual').textContent = '$' + totalMensual.toLocaleString('es-AR');
+  return { alquiler, cinco, costo, totalPedidos, totalMensual };
+};
+
+window.cargarFacturacionMes = async function() {
+  const mes = document.getElementById('fact-mes').value;
+  if (!mes) return;
+  try {
+    const snap = await getDoc(doc(db, 'viandas_facturacion', mes));
+    if (snap.exists()) {
+      const d = snap.data();
+      document.getElementById('fact-alquiler').value = d.ingresoAlquiler || '';
+      document.getElementById('fact-cinco').value = d.ingreso5Facturacion || '';
+      document.getElementById('fact-costo').value = d.costoNeteado || '';
+    } else {
+      document.getElementById('fact-alquiler').value = '';
+      document.getElementById('fact-cinco').value = '';
+      document.getElementById('fact-costo').value = '';
+    }
+  } catch(e) {
+    console.error(e);
+  }
+  calcularTotalMensual();
+};
+
+window.guardarFacturacionMes = async function() {
+  const mes = document.getElementById('fact-mes').value;
+  if (!mes) { toast('Elegí un mes primero', 'error'); return; }
+
+  const btn = document.getElementById('btn-guardar-fact');
+  btn.disabled = true; btn.textContent = 'Guardando...';
+
+  const { alquiler, cinco, costo, totalPedidos, totalMensual } = calcularTotalMensual();
+
+  try {
+    await setDoc(doc(db, 'viandas_facturacion', mes), {
+      mes,
+      ingresoAlquiler: alquiler,
+      ingreso5Facturacion: cinco,
+      costoNeteado: costo,
+      totalPedidos,
+      totalMensual,
+      cargadoPor: nombreUsuario,
+      timestamp: Date.now()
+    });
+    toast('✅ Mes guardado', 'success');
+    await cargarListaFacturacion();
+  } catch(e) {
+    console.error(e);
+    toast('❌ Error al guardar', 'error');
+  }
+
+  btn.disabled = false; btn.textContent = 'Guardar mes';
+};
+
+window.cargarListaFacturacion = async function() {
+  const cont = document.getElementById('lista-facturacion');
+  try {
+    const snap = await getDocs(collection(db, 'viandas_facturacion'));
+    const meses = [];
+    snap.forEach(d => meses.push(d.data()));
+    meses.sort((a, b) => (b.mes || '').localeCompare(a.mes || ''));
+
+    if (!meses.length) {
+      cont.innerHTML = '<div class="sin-datos"><div class="icon">📭</div><p>Sin meses guardados</p></div>';
+      return;
+    }
+
+    cont.innerHTML = meses.map(m => `
+      <div class="vianda-card">
+        <div class="vianda-info">
+          <div class="vianda-productos">${formatMes(m.mes)}</div>
+          <div class="vianda-costos">
+            <span>Alquiler: <b>$${(m.ingresoAlquiler||0).toLocaleString('es-AR')}</b></span>
+            <span>5%: <b>$${(m.ingreso5Facturacion||0).toLocaleString('es-AR')}</b></span>
+            <span>Pedidos: <b>$${(m.totalPedidos||0).toLocaleString('es-AR')}</b></span>
+            <span>Costo: <b>-$${(m.costoNeteado||0).toLocaleString('es-AR')}</b></span>
+          </div>
+        </div>
+        <span class="vianda-total">$${(m.totalMensual||0).toLocaleString('es-AR')}</span>
+      </div>
+    `).join('');
+  } catch(e) {
+    console.error(e);
+    cont.innerHTML = '<div class="sin-datos"><div class="icon">⚠️</div><p>Error al cargar</p></div>';
+  }
+};
+
+function formatMes(mesStr) {
+  if (!mesStr) return '—';
+  const [y, m] = mesStr.split('-');
+  const meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  return `${meses[parseInt(m)-1]} ${y}`;
 }
 </script>
 </body>
