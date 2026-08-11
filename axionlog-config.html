@@ -114,6 +114,7 @@
           <label>Margen extra (días)</label>
           <input type="number" id="r-margen">
         </div>
+        <p style="font-size:11px;color:#aaa;margin-top:4px;">🍞 Panes ya no tiene un objetivo fijo en unidades — usa esta misma regla de "Días objetivo de cobertura" que todo lo demás, así se ajusta solo si la venta sube o baja.</p>
       </div>
 
       <div class="card">
@@ -126,20 +127,6 @@
           <div class="field">
             <label>Umbral amarillo (%) <span class="ayuda">avisa pero calcula</span></label>
             <input type="number" id="r-desvioAmarillo">
-          </div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-title">🍞 Panes — objetivo de stock al recibo</div>
-        <div class="two-col">
-          <div class="field">
-            <label>Pan Blanco (un)</label>
-            <input type="number" id="r-panBlanco">
-          </div>
-          <div class="field">
-            <label>Pan Integral (un)</label>
-            <input type="number" id="r-panIntegral">
           </div>
         </div>
       </div>
@@ -182,6 +169,7 @@
     <!-- TAB PRODUCTOS -->
     <div class="seccion" id="tab-productos">
       <button class="btn-add-prod" onclick="agregarProducto()">+ Agregar producto</button>
+      <button class="btn-add-prod" style="background:#fff8ee;border-color:#ffd9a0;color:#a04000;" onclick="recargarMaestroCompleto()">🔄 Recargar Maestro completo (borra y vuelve a cargar los 62 productos actualizados)</button>
       <div class="filtro-cat" id="filtro-cat"></div>
       <div id="lista-productos"><div class="loading-box"><div class="spinner"></div><p>Cargando...</p></div></div>
     </div>
@@ -209,90 +197,94 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-const CATEGORIAS = ['Proteínas principales','Proteínas secundarias','Fiambres','Quesos','Panes','Salsas','Toppings de pan','Conservas','Snacks','Packaging','Otros'];
+const CATEGORIAS = ['Proteínas','Fiambres','Quesos','Panes','Salsas','Toppings de pan','Conservas','Snacks','Packaging','Otros'];
 
 const REGLAS_DEFAULT = {
   diasObjetivo: 8, leadTime: 2, margen: 0,
   desvioRojo: 80, desvioAmarillo: 40,
-  panBlanco: 220, panIntegral: 165,
   protSecUmbral: 5, salsas2Cajas: 2, snacksMin: 35, papDeliMax: 1, quesosAlerta: 6,
   preventivos: ['Mayonesa', 'Film PVC']
 };
 
-// 📦 Maestro inicial — solo se usa la primera vez, si axionlog_productos está vacía.
-// { nombre, sku, categoria, tamCaja, unidad, estado: 'activo'|'externo'|'excluido' }
+// 📦 Maestro inicial — solo se usa la primera vez, si axionlog_productos está vacía
+// (o al usar "Recargar Maestro completo"). Los productos incluyen "orden" para que
+// la lista calce exacto con la planilla física, y "proteinaSecundaria" para marcar
+// cuáles proteínas se piden con la regla más estricta (categoría ya no las separa).
+// { nombre, sku, categoria, tamCaja, unidad, estado: 'activo'|'externo'|'excluido', orden, proteinaSecundaria }
 const MAESTRO_INICIAL = [
-  // Proteínas principales
-  { nombre:'Suprema (Mila Pollo)', sku:'SBW-00421A / SBW-200352', categoria:'Proteínas principales', tamCaja:10, unidad:'kg', estado:'activo' },
-  { nombre:'Pollo (Chicken Patty)', sku:'SBW-00418', categoria:'Proteínas principales', tamCaja:10, unidad:'kg', estado:'activo' },
-  { nombre:'Pollo Cortado', sku:'SBW-00422', categoria:'Proteínas principales', tamCaja:10, unidad:'kg', estado:'activo' },
-  { nombre:'Milanesa Res', sku:'SBW-200450', categoria:'Proteínas principales', tamCaja:5, unidad:'kg', estado:'activo' },
-  // Proteínas secundarias
-  { nombre:'Criollo (Churrasquito)', sku:'SBW-200441', categoria:'Proteínas secundarias', tamCaja:5, unidad:'kg', estado:'activo' },
-  { nombre:'Costillita BBQ', sku:'SBW-77981383300', categoria:'Proteínas secundarias', tamCaja:5, unidad:'kg', estado:'activo' },
-  { nombre:'C y Queso (Beef Steak)', sku:'SBW-77981383301', categoria:'Proteínas secundarias', tamCaja:5, unidad:'kg', estado:'activo' },
-  { nombre:'Pavo', sku:'SBW-00036A-3', categoria:'Proteínas secundarias', tamCaja:3, unidad:'kg', estado:'activo' },
+  // Proteínas (orden igual a la planilla)
+  { nombre:'Suprema (Mila Pollo)', sku:'SBW-00421A / SBW-200352', categoria:'Proteínas', tamCaja:10, unidad:'kg', estado:'activo', orden:1, proteinaSecundaria:false },
+  { nombre:'Pollo (Chicken Patty)', sku:'SBW-00418', categoria:'Proteínas', tamCaja:10, unidad:'kg', estado:'activo', orden:2, proteinaSecundaria:false },
+  { nombre:'Pollo Cortado', sku:'SBW-00422', categoria:'Proteínas', tamCaja:10, unidad:'kg', estado:'activo', orden:3, proteinaSecundaria:false },
+  { nombre:'Criollo (Churrasquito)', sku:'SBW-200441', categoria:'Proteínas', tamCaja:5, unidad:'kg', estado:'activo', orden:4, proteinaSecundaria:true },
+  { nombre:'Milanesa Res', sku:'SBW-200450', categoria:'Proteínas', tamCaja:5, unidad:'kg', estado:'activo', orden:5, proteinaSecundaria:false },
+  { nombre:'Costillita BBQ', sku:'SBW-77981383300', categoria:'Proteínas', tamCaja:5, unidad:'kg', estado:'activo', orden:6, proteinaSecundaria:true },
+  { nombre:'C y Queso (Beef Steak)', sku:'SBW-77981383301', categoria:'Proteínas', tamCaja:5, unidad:'kg', estado:'activo', orden:7, proteinaSecundaria:true },
   // Fiambres
-  { nombre:'Atún', sku:'SBW-11675', categoria:'Fiambres', tamCaja:5.4, unidad:'kg', estado:'activo' },
-  { nombre:'Jamón', sku:'SBW-00622A', categoria:'Fiambres', tamCaja:10, unidad:'kg', estado:'activo' },
-  { nombre:'Panceta/Bacon', sku:'SBW-95520', categoria:'Fiambres', tamCaja:300, unidad:'un', estado:'activo' },
-  { nombre:'Salame', sku:'SBW-96013A', categoria:'Fiambres', tamCaja:3, unidad:'kg', estado:'activo' },
-  { nombre:'Cantimpalo (Pepperoni)', sku:'SBW-96014A', categoria:'Fiambres', tamCaja:3, unidad:'kg', estado:'activo' },
+  { nombre:'Pavo', sku:'SBW-00036A-3', categoria:'Fiambres', tamCaja:3, unidad:'kg', estado:'activo', orden:1, proteinaSecundaria:true },
+  { nombre:'Atún', sku:'SBW-11675', categoria:'Fiambres', tamCaja:5.4, unidad:'kg', estado:'activo', orden:2 },
+  { nombre:'Jamón', sku:'SBW-00622A', categoria:'Fiambres', tamCaja:10, unidad:'kg', estado:'activo', orden:3 },
+  { nombre:'Panceta/Bacon', sku:'SBW-95520', categoria:'Fiambres', tamCaja:300, unidad:'un', estado:'activo', orden:4 },
+  { nombre:'Salame', sku:'SBW-96013A', categoria:'Fiambres', tamCaja:3, unidad:'kg', estado:'activo', orden:5 },
+  { nombre:'Cantimpalo (Pepperoni)', sku:'SBW-96014A', categoria:'Fiambres', tamCaja:3, unidad:'kg', estado:'activo', orden:6 },
   // Quesos
-  { nombre:'Queso Dambo', sku:'SBW-1012485', categoria:'Quesos', tamCaja:2.16, unidad:'kg', estado:'activo' },
-  { nombre:'Queso Cheddar (CH)', sku:'SBW-30944', categoria:'Quesos', tamCaja:9.48, unidad:'kg', estado:'activo' },
-  { nombre:'Queso Crema', sku:'SBW-2917', categoria:'Quesos', tamCaja:6, unidad:'kg', estado:'activo' },
+  { nombre:'Queso Dambo', sku:'SBW-1012485', categoria:'Quesos', tamCaja:2.16, unidad:'kg', estado:'activo', orden:1 },
+  { nombre:'Queso Cheddar (CH)', sku:'SBW-30944', categoria:'Quesos', tamCaja:9.48, unidad:'kg', estado:'activo', orden:2 },
+  { nombre:'Queso Crema', sku:'SBW-2917', categoria:'Quesos', tamCaja:6, unidad:'kg', estado:'activo', orden:3 },
   // Panes
-  { nombre:'Pan Blanco', sku:'SBW-C237', categoria:'Panes', tamCaja:50, unidad:'un', estado:'activo' },
-  { nombre:'Pan Integral/Baguetín', sku:'SBW-C238 / SBW-T742', categoria:'Panes', tamCaja:40, unidad:'un', estado:'activo' },
-  { nombre:'Tortillas', sku:'SBW-07546975051', categoria:'Panes', tamCaja:60, unidad:'un', estado:'activo' },
+  { nombre:'Pan Blanco', sku:'SBW-C237', categoria:'Panes', tamCaja:50, unidad:'un', estado:'activo', orden:1 },
+  { nombre:'Pan Integral/Baguetín', sku:'SBW-C238 / SBW-T742', categoria:'Panes', tamCaja:40, unidad:'un', estado:'activo', orden:2 },
+  { nombre:'Tortillas', sku:'SBW-07546975051', categoria:'Panes', tamCaja:60, unidad:'un', estado:'activo', orden:3 },
   // Salsas
-  { nombre:'Mayonesa', sku:'SBW-58576', categoria:'Salsas', tamCaja:8.265, unidad:'kg', estado:'activo' },
-  { nombre:'Mostaza', sku:'SBW-86158', categoria:'Salsas', tamCaja:9, unidad:'kg', estado:'activo' },
-  { nombre:'Mostaza DCE', sku:'SBW-02764', categoria:'Salsas', tamCaja:6, unidad:'kg', estado:'activo' },
-  { nombre:'Ketchup', sku:'SBW-44406', categoria:'Salsas', tamCaja:9, unidad:'kg', estado:'activo' },
-  { nombre:'Cebolla DCE', sku:'SBW-02762', categoria:'Salsas', tamCaja:6, unidad:'kg', estado:'activo' },
-  { nombre:'Barbacoa', sku:'SBW-30968', categoria:'Salsas', tamCaja:6, unidad:'kg', estado:'activo' },
-  { nombre:'Caesar', sku:'SBW-02765', categoria:'Salsas', tamCaja:6, unidad:'kg', estado:'activo' },
-  { nombre:'Ranch', sku:'SBW-02763', categoria:'Salsas', tamCaja:6, unidad:'kg', estado:'activo' },
-  { nombre:'Teriyaki', sku:'SBW-02761', categoria:'Salsas', tamCaja:6, unidad:'kg', estado:'activo' },
-  { nombre:'Ají Picante', sku:'SBW-51022', categoria:'Salsas', tamCaja:6, unidad:'kg', estado:'activo' },
+  { nombre:'Mayonesa', sku:'SBW-58576', categoria:'Salsas', tamCaja:8.265, unidad:'kg', estado:'activo', orden:1 },
+  { nombre:'Mostaza', sku:'SBW-86158', categoria:'Salsas', tamCaja:9, unidad:'kg', estado:'activo', orden:2 },
+  { nombre:'Mostaza DCE', sku:'SBW-02764', categoria:'Salsas', tamCaja:6, unidad:'kg', estado:'activo', orden:3 },
+  { nombre:'Ketchup', sku:'SBW-44406', categoria:'Salsas', tamCaja:9, unidad:'kg', estado:'activo', orden:4 },
+  { nombre:'Cebolla DCE', sku:'SBW-02762', categoria:'Salsas', tamCaja:6, unidad:'kg', estado:'activo', orden:5 },
+  { nombre:'Barbacoa', sku:'SBW-30968', categoria:'Salsas', tamCaja:6, unidad:'kg', estado:'activo', orden:6 },
+  { nombre:'Caesar', sku:'SBW-02765', categoria:'Salsas', tamCaja:6, unidad:'kg', estado:'activo', orden:7 },
+  { nombre:'Ranch', sku:'SBW-02763', categoria:'Salsas', tamCaja:6, unidad:'kg', estado:'activo', orden:8 },
+  { nombre:'Teriyaki', sku:'SBW-02761', categoria:'Salsas', tamCaja:6, unidad:'kg', estado:'activo', orden:9 },
+  { nombre:'Ají Picante', sku:'SBW-51022', categoria:'Salsas', tamCaja:6, unidad:'kg', estado:'activo', orden:10 },
   // Toppings de pan
-  { nombre:'Avena Dulce', sku:'SBW-04228', categoria:'Toppings de pan', tamCaja:6.6, unidad:'kg', estado:'activo' },
-  { nombre:'Ajo', sku:'SBW-11539', categoria:'Toppings de pan', tamCaja:6.6, unidad:'kg', estado:'activo' },
-  { nombre:'Orégano', sku:'SBW-04257', categoria:'Toppings de pan', tamCaja:6.6, unidad:'kg', estado:'activo' },
+  { nombre:'Avena Dulce', sku:'SBW-04228', categoria:'Toppings de pan', tamCaja:6.6, unidad:'kg', estado:'activo', orden:1 },
+  { nombre:'Ajo', sku:'SBW-11539', categoria:'Toppings de pan', tamCaja:6.6, unidad:'kg', estado:'activo', orden:2 },
+  { nombre:'Orégano', sku:'SBW-04257', categoria:'Toppings de pan', tamCaja:6.6, unidad:'kg', estado:'activo', orden:3 },
   // Conservas
-  { nombre:'Pepinillos', sku:'SBW-02788', categoria:'Conservas', tamCaja:6, unidad:'kg', estado:'activo' },
-  { nombre:'Aceitunas', sku:'SBW-601306', categoria:'Conservas', tamCaja:5, unidad:'kg', estado:'activo' },
-  { nombre:'Guacamole', sku:'SBW-96022', categoria:'Conservas', tamCaja:5.436, unidad:'kg', estado:'activo' },
+  { nombre:'Pepinillos', sku:'SBW-02788', categoria:'Conservas', tamCaja:6, unidad:'kg', estado:'activo', orden:1 },
+  { nombre:'Aceitunas', sku:'SBW-601306', categoria:'Conservas', tamCaja:5, unidad:'kg', estado:'activo', orden:2 },
+  { nombre:'Guacamole', sku:'SBW-96022', categoria:'Conservas', tamCaja:5.436, unidad:'kg', estado:'activo', orden:3 },
   // Snacks
-  { nombre:'Cookie Vainilla', sku:'SBW-T743', categoria:'Snacks', tamCaja:80, unidad:'un', estado:'activo' },
-  { nombre:'Cookie Choc', sku:'SBW-T744', categoria:'Snacks', tamCaja:80, unidad:'un', estado:'activo' },
-  { nombre:'Lays', sku:'SBW-300059432', categoria:'Snacks', tamCaja:68, unidad:'un', estado:'activo' },
-  { nombre:'Doritos', sku:'SBW-300059545', categoria:'Snacks', tamCaja:70, unidad:'un', estado:'activo' },
-  // Packaging
-  { nombre:'Bolsa PYA', sku:'SBW-81100', categoria:'Packaging', tamCaja:200, unidad:'un', estado:'activo' },
-  { nombre:'Pap Env CH', sku:'SBW-52540', categoria:'Packaging', tamCaja:2000, unidad:'un', estado:'activo' },
-  { nombre:'Pap Env GDE', sku:'SBW-53753', categoria:'Packaging', tamCaja:2000, unidad:'un', estado:'activo' },
-  { nombre:'Pap Deli (Sulfito)', sku:'SBW-3027-1', categoria:'Packaging', tamCaja:2000, unidad:'un', estado:'activo' },
-  { nombre:'Ensaladera', sku:'SBW-05526', categoria:'Packaging', tamCaja:150, unidad:'un', estado:'activo' },
-  { nombre:'Film PVC', sku:'SBW-06119', categoria:'Packaging', tamCaja:1, unidad:'rollo', estado:'activo' },
-  { nombre:'Tapa Ensaladera', sku:'SBW-00022', categoria:'Packaging', tamCaja:150, unidad:'un', estado:'externo' },
-  // Otros / descartables esporádicos
-  { nombre:'Leche', sku:'SBW-15108', categoria:'Otros', tamCaja:12, unidad:'L', estado:'activo' },
-  { nombre:'Aceite', sku:'SBW-96017', categoria:'Otros', tamCaja:198, unidad:'un', estado:'activo' },
-  { nombre:'Guantes', sku:'', categoria:'Otros', tamCaja:5000, unidad:'un', estado:'activo' },
-  // Excluidos (sin SKU/caja — no se trackean)
-  { nombre:'Servilleta', sku:'', categoria:'Otros', tamCaja:0, unidad:'un', estado:'excluido' },
-  { nombre:'Vaso Cortesía', sku:'', categoria:'Otros', tamCaja:0, unidad:'un', estado:'excluido' },
-  { nombre:'Etiqueta', sku:'', categoria:'Otros', tamCaja:0, unidad:'un', estado:'excluido' },
-  { nombre:'Posnet', sku:'', categoria:'Otros', tamCaja:0, unidad:'un', estado:'excluido' },
-  { nombre:'Bolsa Cons', sku:'', categoria:'Otros', tamCaja:0, unidad:'un', estado:'excluido' },
-  { nombre:'Cuchillos', sku:'', categoria:'Otros', tamCaja:0, unidad:'un', estado:'excluido' },
-  { nombre:'Tenedor', sku:'', categoria:'Otros', tamCaja:0, unidad:'un', estado:'excluido' },
-  { nombre:'Cinta', sku:'', categoria:'Otros', tamCaja:0, unidad:'un', estado:'excluido' },
-  { nombre:'Rollo Fiscal', sku:'', categoria:'Otros', tamCaja:0, unidad:'un', estado:'excluido' },
-  { nombre:'Sal', sku:'', categoria:'Otros', tamCaja:0, unidad:'un', estado:'excluido' },
+  { nombre:'Cookie Vainilla', sku:'SBW-T743', categoria:'Snacks', tamCaja:80, unidad:'un', estado:'activo', orden:1 },
+  { nombre:'Cookie Choc', sku:'SBW-T744', categoria:'Snacks', tamCaja:80, unidad:'un', estado:'activo', orden:2 },
+  { nombre:'Lays', sku:'SBW-300059432', categoria:'Snacks', tamCaja:68, unidad:'un', estado:'activo', orden:3 },
+  { nombre:'Doritos', sku:'SBW-300059545', categoria:'Snacks', tamCaja:70, unidad:'un', estado:'activo', orden:4 },
+  // Packaging (orden igual a la planilla)
+  { nombre:'Bolsa SUB', sku:'', categoria:'Packaging', tamCaja:1000, unidad:'un', estado:'activo', orden:1 },
+  { nombre:'Bolsa PYA', sku:'SBW-81100', categoria:'Packaging', tamCaja:200, unidad:'un', estado:'activo', orden:2 },
+  { nombre:'Bolsa Pap', sku:'', categoria:'Packaging', tamCaja:200, unidad:'un', estado:'activo', orden:3 },
+  { nombre:'Pap Env CH', sku:'SBW-52540', categoria:'Packaging', tamCaja:2000, unidad:'un', estado:'activo', orden:4 },
+  { nombre:'Pap Env GDE', sku:'SBW-53753', categoria:'Packaging', tamCaja:2000, unidad:'un', estado:'activo', orden:5 },
+  { nombre:'Pap Deli (Sulfito)', sku:'SBW-3027-1', categoria:'Packaging', tamCaja:2000, unidad:'un', estado:'activo', orden:6 },
+  { nombre:'Tapa Ensaladera', sku:'SBW-00022', categoria:'Packaging', tamCaja:150, unidad:'un', estado:'externo', orden:7 },
+  { nombre:'Ensaladera', sku:'SBW-05526', categoria:'Packaging', tamCaja:150, unidad:'un', estado:'activo', orden:8 },
+  // Otros / Descartables (orden igual a la planilla)
+  { nombre:'Leche', sku:'SBW-15108', categoria:'Otros', tamCaja:12, unidad:'L', estado:'activo', orden:1 },
+  { nombre:'Aceite', sku:'SBW-96017', categoria:'Otros', tamCaja:198, unidad:'un', estado:'activo', orden:2 },
+  { nombre:'Sal', sku:'', categoria:'Otros', tamCaja:0, unidad:'un', estado:'excluido', orden:3 },
+  { nombre:'Film PVC', sku:'SBW-06119', categoria:'Otros', tamCaja:1, unidad:'rollo', estado:'activo', orden:4 },
+  { nombre:'Rollo Fiscal', sku:'', categoria:'Otros', tamCaja:0, unidad:'un', estado:'excluido', orden:5 },
+  { nombre:'Jugo de Limón', sku:'', categoria:'Otros', tamCaja:198, unidad:'un', estado:'activo', orden:6 },
+  { nombre:'Cinta', sku:'', categoria:'Otros', tamCaja:0, unidad:'un', estado:'excluido', orden:7 },
+  { nombre:'Guantes', sku:'', categoria:'Otros', tamCaja:5000, unidad:'un', estado:'activo', orden:8 },
+  { nombre:'Cuchillos', sku:'', categoria:'Otros', tamCaja:0, unidad:'un', estado:'excluido', orden:9 },
+  { nombre:'Tenedor', sku:'', categoria:'Otros', tamCaja:0, unidad:'un', estado:'excluido', orden:10 },
+  // Excluidos sin fila en la planilla (no se ven en axionlog.html, quedan documentados)
+  { nombre:'Servilleta', sku:'', categoria:'Otros', tamCaja:0, unidad:'un', estado:'excluido', orden:11 },
+  { nombre:'Vaso Cortesía', sku:'', categoria:'Otros', tamCaja:0, unidad:'un', estado:'excluido', orden:12 },
+  { nombre:'Etiqueta', sku:'', categoria:'Otros', tamCaja:0, unidad:'un', estado:'excluido', orden:13 },
+  { nombre:'Posnet', sku:'', categoria:'Otros', tamCaja:0, unidad:'un', estado:'excluido', orden:14 },
+  { nombre:'Bolsa Cons', sku:'', categoria:'Otros', tamCaja:0, unidad:'un', estado:'excluido', orden:15 },
 ];
 
 let productos = [];
@@ -333,8 +325,6 @@ async function cargarReglas() {
   set('r-margen', r.margen);
   set('r-desvioRojo', r.desvioRojo);
   set('r-desvioAmarillo', r.desvioAmarillo);
-  set('r-panBlanco', r.panBlanco);
-  set('r-panIntegral', r.panIntegral);
   set('r-protSecUmbral', r.protSecUmbral);
   set('r-salsas2Cajas', r.salsas2Cajas);
   set('r-snacksMin', r.snacksMin);
@@ -358,8 +348,6 @@ window.guardarReglas = async function() {
     margen: getNum('r-margen'),
     desvioRojo: getNum('r-desvioRojo'),
     desvioAmarillo: getNum('r-desvioAmarillo'),
-    panBlanco: getNum('r-panBlanco'),
-    panIntegral: getNum('r-panIntegral'),
     protSecUmbral: getNum('r-protSecUmbral'),
     salsas2Cajas: getNum('r-salsas2Cajas'),
     snacksMin: getNum('r-snacksMin'),
@@ -397,11 +385,41 @@ async function cargarProductos() {
   renderProductos();
 }
 
+// Borra TODOS los productos actuales y vuelve a cargar el Maestro corregido
+// desde cero (con el orden, categorías y productos nuevos actualizados).
+// Cualquier edición manual que hayas hecho en productos existentes se pierde.
+window.recargarMaestroCompleto = async function() {
+  const confirmar = confirm(
+    '⚠️ Esto borra TODOS los productos actuales (' + productos.length + ') y carga de nuevo el Maestro completo (62 productos), con el orden corregido según la planilla.\n\n' +
+    'Si editaste algo a mano que no está en el Maestro (por ejemplo SKUs que agregaste), se pierde.\n\n¿Confirmás?'
+  );
+  if (!confirmar) return;
+
+  try {
+    const snap = await getDocs(collection(db, 'axionlog_productos'));
+    for (const d of snap.docs) {
+      await deleteDoc(doc(db, 'axionlog_productos', d.id));
+    }
+    for (const p of MAESTRO_INICIAL) {
+      await addDoc(collection(db, 'axionlog_productos'), p);
+    }
+    const snap2 = await getDocs(collection(db, 'axionlog_productos'));
+    productos = [];
+    snap2.forEach(d => productos.push({ id: d.id, ...d.data() }));
+    ordenarProductos();
+    renderFiltroCategorias();
+    renderProductos();
+    toast('✅ Maestro recargado — ' + productos.length + ' productos', 'ok');
+  } catch(e) {
+    toast('❌ Error: ' + (e && e.message ? e.message : e), 'err');
+  }
+};
+
 function ordenarProductos() {
   productos.sort((a, b) => {
     const ia = CATEGORIAS.indexOf(a.categoria), ib = CATEGORIAS.indexOf(b.categoria);
     if (ia !== ib) return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
-    return (a.nombre || '').localeCompare(b.nombre || '');
+    return (a.orden || 0) - (b.orden || 0);
   });
 }
 
@@ -446,7 +464,17 @@ function renderProductos() {
           <option value="excluido" ${p.estado === 'excluido' ? 'selected' : ''}>⚪ Excluido</option>
         </select>
       </div>
-      <div class="prod-card-footer">
+      <div class="prod-card-footer" style="justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+        <div style="display:flex;align-items:center;gap:14px;">
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#888;">
+            Orden en planilla
+            <input type="number" value="${p.orden ?? 0}" style="width:56px;padding:6px 8px;" onchange="window.actualizarProducto('${p.id}','orden',parseInt(this.value)||0)">
+          </label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#888;">
+            <input type="checkbox" ${p.proteinaSecundaria ? 'checked' : ''} onchange="window.actualizarProducto('${p.id}','proteinaSecundaria',this.checked)" style="width:auto;">
+            Proteína secundaria
+          </label>
+        </div>
         <button class="btn-del-prod" onclick="window.eliminarProducto('${p.id}')">🗑 Eliminar</button>
       </div>
     </div>
