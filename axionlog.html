@@ -282,11 +282,14 @@ async function cargarProductos() {
   const snap = await getDocs(collection(db, 'axionlog_productos'));
   productos = [];
   snap.forEach(d => productos.push({ id: d.id, ...d.data() }));
-  // Ordenar por categoría
-  const orden = ['Proteínas principales','Proteínas secundarias','Fiambres','Quesos','Panes','Salsas','Toppings de pan','Conservas','Snacks','Packaging','Otros'];
+  // Ordenar por categoría (según la planilla física) y, dentro de cada categoría,
+  // por el campo "orden" — así el orden calza exacto con el papel, no alfabético.
+  const CATEGORIAS = ['Proteínas','Fiambres','Quesos','Panes','Salsas','Toppings de pan','Conservas','Snacks','Packaging','Otros'];
   productos.sort((a, b) => {
-    const ia = orden.indexOf(a.categoria), ib = orden.indexOf(b.categoria);
-    return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+    const ia = CATEGORIAS.indexOf(a.categoria), ib = CATEGORIAS.indexOf(b.categoria);
+    const ca = ia === -1 ? 99 : ia, cb = ib === -1 ? 99 : ib;
+    if (ca !== cb) return ca - cb;
+    return (a.orden || 0) - (b.orden || 0);
   });
 }
 
@@ -536,17 +539,10 @@ window.calcular = function() {
     let razonNoPedir = '';
     let esReglaEspecial = false;
 
-    if (p.nombre === 'Pan Blanco') {
-      esReglaEspecial = true;
-      const necesita = R.panBlanco - stockRecibo;
-      cajasASugerir = necesita > 0 ? Math.ceil(necesita / p.tamCaja) : 0;
-      if (cajasASugerir === 0) razonNoPedir = `Stock recibo (${stockRecibo.toFixed(0)} un) >= objetivo ${R.panBlanco} un`;
-    } else if (p.nombre === 'Pan Integral/Baguetín') {
-      esReglaEspecial = true;
-      const necesita = R.panIntegral - stockRecibo;
-      cajasASugerir = necesita > 0 ? Math.ceil(necesita / p.tamCaja) : 0;
-      if (cajasASugerir === 0) razonNoPedir = `Stock recibo (${stockRecibo.toFixed(0)} un) >= objetivo ${R.panIntegral} un`;
-    } else if (p.categoria === 'Proteínas secundarias') {
+    // Panes ya NO tiene objetivo fijo en unidades — usa la misma regla general
+    // de días de cobertura que el resto (más abajo), así se ajusta solo si
+    // sube o baja la venta.
+    if (p.categoria === 'Proteínas' && p.proteinaSecundaria) {
       esReglaEspecial = true;
       if (diasCobertura < R.protSecUmbral) {
         const necesita = (cd * R.diasObjetivo) - stockRecibo;
