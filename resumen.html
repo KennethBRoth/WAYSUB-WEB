@@ -155,6 +155,17 @@ window.buscar = async function() {
   }
 };
 
+// El "Resultado de caja" se recalcula acá con los componentes que sí están bien
+// guardados (cierre, tarjetas, gastos, delivery, apertura, ventas IVA, posnet
+// Balcarce) — igual que el cartel que ve el cajero en pantalla al cerrar caja.
+// No se usa el campo guardado "resultadoCaja" porque tiene un error conocido en
+// cajero.html (no suma las tarjetas), así que no coincide con lo que se vio en
+// pantalla ese día.
+function calcularResultado(c) {
+  return (c.cierreContado || 0) + (c.importeTarjetas || 0) + (c.totalGastos || 0) + (c.totalDelivery || 0)
+       - (c.apertura || 0) - (c.ventasIva || 0) - (c.posnetBalcarce || 0);
+}
+
 function renderCierres() {
   const desde = document.getElementById('filtro-desde').value;
   const hasta = document.getElementById('filtro-hasta').value;
@@ -172,7 +183,7 @@ function renderCierres() {
   div.innerHTML = filtrados.map(c => {
     const apertura = c.aperturaFuerte || 0;
     const cierre = c.cierreFuerte || 0;
-    const resultado = c.resultadoCaja || 0;
+    const resultado = calcularResultado(c);
     const egresos = c.egresos || [];
     const totalEgresos = egresos.reduce((acc, e) => acc + (parseFloat(e.monto) || 0), 0);
 
