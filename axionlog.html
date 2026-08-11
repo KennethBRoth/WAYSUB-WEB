@@ -128,6 +128,9 @@
       <button class="btn-secondary" style="margin-left:auto;" onclick="window.location.href='axionlog-config.html'">⚙️ Configuración</button>
     </div>
     <div id="info-local" style="margin-top:12px;font-size:13px;color:#888;display:none;"></div>
+    <button id="btn-primera-semana" onclick="togglePrimeraSemana()" style="width:100%;margin-top:12px;padding:12px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;border:1.5px solid #e8e8e8;background:white;color:#888;transition:background 0.15s,color 0.15s,border-color 0.15s;">
+      📅 Primera semana del mes <span style="font-weight:400;">(+15% al consumo calculado)</span>
+    </button>
   </div>
 
   <!-- STOCK A (referencia) -->
@@ -250,6 +253,23 @@ let historialLocal = [];
 let resultadoCalculo = null;
 let transfers = [];
 let datosListos = null; // Promise que resuelve cuando productos/reglas/historial ya están cargados
+let primeraSemana = false; // Si está activo, el consumo calculado se aumenta 15%
+
+window.togglePrimeraSemana = function() {
+  primeraSemana = !primeraSemana;
+  const btn = document.getElementById('btn-primera-semana');
+  if (primeraSemana) {
+    btn.style.background = '#1a1a2e';
+    btn.style.color = 'white';
+    btn.style.borderColor = '#1a1a2e';
+    btn.innerHTML = '✅ Primera semana del mes <span style="font-weight:400;">(+15% activado)</span>';
+  } else {
+    btn.style.background = 'white';
+    btn.style.color = '#888';
+    btn.style.borderColor = '#e8e8e8';
+    btn.innerHTML = '📅 Primera semana del mes <span style="font-weight:400;">(+15% al consumo calculado)</span>';
+  }
+};
 
 // ── AUTH ─────────────────────────────────────────────
 onAuthStateChanged(auth, async (user) => {
@@ -518,11 +538,13 @@ window.calcular = function() {
       return;
     }
 
-    const cd = consumoReal / 7;
+    const cdReal = consumoReal / 7;
+    const cd = primeraSemana ? cdReal * 1.15 : cdReal;
 
-    // Desvío vs semana anterior
+    // Desvío vs semana anterior — se compara con el consumo real (sin el +15%),
+    // para no confundir el ajuste manual con un desvío real de los datos
     if (cdAnterior[p.nombre] !== undefined && cdAnterior[p.nombre] > 0) {
-      const desvio = Math.abs((cd - cdAnterior[p.nombre]) / cdAnterior[p.nombre]) * 100;
+      const desvio = Math.abs((cdReal - cdAnterior[p.nombre]) / cdAnterior[p.nombre]) * 100;
       if (desvio > R.desvioRojo) {
         alertas.push({ tipo: 'rojo', msg: `${p.nombre}: desvío de consumo ${desvio.toFixed(0)}% vs semana anterior — no calculado automáticamente` });
         return;
@@ -612,7 +634,7 @@ window.calcular = function() {
   });
 
   resultadoCalculo = { alertas, pedir, noPedir, tablaCalc, local: localActual, fecha: new Date().toISOString().split('T')[0],
-    stockB: obtenerStockB() };
+    stockB: obtenerStockB(), primeraSemana };
   renderReporte();
   cambiarTab('reporte', document.querySelectorAll('.tab')[1]);
 };
@@ -635,10 +657,13 @@ function renderReporte() {
   document.getElementById('reporte-contenido').style.display = 'block';
 
   // Alertas
-  document.getElementById('alertas-container').innerHTML = alertas.length
+  const notaPrimeraSemana = resultadoCalculo.primeraSemana
+    ? `<div class="alerta alerta-azul">📅 Calculado con <b>+15% de consumo</b> por ser primera semana del mes</div>`
+    : '';
+  document.getElementById('alertas-container').innerHTML = notaPrimeraSemana + (alertas.length
     ? alertas.map(a => `<div class="alerta alerta-${a.tipo === 'rojo' ? 'roja' : a.tipo === 'naranja' ? 'naranja' : 'azul'}">
         ${a.tipo === 'rojo' ? '🔴' : a.tipo === 'naranja' ? '🟡' : 'ℹ️'} ${a.msg}</div>`).join('')
-    : '';
+    : '');
 
   // Pedido consolidado
   document.getElementById('pedido-consolidado').innerHTML = pedir.length
