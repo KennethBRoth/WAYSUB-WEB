@@ -227,13 +227,14 @@
         <div class="two-col">
           <div class="field">
             <label>Caja fuerte ($)</label>
-            <input type="number" id="apertura-fuerte" placeholder="0" inputmode="decimal" oninput="recalcular()">
+            <input type="number" id="apertura-fuerte" placeholder="0" inputmode="decimal" oninput="recalcular()" onblur="verificarApertura()">
           </div>
           <div class="field">
             <label>Caja registradora ($)</label>
-            <input type="number" id="apertura-registradora" placeholder="0" inputmode="decimal" oninput="recalcular()">
+            <input type="number" id="apertura-registradora" placeholder="0" inputmode="decimal" oninput="recalcular()" onblur="verificarApertura()">
           </div>
         </div>
+        <div id="alerta-apertura" style="display:none;background:#fff8ee;border:1px solid #ffd9a0;border-radius:10px;padding:10px 14px;margin-top:8px;font-size:13px;color:#a04000;"></div>
         <div style="display:flex;justify-content:space-between;align-items:center;background:#fef0f0;border-radius:10px;padding:10px 14px;margin-top:4px;">
           <span style="font-size:13px;font-weight:700;color:#555;">Total apertura</span>
           <span style="font-size:18px;font-weight:800;color:#e74c3c;" id="total-apertura">$0</span>
@@ -674,6 +675,49 @@ window.eliminarGasto = function(i) {
 function getNum(id) { return parseFloat(document.getElementById(id)?.value) || 0; }
 function formatPeso(n) { return '$' + Math.abs(n).toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 }); }
 
+// ── AVISO: APERTURA vs CIERRE DEL DÍA ANTERIOR ───────────
+// No bloquea nada ni cambia ningún cálculo — solo avisa si no coinciden.
+window.verificarApertura = async function() {
+  const el = document.getElementById('alerta-apertura');
+  const fecha = document.getElementById('campo-fecha').value;
+  if (!fecha || !localUsuario) { el.style.display = 'none'; return; }
+
+  const aperturaHoy = getNum('apertura-fuerte') + getNum('apertura-registradora');
+  if (aperturaHoy === 0) { el.style.display = 'none'; return; } // todavía no cargó nada
+
+  // Fecha de ayer (respetando mes/año)
+  const d = new Date(fecha + 'T00:00:00');
+  d.setDate(d.getDate() - 1);
+  const ayer = d.toISOString().split('T')[0];
+
+  try {
+    const snap = await getDocs(collection(db, 'cajero_cierres'));
+    let cierreAyer = 0;
+    let encontrado = false;
+    snap.forEach(doc => {
+      const data = doc.data();
+      if (data.local === localUsuario && data.fecha === ayer) {
+        cierreAyer += data.cierreContado || 0;
+        encontrado = true;
+      }
+    });
+
+    if (!encontrado) { el.style.display = 'none'; return; }
+
+    const diferencia = aperturaHoy - cierreAyer;
+    if (Math.abs(diferencia) < 1) {
+      el.style.display = 'none';
+      return;
+    }
+
+    el.style.display = 'block';
+    el.innerHTML = `⚠️ La Apertura de hoy (${formatPeso(aperturaHoy)}) no coincide con el Cierre contado de ayer (${formatPeso(cierreAyer)}) — diferencia de ${diferencia > 0 ? '+' : '-'}${formatPeso(diferencia)}.`;
+  } catch (e) {
+    console.error('Error verificando apertura:', e);
+    el.style.display = 'none';
+  }
+};
+
 window.recalcular = function() {
   const apertura    = getNum('apertura-fuerte') + getNum('apertura-registradora');
   const cierre      = getNum('cierre-fuerte') + getNum('cierre-registradora');
@@ -770,6 +814,7 @@ window.cargarDia = async function() {
       cargarDatos(unificado);
       mostrarToast(`📋 ${registros.length} turnos unificados`, '');
     }
+    verificarApertura();
   } catch (err) {
     console.error(err);
     mostrarToast('Error al cargar el día', 'error');
@@ -868,6 +913,8 @@ function limpiarFormulario() {
   renderTarjetas();
   egresosActuales = [];
   renderEgresos();
+  const elAlertaAp = document.getElementById('alerta-apertura');
+  if (elAlertaAp) elAlertaAp.style.display = 'none';
   recalcular();
 }
 
