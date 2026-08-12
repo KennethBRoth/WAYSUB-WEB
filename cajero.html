@@ -639,15 +639,19 @@ window.eliminarEgreso = function(i) {
 // ── GASTOS ──────────────────────────────────────────────
 function renderGastos() {
   const lista = document.getElementById('gastos-lista');
-  lista.innerHTML = gastosActuales.map((g, i) => `
+  lista.innerHTML = gastosActuales.map((g, i) => {
+    const falta = (parseFloat(g.monto) || 0) > 0 && !(g.desc && g.desc.trim());
+    return `
     <div class="gasto-item">
-      <input type="text" class="gasto-desc" placeholder="Descripción" value="${g.desc || ''}"
-        oninput="window.actualizarGasto(${i}, 'desc', this.value)">
+      <input type="text" class="gasto-desc" placeholder="${falta ? '⚠️ Descripción obligatoria' : 'Descripción'}" value="${g.desc || ''}"
+        style="${falta ? 'border-color:#e63946;background:#fff5f5;' : ''}"
+        oninput="window.actualizarGasto(${i}, 'desc', this.value)" onblur="renderGastos()">
       <input type="number" class="gasto-monto" placeholder="$0" value="${g.monto || ''}"
-        inputmode="decimal" oninput="window.actualizarGasto(${i}, 'monto', this.value)">
+        inputmode="decimal" oninput="window.actualizarGasto(${i}, 'monto', this.value)" onblur="renderGastos()">
       <button class="btn-del-gasto" onclick="window.eliminarGasto(${i})">🗑</button>
     </div>
-  `).join('');
+  `;
+  }).join('');
   recalcular();
 }
 
@@ -920,6 +924,13 @@ function limpiarFormulario() {
 
 // ── GUARDAR ─────────────────────────────────────────────
 window.guardarCierre = async function() {
+  // Un gasto con monto cargado tiene que tener descripción sí o sí
+  const gastoIncompleto = gastosActuales.find(g => (parseFloat(g.monto) || 0) > 0 && !(g.desc && g.desc.trim()));
+  if (gastoIncompleto) {
+    mostrarToast('❌ Hay un gasto con monto pero sin descripción — completalo antes de guardar', 'error');
+    return;
+  }
+
   const btn = document.getElementById('btn-guardar');
   btn.disabled = true; btn.textContent = 'Guardando...';
 
