@@ -169,6 +169,10 @@
       <div class="stat-label">Pendiente de cobro</div>
       <div class="stat-value" id="total-pendiente-cobro" style="color:#e8b84b;">$0</div>
     </div>
+    <div class="stat-box" style="grid-column:1/-1;">
+      <div class="stat-label">Viandas vendidas</div>
+      <div class="stat-value" id="total-unidades" style="color:white;">0 un</div>
+    </div>
   </div>
   <div class="filtro-pago">
     <div class="chip activo" onclick="setFiltroPago('todos', this)">Todos</div>
@@ -466,11 +470,14 @@ window.renderLista = function() {
   const totalPedido = filtradas.reduce((acc, v) => acc + getCostoPedido(v), 0);
   const totalGeneral = totalEnvio + totalPedido;
   const totalPendienteCobro = filtradas.reduce((acc, v) => acc + (!getPagado(v) ? getCostoEnvio(v) + getCostoPedido(v) : 0), 0);
+  const totalUnidades = filtradas.reduce((acc, v) =>
+    acc + getProductosDeVianda(v).reduce((a, p) => a + (p.cantidad || 0), 0), 0);
 
   document.getElementById('total-envio').textContent = '$' + totalEnvio.toLocaleString('es-AR');
   document.getElementById('total-pedido').textContent = '$' + totalPedido.toLocaleString('es-AR');
   document.getElementById('total-general').textContent = '$' + totalGeneral.toLocaleString('es-AR');
   document.getElementById('total-pendiente-cobro').textContent = '$' + totalPendienteCobro.toLocaleString('es-AR');
+  document.getElementById('total-unidades').textContent = totalUnidades.toLocaleString('es-AR') + ' un';
 
   // Filtro por estado de pago (chips): se usa solo para qué tarjetas se muestran
   const vista = filtradas.filter(v => {
