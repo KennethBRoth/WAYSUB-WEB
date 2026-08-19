@@ -151,7 +151,7 @@
         <div class="col-header">Producto</div>
         <div class="col-header">Stock A (ref.)</div>
         <div class="col-header">Stock B (hoy)</div>
-        <div class="col-header">Factura llegada</div>
+        <div class="col-header">Factura (cajas)</div>
       </div>
       <div id="form-productos"></div>
     </div>
@@ -230,7 +230,7 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, collection, getDocs, doc, getDoc, setDoc, addDoc, query, orderBy, limit, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, getDocs, doc, getDoc, setDoc, addDoc, deleteDoc, query, orderBy, limit, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAB2-btgFqGiCe1YdZSDv4EShV601N-uQs",
@@ -451,7 +451,7 @@ function construirFormulario() {
         </div>
         <div>
           <input type="number" class="prod-input" id="fac-${p.id}" placeholder="0" inputmode="decimal" step="any" ${esExterno ? 'disabled style="background:#f8f9fa;color:#ccc;"' : ''}>
-          <div class="prod-unidad">${p.unidad}</div>
+          <div class="prod-unidad">cajas (${p.tamCaja}${p.unidad}/cj)</div>
         </div>
       `;
       cont.appendChild(row);
@@ -517,37 +517,36 @@ window.calcular = function() {
     const sbEl = document.getElementById('sb-' + p.id);
     const facEl = document.getElementById('fac-' + p.id);
     const sbStr = sbEl?.value;
-    const facStr = facEl?.value;
+    const facCajasStr = facEl?.value;
 
-    // Si no completó Stock B → alerta sin calcular
+    // Si no completó Stock B, se toma como 0 — se avisa, pero no se salta el producto
     if (!sbStr || sbStr === '') {
-      alertas.push({ tipo: 'azul', msg: `${p.nombre}: sin dato de Stock B — no calculado` });
-      return;
+      alertas.push({ tipo: 'azul', msg: `${p.nombre}: sin dato de Stock B — se tomó como 0` });
     }
 
     const sa = stockA[p.nombre] !== undefined ? parseFloat(stockA[p.nombre]) : 0;
     const sb = parseFloat(sbStr) || 0;
-    const fac = parseFloat(facStr) || 0;
+    const facCajas = parseFloat(facCajasStr) || 0;
+    const fac = facCajas * p.tamCaja; // Factura se carga en cajas, acá se convierte a kg/un
     const transf = transferMap[p.nombre] || 0;
 
     const consumoReal = sa + fac + transf - sb;
 
-    // Consumo negativo → alerta
+    // Consumo negativo → alerta, pero igual se calcula y aparece en la tabla
     if (consumoReal < 0) {
       alertas.push({ tipo: 'rojo', msg: `${p.nombre}: consumo negativo (${consumoReal.toFixed(2)} ${p.unidad}). Verificar datos.` });
-      return;
     }
 
     const cdReal = consumoReal / 7;
     const cd = primeraSemana ? cdReal * 1.15 : cdReal;
 
     // Desvío vs semana anterior — se compara con el consumo real (sin el +15%),
-    // para no confundir el ajuste manual con un desvío real de los datos
+    // para no confundir el ajuste manual con un desvío real de los datos.
+    // Igual se calcula y aparece en la tabla, la alerta es solo un aviso.
     if (cdAnterior[p.nombre] !== undefined && cdAnterior[p.nombre] > 0) {
       const desvio = Math.abs((cdReal - cdAnterior[p.nombre]) / cdAnterior[p.nombre]) * 100;
       if (desvio > R.desvioRojo) {
-        alertas.push({ tipo: 'rojo', msg: `${p.nombre}: desvío de consumo ${desvio.toFixed(0)}% vs semana anterior — no calculado automáticamente` });
-        return;
+        alertas.push({ tipo: 'rojo', msg: `${p.nombre}: desvío de consumo ${desvio.toFixed(0)}% vs semana anterior — revisar` });
       } else if (desvio > R.desvioAmarillo) {
         alertas.push({ tipo: 'naranja', msg: `${p.nombre}: desvío moderado ${desvio.toFixed(0)}% vs semana anterior — calculado igual` });
       }
@@ -766,9 +765,24 @@ function renderHistorial() {
           <span class="badge-verde">${totalPedir} productos</span>
         </div>
       </div>
+      <div style="display:flex;justify-content:flex-end;margin-top:10px;">
+        <button class="btn-del-small" onclick="event.stopPropagation(); eliminarHistorialAxionlog('${h.id}')">🗑 Eliminar</button>
+      </div>
     </div>`;
   }).join('');
 }
+
+window.eliminarHistorialAxionlog = async function(id) {
+  if (!confirm('¿Eliminar este pedido del historial? No se puede deshacer, y ese Stock B ya no va a aparecer como referencia la próxima vez que cargues.')) return;
+  try {
+    await deleteDoc(doc(db, 'axionlog_historial_v2', id));
+    historialLocal = historialLocal.filter(h => h.id !== id);
+    renderHistorial();
+    toast('Eliminado', '');
+  } catch(e) {
+    toast('❌ Error al eliminar: ' + (e && e.message ? e.message : e), 'err');
+  }
+};
 
 window.verHistorial = function(id) {
   const h = historialLocal.find(x => x.id === id);
