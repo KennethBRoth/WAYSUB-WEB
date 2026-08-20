@@ -20,10 +20,13 @@
 
   .total-periodo { background: #1a1a2e; border-radius: 16px; padding: 18px 20px; margin-bottom: 20px; color: white; }
   .total-periodo-label { font-size: 11px; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px; }
-  .total-periodo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .total-periodo-item { background: rgba(255,255,255,0.08); border-radius: 10px; padding: 12px 14px; }
-  .total-periodo-item .tp-label { font-size: 11px; color: rgba(255,255,255,0.5); margin-bottom: 4px; }
-  .total-periodo-item .tp-valor { font-size: 20px; font-weight: 800; color: #e8b84b; }
+  .total-periodo-local { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.1); gap: 10px; }
+  .total-periodo-local:last-child { border-bottom: none; }
+  .total-periodo-local .tpl-nombre { font-size: 13px; font-weight: 700; flex: 1; min-width: 0; }
+  .total-periodo-local .tpl-metricas { display: flex; gap: 18px; }
+  .total-periodo-local .tpl-item { text-align: right; min-width: 74px; }
+  .total-periodo-local .tp-label { font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 3px; }
+  .total-periodo-local .tp-valor { font-size: 15px; font-weight: 800; color: #e8b84b; }
 
   .dia-block { margin-bottom: 22px; }
   .dia-header { font-size: 14px; font-weight: 800; color: #1a1a2e; margin-bottom: 10px; padding-left: 2px; text-transform: capitalize; }
@@ -59,7 +62,9 @@
     .local-row, .dia-total-row { flex-direction: column; align-items: stretch; gap: 8px; }
     .local-metricas { justify-content: space-between; }
     .metrica { text-align: left; }
-    .total-periodo-grid { grid-template-columns: 1fr; }
+    .total-periodo-local { flex-direction: column; align-items: stretch; }
+    .total-periodo-local .tpl-metricas { justify-content: space-between; }
+    .total-periodo-local .tpl-item { text-align: left; }
   }
 </style>
 </head>
@@ -87,17 +92,8 @@
     </div>
 
     <div class="total-periodo">
-      <div class="total-periodo-label">Total del período (los 4 locales)</div>
-      <div class="total-periodo-grid">
-        <div class="total-periodo-item">
-          <div class="tp-label">Ventas del sistema</div>
-          <div class="tp-valor" id="total-periodo-ventas">$0</div>
-        </div>
-        <div class="total-periodo-item">
-          <div class="tp-label">Vouchers</div>
-          <div class="tp-valor" id="total-periodo-vouchers">$0</div>
-        </div>
-      </div>
+      <div class="total-periodo-label">Total del período — por local</div>
+      <div id="total-periodo-locales"></div>
     </div>
 
     <div id="reporte-contenido">
@@ -198,12 +194,21 @@ window.renderReporte = function() {
 
   const fechas = generarRangoFechas(desde, hasta);
 
-  // Total del período completo (los 4 locales, todos los días del rango)
+  // Total del período, desglosado por local (los 4 juntos, uno debajo del otro)
   const cierresDelPeriodo = cierres.filter(c => c.fecha >= desde && c.fecha <= hasta);
-  const totalPeriodoVentas = cierresDelPeriodo.reduce((acc, c) => acc + (c.ventasIva || 0), 0);
-  const totalPeriodoVouchers = cierresDelPeriodo.reduce((acc, c) => acc + (c.vouchers || 0), 0);
-  document.getElementById('total-periodo-ventas').textContent = formatPeso(totalPeriodoVentas);
-  document.getElementById('total-periodo-vouchers').textContent = formatPeso(totalPeriodoVouchers);
+  document.getElementById('total-periodo-locales').innerHTML = LOCALES.map(loc => {
+    const delLocal = cierresDelPeriodo.filter(c => c.local === loc.nombre);
+    const ventasLocal = delLocal.reduce((acc, c) => acc + (c.ventasIva || 0), 0);
+    const vouchersLocal = delLocal.reduce((acc, c) => acc + (c.vouchers || 0), 0);
+    return `
+      <div class="total-periodo-local">
+        <div class="tpl-nombre">${loc.emoji} ${loc.nombre}</div>
+        <div class="tpl-metricas">
+          <div class="tpl-item"><div class="tp-label">Ventas sistema</div><div class="tp-valor">${formatPeso(ventasLocal)}</div></div>
+          <div class="tpl-item"><div class="tp-label">Vouchers</div><div class="tp-valor">${formatPeso(vouchersLocal)}</div></div>
+        </div>
+      </div>`;
+  }).join('');
 
   cont.innerHTML = fechas.map(fecha => {
     let totalVentas = 0, totalDif = 0;
