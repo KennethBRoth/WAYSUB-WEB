@@ -382,10 +382,10 @@
         </div>
         <div class="field"><label>Panes en retardador</label><input type="number" id="retardador" placeholder="0" inputmode="numeric" oninput="calcPanes()"></div>
         <div class="field"><label>Panes egresados</label><input type="number" id="panes-egresados" placeholder="0" inputmode="numeric" oninput="calcPanes()"></div>
-        <div class="field"><label>Panes Tostados <span style="font-weight:400;color:#e63946;font-size:11px;">(resta)</span></label><input type="number" id="panes-tostados" placeholder="0" inputmode="numeric" oninput="calcPanes()"></div>
+        <div class="field"><label>Panes Tostados <span style="font-weight:400;color:#aaa;font-size:11px;">(resta)</span></label><input type="number" id="panes-tostados" placeholder="0" inputmode="numeric" oninput="calcPanes()"></div>
         <div class="field"><label>Desperdicios</label><input type="number" id="desperdicios" placeholder="0" inputmode="numeric" oninput="calcPanes()"></div>
         <div class="field"><label>Sobrantes del día</label><input type="number" id="sobrantes-dia" placeholder="0" inputmode="numeric" oninput="calcPanes()"></div>
-        <div style="grid-column:1/-1;" id="alerta-sobrante-panes" style="display:none;background:#fff8ee;border:1px solid #ffd9a0;border-radius:10px;padding:10px 14px;font-size:13px;color:#a04000;"></div>
+        <div style="grid-column:1/-1;" id="alerta-sobrante-panes" style="display:none;background:#fff0f0;border:1px solid #ffd0d0;border-radius:10px;padding:10px 14px;font-size:13px;color:#c0392b;"></div>
         <div class="panes-result">
           <div class="result-card neutral" id="card-sistema">
             <div class="r-label">Panes vendidos por sistema</div>
@@ -756,12 +756,19 @@ window.verificarApertura = async function() {
 // guardado ayer para el mismo local. No bloquea nada, solo avisa.
 window.verificarSobrantePanes = async function() {
   const el = document.getElementById('alerta-sobrante-panes');
+  const inputEl = document.getElementById('sobrantes-anterior');
+  const marcarCampo = (activo) => {
+    if (!inputEl) return;
+    inputEl.style.borderColor = activo ? '#e63946' : '';
+    inputEl.style.background = activo ? '#fff5f5' : '';
+  };
+
   if (!el) return;
   const fecha = document.getElementById('campo-fecha').value;
-  if (!fecha || !localUsuario || !esSubway) { el.style.display = 'none'; return; }
+  if (!fecha || !localUsuario || !esSubway) { el.style.display = 'none'; marcarCampo(false); return; }
 
   const sobranteAnteriorHoy = getNum('sobrantes-anterior');
-  if (sobranteAnteriorHoy === 0) { el.style.display = 'none'; return; }
+  if (sobranteAnteriorHoy === 0) { el.style.display = 'none'; marcarCampo(false); return; }
 
   const d = new Date(fecha + 'T00:00:00');
   d.setDate(d.getDate() - 1);
@@ -779,19 +786,22 @@ window.verificarSobrantePanes = async function() {
       }
     });
 
-    if (!encontrado) { el.style.display = 'none'; return; }
+    if (!encontrado) { el.style.display = 'none'; marcarCampo(false); return; }
 
     const diferencia = sobranteAnteriorHoy - sobranteDiaAyer;
     if (Math.abs(diferencia) < 1) {
       el.style.display = 'none';
+      marcarCampo(false);
       return;
     }
 
     el.style.display = 'block';
+    marcarCampo(true);
     el.innerHTML = `⚠️ "Sobrantes día anterior" (${sobranteAnteriorHoy}) no coincide con "Sobrantes del día" que quedó guardado ayer (${sobranteDiaAyer}) — diferencia de ${diferencia > 0 ? '+' : ''}${diferencia}.`;
   } catch (e) {
     console.error('Error verificando sobrante de panes:', e);
     el.style.display = 'none';
+    marcarCampo(false);
   }
 };
 
@@ -1052,6 +1062,8 @@ function limpiarFormulario() {
   if (elAlertaAp) elAlertaAp.style.display = 'none';
   const elAlertaPanes = document.getElementById('alerta-sobrante-panes');
   if (elAlertaPanes) elAlertaPanes.style.display = 'none';
+  const elSobranteAnteriorInput = document.getElementById('sobrantes-anterior');
+  if (elSobranteAnteriorInput) { elSobranteAnteriorInput.style.borderColor = ''; elSobranteAnteriorInput.style.background = ''; }
 }
 
 // ── GUARDAR ─────────────────────────────────────────────
