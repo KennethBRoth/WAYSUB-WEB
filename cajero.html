@@ -382,7 +382,7 @@
         </div>
         <div class="field"><label>Panes en retardador</label><input type="number" id="retardador" placeholder="0" inputmode="numeric" oninput="calcPanes()"></div>
         <div class="field"><label>Panes egresados</label><input type="number" id="panes-egresados" placeholder="0" inputmode="numeric" oninput="calcPanes()"></div>
-        <div class="field"><label>Panes Tostados</label><input type="number" id="panes-tostados" placeholder="0" inputmode="numeric" oninput="calcPanes()"></div>
+        <div class="field"><label>Panes Tostados <span style="font-weight:400;color:#e63946;font-size:11px;">(resta)</span></label><input type="number" id="panes-tostados" placeholder="0" inputmode="numeric" oninput="calcPanes()"></div>
         <div class="field"><label>Desperdicios</label><input type="number" id="desperdicios" placeholder="0" inputmode="numeric" oninput="calcPanes()"></div>
         <div class="field"><label>Sobrantes del día</label><input type="number" id="sobrantes-dia" placeholder="0" inputmode="numeric" oninput="calcPanes()"></div>
         <div style="grid-column:1/-1;" id="alerta-sobrante-panes" style="display:none;background:#fff8ee;border:1px solid #ffd9a0;border-radius:10px;padding:10px 14px;font-size:13px;color:#a04000;"></div>
@@ -841,9 +841,9 @@ window.calcPanes = function() {
   // Panes vendidos por sistema = panes registrados sistema
   const vendidosSistema = getNum('panes-sistema');
 
-  // Conteo real = sobrantes anterior + retardador + egresados + tostados - desperdicios - sobrantes dia
-  const conteoReal = getNum('sobrantes-anterior') + getNum('retardador') + getNum('panes-egresados') + getNum('panes-tostados')
-    - getNum('desperdicios') - getNum('sobrantes-dia');
+  // Conteo real = sobrantes anterior + retardador + egresados - tostados - desperdicios - sobrantes dia
+  const conteoReal = getNum('sobrantes-anterior') + getNum('retardador') + getNum('panes-egresados')
+    - getNum('panes-tostados') - getNum('desperdicios') - getNum('sobrantes-dia');
 
   const diferencia = vendidosSistema - conteoReal;
 
@@ -1080,8 +1080,8 @@ window.guardarCierre = async function() {
     let difPanesActual = null, panesVendidosActual = null;
     if (esSubway) {
       panesVendidosActual = getNum('panes-sistema');
-      const conteoRealActual = getNum('sobrantes-anterior') + getNum('retardador') + getNum('panes-egresados') + getNum('panes-tostados')
-        - getNum('desperdicios') - getNum('sobrantes-dia');
+      const conteoRealActual = getNum('sobrantes-anterior') + getNum('retardador') + getNum('panes-egresados')
+        - getNum('panes-tostados') - getNum('desperdicios') - getNum('sobrantes-dia');
       difPanesActual = panesVendidosActual - conteoRealActual;
     }
 
@@ -1133,8 +1133,8 @@ window.guardarCierre = async function() {
 
     if (esSubway) {
       const vendidosSistema = getNum('panes-sistema');
-      const conteoReal = getNum('sobrantes-anterior') + getNum('retardador') + getNum('panes-egresados') + getNum('panes-tostados')
-        - getNum('desperdicios') - getNum('sobrantes-dia');
+      const conteoReal = getNum('sobrantes-anterior') + getNum('retardador') + getNum('panes-egresados')
+        - getNum('panes-tostados') - getNum('desperdicios') - getNum('sobrantes-dia');
       datos.panes = {
         sistema: vendidosSistema,
         sobrantesAnt: getNum('sobrantes-anterior'), retardador: getNum('retardador'),
