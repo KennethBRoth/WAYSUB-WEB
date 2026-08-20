@@ -14,9 +14,16 @@
 
   .container { max-width: 680px; margin: 0 auto; padding: 20px 16px 80px; }
 
-  .filtro-fecha { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+  .filtro-fecha { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
   .filtro-fecha input { flex: 1; min-width: 130px; padding: 12px 14px; border: 1.5px solid #e8e8e8; border-radius: 10px; font-size: 14px; background: white; outline: none; font-family: inherit; color: #1a1a2e; }
   .filtro-fecha input:focus { border-color: #1a1a2e; }
+
+  .total-periodo { background: #1a1a2e; border-radius: 16px; padding: 18px 20px; margin-bottom: 20px; color: white; }
+  .total-periodo-label { font-size: 11px; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px; }
+  .total-periodo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .total-periodo-item { background: rgba(255,255,255,0.08); border-radius: 10px; padding: 12px 14px; }
+  .total-periodo-item .tp-label { font-size: 11px; color: rgba(255,255,255,0.5); margin-bottom: 4px; }
+  .total-periodo-item .tp-valor { font-size: 20px; font-weight: 800; color: #e8b84b; }
 
   .dia-block { margin-bottom: 22px; }
   .dia-header { font-size: 14px; font-weight: 800; color: #1a1a2e; margin-bottom: 10px; padding-left: 2px; text-transform: capitalize; }
@@ -47,13 +54,12 @@
 
   .error-box { max-width: 400px; margin: 60px auto; background: white; border-radius: 16px; padding: 40px; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
   .error-box .icon { font-size: 48px; margin-bottom: 16px; }
-  .error-box h2 { font-size: 20px; margin-bottom: 8px; }
-  .error-box p { color: #666; font-size: 14px; margin-bottom: 20px; }
 
   @media (max-width: 420px) {
     .local-row, .dia-total-row { flex-direction: column; align-items: stretch; gap: 8px; }
     .local-metricas { justify-content: space-between; }
     .metrica { text-align: left; }
+    .total-periodo-grid { grid-template-columns: 1fr; }
   }
 </style>
 </head>
@@ -78,6 +84,20 @@
     <div class="filtro-fecha">
       <input type="date" id="filtro-desde" onchange="renderReporte()">
       <input type="date" id="filtro-hasta" onchange="renderReporte()">
+    </div>
+
+    <div class="total-periodo">
+      <div class="total-periodo-label">Total del período (los 4 locales)</div>
+      <div class="total-periodo-grid">
+        <div class="total-periodo-item">
+          <div class="tp-label">Ventas del sistema</div>
+          <div class="tp-valor" id="total-periodo-ventas">$0</div>
+        </div>
+        <div class="total-periodo-item">
+          <div class="tp-label">Vouchers</div>
+          <div class="tp-valor" id="total-periodo-vouchers">$0</div>
+        </div>
+      </div>
     </div>
 
     <div id="reporte-contenido">
@@ -177,6 +197,13 @@ window.renderReporte = function() {
   if (!desde || !hasta) return;
 
   const fechas = generarRangoFechas(desde, hasta);
+
+  // Total del período completo (los 4 locales, todos los días del rango)
+  const cierresDelPeriodo = cierres.filter(c => c.fecha >= desde && c.fecha <= hasta);
+  const totalPeriodoVentas = cierresDelPeriodo.reduce((acc, c) => acc + (c.ventasIva || 0), 0);
+  const totalPeriodoVouchers = cierresDelPeriodo.reduce((acc, c) => acc + (c.vouchers || 0), 0);
+  document.getElementById('total-periodo-ventas').textContent = formatPeso(totalPeriodoVentas);
+  document.getElementById('total-periodo-vouchers').textContent = formatPeso(totalPeriodoVouchers);
 
   cont.innerHTML = fechas.map(fecha => {
     let totalVentas = 0, totalDif = 0;
