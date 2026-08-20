@@ -43,10 +43,12 @@
   /* RESUMEN ARRIBA DE TODO */
   .resumen-top { background: #1a1a2e; border-radius: 16px; padding: 18px 20px; margin-bottom: 16px; color: white; }
   .resumen-top-label { font-size: 11px; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
-  .resumen-cajero-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.12); }
-  .resumen-cajero-row span { font-size: 13px; color: rgba(255,255,255,0.7); }
-  .resumen-cajero-row strong { font-size: 15px; }
+  .resumen-cajero-card { background: rgba(255,255,255,0.08); border-radius: 12px; padding: 12px 14px; margin-bottom: 8px; }
+  .resumen-cajero-card:last-child { margin-bottom: 0; }
+  .resumen-cajero-nombre { font-size: 14px; font-weight: 700; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+  .resumen-cajero-nombre .actual-badge { font-size: 9px; font-weight: 700; background: #e8b84b; color: #1a1a2e; padding: 2px 6px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.05em; }
   .resumen-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .resumen-vacio { font-size: 13px; color: rgba(255,255,255,0.5); text-align: center; padding: 8px 0; }
   .resumen-item { background: rgba(255,255,255,0.08); border-radius: 10px; padding: 10px 12px; }
   .resumen-item .ri-label { font-size: 11px; color: rgba(255,255,255,0.5); margin-bottom: 2px; }
   .resumen-item .ri-val { font-size: 16px; font-weight: 800; }
@@ -202,24 +204,9 @@
 
     <!-- RESUMEN ARRIBA DE TODO -->
     <div class="resumen-top">
-      <div class="resumen-top-label">Resumen del día</div>
-      <div class="resumen-cajero-row">
-        <span>Cajero</span>
-        <strong id="resumen-cajero">—</strong>
-      </div>
-      <div class="resumen-grid">
-        <div class="resumen-item">
-          <div class="ri-label">Diferencia de caja</div>
-          <div class="ri-val neutral" id="resumen-dif-caja">$0</div>
-        </div>
-        <div class="resumen-item" id="resumen-item-panes-dif" style="display:none;">
-          <div class="ri-label">Diferencia de panes</div>
-          <div class="ri-val neutral" id="resumen-dif-panes">0</div>
-        </div>
-        <div class="resumen-item" id="resumen-item-panes-vendidos" style="grid-column:1/-1;display:none;">
-          <div class="ri-label">Panes vendidos (sistema)</div>
-          <div class="ri-val neutral" id="resumen-panes-vendidos">0</div>
-        </div>
+      <div class="resumen-top-label">Resumen del día — todos los cajeros</div>
+      <div id="resumen-del-dia">
+        <div class="resumen-vacio">Sin cierres guardados todavía para este día</div>
       </div>
     </div>
 
@@ -234,6 +221,12 @@
     <div class="cajero-row">
       <span>Cajero</span>
       <strong id="campo-cajero">—</strong>
+    </div>
+
+    <!-- MODO EDICIÓN (aparece al tocar un cajero de la lista de arriba) -->
+    <div id="modo-edicion" style="display:none;background:#fff8ee;border:1.5px solid #ffd9a0;border-radius:14px;padding:14px 16px;margin-bottom:16px;align-items:center;justify-content:space-between;gap:10px;">
+      <span style="font-size:13px;color:#a04000;">✏️ Editando el cierre de <strong id="modo-edicion-nombre">—</strong></span>
+      <button onclick="cancelarEdicion()" style="background:white;border:1.5px solid #ffd9a0;color:#a04000;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">✕ Cancelar</button>
     </div>
 
     <!-- RESULTADO CAJA -->
@@ -252,7 +245,7 @@
     </div>
 
     <!-- CAJA -->
-    <div class="section">
+    <div class="section" id="seccion-caja">
       <div class="section-title">💵 Caja</div>
 
       <!-- APERTURA -->
@@ -509,13 +502,10 @@ function entrarALocal(key) {
   document.getElementById('header-local').textContent = localUsuario;
   document.getElementById('header-user').textContent = nombreUsuario;
   document.getElementById('campo-cajero').textContent = nombreUsuario;
-  document.getElementById('resumen-cajero').textContent = nombreUsuario;
   document.getElementById('campo-fecha').value = new Date().toISOString().split('T')[0];
   document.getElementById('seccion-panes').style.display = esSubway ? 'block' : 'none';
   document.getElementById('seccion-egresos').style.display = 'block';
   document.getElementById('btn-cambiar').style.display = esMultiLocal ? 'block' : 'none';
-  document.getElementById('resumen-item-panes-dif').style.display = esSubway ? 'block' : 'none';
-  document.getElementById('resumen-item-panes-vendidos').style.display = esSubway ? 'block' : 'none';
 
   // El posnet Balcarce solo aplica al local Subway Morón
   const esPosnetBalcarce = (key === 'cajero_subway_moron');
@@ -851,13 +841,6 @@ window.recalcular = function() {
   // Delivery
   const elTotalDel = document.getElementById('total-delivery-label');
   if (elTotalDel) elTotalDel.textContent = formatPeso(totalDel);
-
-  // Resumen de arriba de todo
-  const elResumenDifCaja = document.getElementById('resumen-dif-caja');
-  if (elResumenDifCaja) {
-    elResumenDifCaja.textContent = (resultado < 0 ? '-' : '') + formatPeso(resultado);
-    elResumenDifCaja.className = 'ri-val ' + (resultado === 0 ? 'neutral' : resultado > 0 ? 'ok' : 'warn');
-  }
 };
 
 window.calcPanes = function() {
@@ -877,24 +860,17 @@ window.calcPanes = function() {
   document.getElementById('card-sistema').className = 'result-card neutral';
   document.getElementById('card-conteo-real').className = 'result-card neutral';
   document.getElementById('card-dif-panes').className = 'result-card ' + (diferencia === 0 ? 'ok' : 'warn');
-
-  // Resumen de arriba de todo
-  const elResumenDifPanes = document.getElementById('resumen-dif-panes');
-  if (elResumenDifPanes) {
-    elResumenDifPanes.textContent = diferencia;
-    elResumenDifPanes.className = 'ri-val ' + (diferencia === 0 ? 'ok' : 'warn');
-  }
-  const elResumenPanesVendidos = document.getElementById('resumen-panes-vendidos');
-  if (elResumenPanesVendidos) elResumenPanesVendidos.textContent = vendidosSistema;
 };
 
 // ── CARGAR DÍA ──────────────────────────────────────────
+let registrosDelDia = []; // Los cierres ya guardados este día, para poder editarlos desde la lista
+
 window.cargarDia = async function() {
   const fecha = document.getElementById('campo-fecha').value;
   if (!fecha) return;
 
   limpiarFormulario();
-  docIdActual = null;
+  docIdActual = null; // El formulario siempre arranca listo para un cierre NUEVO
 
   try {
     const snap = await getDocs(collection(db, 'cajero_cierres'));
@@ -905,24 +881,14 @@ window.cargarDia = async function() {
         registros.push({ id: d.id, ...data });
       }
     });
+    registrosDelDia = registros;
 
     if (registros.length === 0) {
       mostrarToast('Día nuevo — formulario en blanco', '');
-      return;
-    }
-
-    // Si hay múltiples turnos del mismo día, unificarlos
-    if (registros.length === 1) {
-      docIdActual = registros[0].id;
-      cargarDatos(registros[0]);
-      mostrarToast('✏️ Datos cargados — podés editar', '');
     } else {
-      // Unificar varios turnos
-      const unificado = unificarTurnos(registros);
-      docIdActual = null; // Al guardar creará uno nuevo unificado
-      cargarDatos(unificado);
-      mostrarToast(`📋 ${registros.length} turnos unificados`, '');
+      mostrarToast(`Ya hay ${registros.length} cierre(s) guardado(s) — este formulario es para uno nuevo. Tocá un cajero arriba para corregir el suyo.`, '');
     }
+    renderResumenDelDia(registros);
     verificarApertura();
     verificarSobrantePanes();
   } catch (err) {
@@ -931,26 +897,97 @@ window.cargarDia = async function() {
   }
 };
 
-function unificarTurnos(registros) {
-  // Suma todos los valores numéricos, combina gastos
-  const base = registros[0];
-  const campos = ['aperturaFuerte','aperturaRegistradora','cierreFuerte','cierreRegistradora','apertura','cierreContado','importeTarjetas','cantidadTarjetas','totalGastos',
-    'mercadoPago','posnetBalcarce','gastosDiarios','ventasIva','vouchers',
-    'mercadoDelivery','rappi','pedidosYa','uberEats'];
+// Carga un cierre ya guardado en el formulario para corregirlo — es la ÚNICA
+// forma de editar uno existente; entrar al día siempre arranca en blanco, para
+// que dos cajeros del mismo día no se pisen entre sí.
+window.cargarRegistroEspecifico = function(id) {
+  const registro = registrosDelDia.find(r => r.id === id);
+  if (!registro) return;
+  docIdActual = id;
+  cargarDatos(registro);
+  document.getElementById('modo-edicion').style.display = 'flex';
+  document.getElementById('modo-edicion-nombre').textContent = registro.cajero || '—';
+  document.getElementById('seccion-caja').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  mostrarToast(`✏️ Editando el cierre de ${registro.cajero || '—'}`, '');
+};
 
-  const resultado = { ...base };
-  for (let i = 1; i < registros.length; i++) {
-    campos.forEach(c => { resultado[c] = (resultado[c] || 0) + (registros[i][c] || 0); });
-    // Combinar gastos
-    if (registros[i].gastos) {
-      resultado.gastos = [...(resultado.gastos || []), ...registros[i].gastos];
-    }
-    if (registros[i].panes && resultado.panes) {
-      // Para panes, usar el último turno (más reciente)
-      resultado.panes = registros[i].panes;
-    }
+// Cancela la edición y vuelve a dejar el formulario en blanco para cargar un turno nuevo
+window.cancelarEdicion = function() {
+  docIdActual = null;
+  limpiarFormulario();
+  document.getElementById('modo-edicion').style.display = 'none';
+  mostrarToast('Listo para cargar un turno nuevo', '');
+};
+
+// Muestra, sin mezclar, cada cierre guardado ese día para este local — así cada
+// cajero deja su propia Diferencia de caja (y de panes) sin pisar a los demás.
+// Tocar una tarjeta la carga en el formulario para corregirla.
+function renderResumenDelDia(registros) {
+  const cont = document.getElementById('resumen-del-dia');
+  if (!registros.length) {
+    cont.innerHTML = '<div class="resumen-vacio">Sin cierres guardados todavía para este día</div>';
+    return;
   }
-  return resultado;
+
+  cont.innerHTML = registros.map(r => {
+    const resultado = (r.cierreContado || 0) + (r.importeTarjetas || 0) + (r.totalGastos || 0) + (r.totalDelivery || 0)
+      - (r.apertura || 0) - (r.ventasIva || 0) - (r.posnetBalcarce || 0);
+    const claseCaja = resultado === 0 ? 'neutral' : resultado > 0 ? 'ok' : 'warn';
+    const esActual = r.cajero === nombreUsuario;
+
+    let filasPanes = '';
+    if (esSubway && r.panes) {
+      const difPanes = r.panes.diferencia ?? 0;
+      const clasePanes = difPanes === 0 ? 'ok' : 'warn';
+      filasPanes = `
+        <div class="resumen-item">
+          <div class="ri-label">Diferencia de panes</div>
+          <div class="ri-val ${clasePanes}">${difPanes}</div>
+        </div>
+        <div class="resumen-item">
+          <div class="ri-label">Panes vendidos (sistema)</div>
+          <div class="ri-val neutral">${r.panes.vendidosSistema ?? r.panes.sistema ?? 0}</div>
+        </div>
+      `;
+    }
+
+    return `
+      <div class="resumen-cajero-card" onclick="window.cargarRegistroEspecifico('${r.id}')" style="cursor:pointer;">
+        <div class="resumen-cajero-nombre">
+          👤 ${r.cajero || '—'} ${esActual ? '<span class="actual-badge">Vos</span>' : ''}
+          <span style="margin-left:auto;font-size:11px;font-weight:400;color:rgba(255,255,255,0.4);">✏️ Tocar para editar</span>
+        </div>
+        <div class="resumen-grid">
+          <div class="resumen-item" style="grid-column:1/-1;">
+            <div class="ri-label">Diferencia de caja</div>
+            <div class="ri-val ${claseCaja}">${(resultado < 0 ? '-' : '') + formatPeso(resultado)}</div>
+          </div>
+          ${filasPanes}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// Vuelve a buscar y mostrar la lista de cajeros del día, sin tocar el formulario
+// (se usa después de guardar, para que el que acaba de guardar se vea en la lista).
+async function refrescarResumenDelDia() {
+  const fecha = document.getElementById('campo-fecha').value;
+  if (!fecha || !localUsuario) return;
+  try {
+    const snap = await getDocs(collection(db, 'cajero_cierres'));
+    const registros = [];
+    snap.forEach(d => {
+      const data = d.data();
+      if (data.local === localUsuario && data.fecha === fecha) {
+        registros.push({ id: d.id, ...data });
+      }
+    });
+    registrosDelDia = registros;
+    renderResumenDelDia(registros);
+  } catch (e) {
+    console.error('Error refrescando resumen del día:', e);
+  }
 }
 
 function cargarDatos(data) {
@@ -1028,6 +1065,8 @@ function limpiarFormulario() {
   if (elAlertaAp) elAlertaAp.style.display = 'none';
   const elAlertaPanes = document.getElementById('alerta-sobrante-panes');
   if (elAlertaPanes) elAlertaPanes.style.display = 'none';
+  const elModoEdicion = document.getElementById('modo-edicion');
+  if (elModoEdicion) elModoEdicion.style.display = 'none';
 }
 
 // ── GUARDAR ─────────────────────────────────────────────
@@ -1098,6 +1137,8 @@ window.guardarCierre = async function() {
       docIdActual = ref.id;
       mostrarToast('✅ Cierre guardado', 'success');
     }
+
+    await refrescarResumenDelDia();
 
     document.getElementById('btn-guardar').textContent = '✅ Guardado — volver a guardar para actualizar';
     setTimeout(() => { btn.disabled = false; btn.textContent = 'Guardar cierre del día'; }, 3000);
