@@ -40,6 +40,20 @@
   #app.active { display: block; }
   .container { max-width: 680px; margin: 0 auto; padding: 16px 16px 80px; }
 
+  /* RESUMEN ARRIBA DE TODO */
+  .resumen-top { background: #1a1a2e; border-radius: 16px; padding: 18px 20px; margin-bottom: 16px; color: white; }
+  .resumen-top-label { font-size: 11px; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
+  .resumen-cajero-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.12); }
+  .resumen-cajero-row span { font-size: 13px; color: rgba(255,255,255,0.7); }
+  .resumen-cajero-row strong { font-size: 15px; }
+  .resumen-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .resumen-item { background: rgba(255,255,255,0.08); border-radius: 10px; padding: 10px 12px; }
+  .resumen-item .ri-label { font-size: 11px; color: rgba(255,255,255,0.5); margin-bottom: 2px; }
+  .resumen-item .ri-val { font-size: 16px; font-weight: 800; }
+  .resumen-item .ri-val.ok { color: #2ecc71; }
+  .resumen-item .ri-val.warn { color: #e74c3c; }
+  .resumen-item .ri-val.neutral { color: white; }
+
   /* SELECTOR FECHA */
   .fecha-nav { background: white; border-radius: 16px; padding: 16px 20px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); display: flex; align-items: center; gap: 12px; }
   .fecha-nav label { font-size: 13px; font-weight: 700; color: #555; white-space: nowrap; }
@@ -148,7 +162,7 @@
   .toast.success { background: #2ecc71; color: #1a1a2e; }
 
   @media (max-width: 480px) {
-    .two-col, .panes-grid, .panes-result, .resultado-detalle { grid-template-columns: 1fr; }
+    .two-col, .panes-grid, .panes-result, .resultado-detalle, .resumen-grid { grid-template-columns: 1fr; }
     .gasto-item { flex-wrap: wrap; }
   }
 </style>
@@ -185,6 +199,29 @@
   </div>
 
   <div class="container">
+
+    <!-- RESUMEN ARRIBA DE TODO -->
+    <div class="resumen-top">
+      <div class="resumen-top-label">Resumen del día</div>
+      <div class="resumen-cajero-row">
+        <span>Cajero</span>
+        <strong id="resumen-cajero">—</strong>
+      </div>
+      <div class="resumen-grid">
+        <div class="resumen-item">
+          <div class="ri-label">Diferencia de caja</div>
+          <div class="ri-val neutral" id="resumen-dif-caja">$0</div>
+        </div>
+        <div class="resumen-item" id="resumen-item-panes-dif" style="display:none;">
+          <div class="ri-label">Diferencia de panes</div>
+          <div class="ri-val neutral" id="resumen-dif-panes">0</div>
+        </div>
+        <div class="resumen-item" id="resumen-item-panes-vendidos" style="grid-column:1/-1;display:none;">
+          <div class="ri-label">Panes vendidos (sistema)</div>
+          <div class="ri-val neutral" id="resumen-panes-vendidos">0</div>
+        </div>
+      </div>
+    </div>
 
     <!-- SELECTOR FECHA -->
     <div class="fecha-nav">
@@ -352,11 +389,16 @@
       <div class="section-title">🍞 Conteo de Panes</div>
       <div class="panes-grid">
         <div class="field"><label>Panes registrados sistema</label><input type="number" id="panes-sistema" placeholder="0" inputmode="numeric" oninput="calcPanes()"></div>
-        <div class="field"><label>Sobrantes día anterior</label><input type="number" id="sobrantes-anterior" placeholder="0" inputmode="numeric" oninput="calcPanes()"></div>
+        <div class="field">
+          <label>Sobrantes día anterior</label>
+          <input type="number" id="sobrantes-anterior" placeholder="0" inputmode="numeric" oninput="calcPanes()" onblur="verificarSobrantePanes()">
+        </div>
         <div class="field"><label>Panes en retardador</label><input type="number" id="retardador" placeholder="0" inputmode="numeric" oninput="calcPanes()"></div>
         <div class="field"><label>Panes egresados</label><input type="number" id="panes-egresados" placeholder="0" inputmode="numeric" oninput="calcPanes()"></div>
+        <div class="field"><label>Panes Tostados</label><input type="number" id="panes-tostados" placeholder="0" inputmode="numeric" oninput="calcPanes()"></div>
         <div class="field"><label>Desperdicios</label><input type="number" id="desperdicios" placeholder="0" inputmode="numeric" oninput="calcPanes()"></div>
         <div class="field"><label>Sobrantes del día</label><input type="number" id="sobrantes-dia" placeholder="0" inputmode="numeric" oninput="calcPanes()"></div>
+        <div style="grid-column:1/-1;" id="alerta-sobrante-panes" style="display:none;background:#fff8ee;border:1px solid #ffd9a0;border-radius:10px;padding:10px 14px;font-size:13px;color:#a04000;"></div>
         <div class="panes-result">
           <div class="result-card neutral" id="card-sistema">
             <div class="r-label">Panes vendidos por sistema</div>
@@ -467,10 +509,13 @@ function entrarALocal(key) {
   document.getElementById('header-local').textContent = localUsuario;
   document.getElementById('header-user').textContent = nombreUsuario;
   document.getElementById('campo-cajero').textContent = nombreUsuario;
+  document.getElementById('resumen-cajero').textContent = nombreUsuario;
   document.getElementById('campo-fecha').value = new Date().toISOString().split('T')[0];
   document.getElementById('seccion-panes').style.display = esSubway ? 'block' : 'none';
   document.getElementById('seccion-egresos').style.display = 'block';
   document.getElementById('btn-cambiar').style.display = esMultiLocal ? 'block' : 'none';
+  document.getElementById('resumen-item-panes-dif').style.display = esSubway ? 'block' : 'none';
+  document.getElementById('resumen-item-panes-vendidos').style.display = esSubway ? 'block' : 'none';
 
   // El posnet Balcarce solo aplica al local Subway Morón
   const esPosnetBalcarce = (key === 'cajero_subway_moron');
@@ -722,6 +767,50 @@ window.verificarApertura = async function() {
   }
 };
 
+// ── AVISO: SOBRANTES DE PANES vs DÍA ANTERIOR ────────────
+// Compara "Sobrantes día anterior" de hoy contra "Sobrantes del día" que quedó
+// guardado ayer para el mismo local. No bloquea nada, solo avisa.
+window.verificarSobrantePanes = async function() {
+  const el = document.getElementById('alerta-sobrante-panes');
+  if (!el) return;
+  const fecha = document.getElementById('campo-fecha').value;
+  if (!fecha || !localUsuario || !esSubway) { el.style.display = 'none'; return; }
+
+  const sobranteAnteriorHoy = getNum('sobrantes-anterior');
+  if (sobranteAnteriorHoy === 0) { el.style.display = 'none'; return; }
+
+  const d = new Date(fecha + 'T00:00:00');
+  d.setDate(d.getDate() - 1);
+  const ayer = d.toISOString().split('T')[0];
+
+  try {
+    const snap = await getDocs(collection(db, 'cajero_cierres'));
+    let sobranteDiaAyer = 0;
+    let encontrado = false;
+    snap.forEach(doc => {
+      const data = doc.data();
+      if (data.local === localUsuario && data.fecha === ayer && data.panes) {
+        sobranteDiaAyer += data.panes.sobrantesDia || 0;
+        encontrado = true;
+      }
+    });
+
+    if (!encontrado) { el.style.display = 'none'; return; }
+
+    const diferencia = sobranteAnteriorHoy - sobranteDiaAyer;
+    if (Math.abs(diferencia) < 1) {
+      el.style.display = 'none';
+      return;
+    }
+
+    el.style.display = 'block';
+    el.innerHTML = `⚠️ "Sobrantes día anterior" (${sobranteAnteriorHoy}) no coincide con "Sobrantes del día" que quedó guardado ayer (${sobranteDiaAyer}) — diferencia de ${diferencia > 0 ? '+' : ''}${diferencia}.`;
+  } catch (e) {
+    console.error('Error verificando sobrante de panes:', e);
+    el.style.display = 'none';
+  }
+};
+
 window.recalcular = function() {
   const apertura    = getNum('apertura-fuerte') + getNum('apertura-registradora');
   const cierre      = getNum('cierre-fuerte') + getNum('cierre-registradora');
@@ -762,14 +851,21 @@ window.recalcular = function() {
   // Delivery
   const elTotalDel = document.getElementById('total-delivery-label');
   if (elTotalDel) elTotalDel.textContent = formatPeso(totalDel);
+
+  // Resumen de arriba de todo
+  const elResumenDifCaja = document.getElementById('resumen-dif-caja');
+  if (elResumenDifCaja) {
+    elResumenDifCaja.textContent = (resultado < 0 ? '-' : '') + formatPeso(resultado);
+    elResumenDifCaja.className = 'ri-val ' + (resultado === 0 ? 'neutral' : resultado > 0 ? 'ok' : 'warn');
+  }
 };
 
 window.calcPanes = function() {
   // Panes vendidos por sistema = panes registrados sistema
   const vendidosSistema = getNum('panes-sistema');
 
-  // Conteo real = sobrantes anterior + retardador + egresados - desperdicios - sobrantes dia
-  const conteoReal = getNum('sobrantes-anterior') + getNum('retardador') + getNum('panes-egresados')
+  // Conteo real = sobrantes anterior + retardador + egresados + tostados - desperdicios - sobrantes dia
+  const conteoReal = getNum('sobrantes-anterior') + getNum('retardador') + getNum('panes-egresados') + getNum('panes-tostados')
     - getNum('desperdicios') - getNum('sobrantes-dia');
 
   const diferencia = vendidosSistema - conteoReal;
@@ -781,6 +877,15 @@ window.calcPanes = function() {
   document.getElementById('card-sistema').className = 'result-card neutral';
   document.getElementById('card-conteo-real').className = 'result-card neutral';
   document.getElementById('card-dif-panes').className = 'result-card ' + (diferencia === 0 ? 'ok' : 'warn');
+
+  // Resumen de arriba de todo
+  const elResumenDifPanes = document.getElementById('resumen-dif-panes');
+  if (elResumenDifPanes) {
+    elResumenDifPanes.textContent = diferencia;
+    elResumenDifPanes.className = 'ri-val ' + (diferencia === 0 ? 'ok' : 'warn');
+  }
+  const elResumenPanesVendidos = document.getElementById('resumen-panes-vendidos');
+  if (elResumenPanesVendidos) elResumenPanesVendidos.textContent = vendidosSistema;
 };
 
 // ── CARGAR DÍA ──────────────────────────────────────────
@@ -819,6 +924,7 @@ window.cargarDia = async function() {
       mostrarToast(`📋 ${registros.length} turnos unificados`, '');
     }
     verificarApertura();
+    verificarSobrantePanes();
   } catch (err) {
     console.error(err);
     mostrarToast('Error al cargar el día', 'error');
@@ -893,6 +999,7 @@ function cargarDatos(data) {
     set('sobrantes-anterior',data.panes.sobrantesAnt);
     set('retardador',        data.panes.retardador);
     set('panes-egresados',   data.panes.egresados);
+    set('panes-tostados',    data.panes.tostados);
     set('desperdicios',      data.panes.desperdicios);
     set('sobrantes-dia',     data.panes.sobrantesDia);
     calcPanes();
@@ -905,7 +1012,7 @@ function limpiarFormulario() {
   ['apertura-fuerte','apertura-registradora','cierre-fuerte','cierre-registradora','mercado-pago',
    'posnet-balcarce','ventas-iva','vouchers','dif-delivery-input',
    'panes-sistema','sobrantes-anterior','retardador',
-   'panes-egresados','desperdicios','sobrantes-dia'
+   'panes-egresados','panes-tostados','desperdicios','sobrantes-dia'
   ].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
   const elObsL = document.getElementById('observaciones');
   if (elObsL) elObsL.value = '';
@@ -919,7 +1026,8 @@ function limpiarFormulario() {
   renderEgresos();
   const elAlertaAp = document.getElementById('alerta-apertura');
   if (elAlertaAp) elAlertaAp.style.display = 'none';
-  recalcular();
+  const elAlertaPanes = document.getElementById('alerta-sobrante-panes');
+  if (elAlertaPanes) elAlertaPanes.style.display = 'none';
 }
 
 // ── GUARDAR ─────────────────────────────────────────────
@@ -968,12 +1076,12 @@ window.guardarCierre = async function() {
 
     if (esSubway) {
       const vendidosSistema = getNum('panes-sistema');
-      const conteoReal = getNum('sobrantes-anterior') + getNum('retardador') + getNum('panes-egresados')
+      const conteoReal = getNum('sobrantes-anterior') + getNum('retardador') + getNum('panes-egresados') + getNum('panes-tostados')
         - getNum('desperdicios') - getNum('sobrantes-dia');
       datos.panes = {
         sistema: vendidosSistema,
         sobrantesAnt: getNum('sobrantes-anterior'), retardador: getNum('retardador'),
-        egresados: getNum('panes-egresados'), desperdicios: getNum('desperdicios'),
+        egresados: getNum('panes-egresados'), tostados: getNum('panes-tostados'), desperdicios: getNum('desperdicios'),
         sobrantesDia: getNum('sobrantes-dia'),
         vendidosSistema, conteoReal,
         diferencia: vendidosSistema - conteoReal
