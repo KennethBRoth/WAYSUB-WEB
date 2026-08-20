@@ -223,12 +223,6 @@
       <strong id="campo-cajero">—</strong>
     </div>
 
-    <!-- MODO EDICIÓN (aparece al tocar un cajero de la lista de arriba) -->
-    <div id="modo-edicion" style="display:none;background:#fff8ee;border:1.5px solid #ffd9a0;border-radius:14px;padding:14px 16px;margin-bottom:16px;align-items:center;justify-content:space-between;gap:10px;">
-      <span style="font-size:13px;color:#a04000;">✏️ Editando el cierre de <strong id="modo-edicion-nombre">—</strong></span>
-      <button onclick="cancelarEdicion()" style="background:white;border:1.5px solid #ffd9a0;color:#a04000;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">✕ Cancelar</button>
-    </div>
-
     <!-- RESULTADO CAJA -->
     <div class="resultado-caja">
       <div class="label">Resultado de caja</div>
@@ -863,14 +857,14 @@ window.calcPanes = function() {
 };
 
 // ── CARGAR DÍA ──────────────────────────────────────────
-let registrosDelDia = []; // Los cierres ya guardados este día, para poder editarlos desde la lista
+let firmasDelDia = []; // Log de "quién pasó por acá y cómo le quedó", dentro del mismo cierre del día
 
 window.cargarDia = async function() {
   const fecha = document.getElementById('campo-fecha').value;
   if (!fecha) return;
 
   limpiarFormulario();
-  docIdActual = null; // El formulario siempre arranca listo para un cierre NUEVO
+  docIdActual = null;
 
   try {
     const snap = await getDocs(collection(db, 'cajero_cierres'));
@@ -881,14 +875,25 @@ window.cargarDia = async function() {
         registros.push({ id: d.id, ...data });
       }
     });
-    registrosDelDia = registros;
 
     if (registros.length === 0) {
       mostrarToast('Día nuevo — formulario en blanco', '');
-    } else {
-      mostrarToast(`Ya hay ${registros.length} cierre(s) guardado(s) — este formulario es para uno nuevo. Tocá un cajero arriba para corregir el suyo.`, '');
+      firmasDelDia = [];
+      renderResumenDelDia();
+      return;
     }
-    renderResumenDelDia(registros);
+
+    // Si hay múltiples turnos del mismo día, unificarlos (como siempre)
+    if (registros.length === 1) {
+      docIdActual = registros[0].id;
+      cargarDatos(registros[0]);
+      mostrarToast('✏️ Datos cargados — podés editar', '');
+    } else {
+      const unificado = unificarTurnos(registros);
+      docIdActual = null; // Al guardar creará uno nuevo unificado
+      cargarDatos(unificado);
+      mostrarToast(`📋 ${registros.length} turnos unificados`, '');
+    }
     verificarApertura();
     verificarSobrantePanes();
   } catch (err) {
@@ -897,70 +902,71 @@ window.cargarDia = async function() {
   }
 };
 
-// Carga un cierre ya guardado en el formulario para corregirlo — es la ÚNICA
-// forma de editar uno existente; entrar al día siempre arranca en blanco, para
-// que dos cajeros del mismo día no se pisen entre sí.
-window.cargarRegistroEspecifico = function(id) {
-  const registro = registrosDelDia.find(r => r.id === id);
-  if (!registro) return;
-  docIdActual = id;
-  cargarDatos(registro);
-  document.getElementById('modo-edicion').style.display = 'flex';
-  document.getElementById('modo-edicion-nombre').textContent = registro.cajero || '—';
-  document.getElementById('seccion-caja').scrollIntoView({ behavior: 'smooth', block: 'start' });
-  mostrarToast(`✏️ Editando el cierre de ${registro.cajero || '—'}`, '');
-};
+function unificarTurnos(registros) {
+  // Suma todos los valores numéricos, combina gastos
+  const base = registros[0];
+  const campos = ['aperturaFuerte','aperturaRegistradora','cierreFuerte','cierreRegistradora','apertura','cierreContado','importeTarjetas','cantidadTarjetas','totalGastos',
+    'mercadoPago','posnetBalcarce','gastosDiarios','ventasIva','vouchers',
+    'mercadoDelivery','rappi','pedidosYa','uberEats'];
 
-// Cancela la edición y vuelve a dejar el formulario en blanco para cargar un turno nuevo
-window.cancelarEdicion = function() {
-  docIdActual = null;
-  limpiarFormulario();
-  document.getElementById('modo-edicion').style.display = 'none';
-  mostrarToast('Listo para cargar un turno nuevo', '');
-};
+  const resultado = { ...base };
+  for (let i = 1; i < registros.length; i++) {
+    campos.forEach(c => { resultado[c] = (resultado[c] || 0) + (registros[i][c] || 0); });
+    // Combinar gastos
+    if (registros[i].gastos) {
+      resultado.gastos = [...(resultado.gastos || []), ...registros[i].gastos];
+    }
+    if (registros[i].panes && resultado.panes) {
+      // Para panes, usar el último turno (más reciente)
+      resultado.panes = registros[i].panes;
+    }
+    // Combinar firmas de todos los turnos que se están unificando
+    if (registros[i].firmas) {
+      resultado.firmas = [...(resultado.firmas || []), ...registros[i].firmas];
+    }
+  }
+  return resultado;
+}
 
-// Muestra, sin mezclar, cada cierre guardado ese día para este local — así cada
-// cajero deja su propia Diferencia de caja (y de panes) sin pisar a los demás.
-// Tocar una tarjeta la carga en el formulario para corregirla.
-function renderResumenDelDia(registros) {
+// Muestra el registro de cajeros que ya guardaron ese día, cada uno con la hora
+// y cómo le quedó en ese momento — sin tocar para nada el formulario ni cómo se
+// carga/edita el cierre (eso sigue funcionando exactamente igual que siempre).
+function renderResumenDelDia() {
   const cont = document.getElementById('resumen-del-dia');
-  if (!registros.length) {
-    cont.innerHTML = '<div class="resumen-vacio">Sin cierres guardados todavía para este día</div>';
+  if (!firmasDelDia.length) {
+    cont.innerHTML = '<div class="resumen-vacio">Todavía nadie dejó su resumen hoy</div>';
     return;
   }
 
-  cont.innerHTML = registros.map(r => {
-    const resultado = (r.cierreContado || 0) + (r.importeTarjetas || 0) + (r.totalGastos || 0) + (r.totalDelivery || 0)
-      - (r.apertura || 0) - (r.ventasIva || 0) - (r.posnetBalcarce || 0);
-    const claseCaja = resultado === 0 ? 'neutral' : resultado > 0 ? 'ok' : 'warn';
-    const esActual = r.cajero === nombreUsuario;
+  cont.innerHTML = firmasDelDia.map(f => {
+    const claseCaja = f.difCaja === 0 ? 'neutral' : f.difCaja > 0 ? 'ok' : 'warn';
+    const esActual = f.cajero === nombreUsuario;
 
     let filasPanes = '';
-    if (esSubway && r.panes) {
-      const difPanes = r.panes.diferencia ?? 0;
-      const clasePanes = difPanes === 0 ? 'ok' : 'warn';
+    if (esSubway && f.difPanes !== null && f.difPanes !== undefined) {
+      const clasePanes = f.difPanes === 0 ? 'ok' : 'warn';
       filasPanes = `
         <div class="resumen-item">
           <div class="ri-label">Diferencia de panes</div>
-          <div class="ri-val ${clasePanes}">${difPanes}</div>
+          <div class="ri-val ${clasePanes}">${f.difPanes}</div>
         </div>
         <div class="resumen-item">
           <div class="ri-label">Panes vendidos (sistema)</div>
-          <div class="ri-val neutral">${r.panes.vendidosSistema ?? r.panes.sistema ?? 0}</div>
+          <div class="ri-val neutral">${f.panesVendidos ?? 0}</div>
         </div>
       `;
     }
 
     return `
-      <div class="resumen-cajero-card" onclick="window.cargarRegistroEspecifico('${r.id}')" style="cursor:pointer;">
+      <div class="resumen-cajero-card">
         <div class="resumen-cajero-nombre">
-          👤 ${r.cajero || '—'} ${esActual ? '<span class="actual-badge">Vos</span>' : ''}
-          <span style="margin-left:auto;font-size:11px;font-weight:400;color:rgba(255,255,255,0.4);">✏️ Tocar para editar</span>
+          👤 ${f.cajero || '—'} ${esActual ? '<span class="actual-badge">Vos</span>' : ''}
+          <span style="margin-left:auto;font-size:11px;font-weight:400;color:rgba(255,255,255,0.4);">🕐 ${f.hora || ''}</span>
         </div>
         <div class="resumen-grid">
           <div class="resumen-item" style="grid-column:1/-1;">
             <div class="ri-label">Diferencia de caja</div>
-            <div class="ri-val ${claseCaja}">${(resultado < 0 ? '-' : '') + formatPeso(resultado)}</div>
+            <div class="ri-val ${claseCaja}">${(f.difCaja < 0 ? '-' : '') + formatPeso(f.difCaja)}</div>
           </div>
           ${filasPanes}
         </div>
@@ -969,29 +975,10 @@ function renderResumenDelDia(registros) {
   }).join('');
 }
 
-// Vuelve a buscar y mostrar la lista de cajeros del día, sin tocar el formulario
-// (se usa después de guardar, para que el que acaba de guardar se vea en la lista).
-async function refrescarResumenDelDia() {
-  const fecha = document.getElementById('campo-fecha').value;
-  if (!fecha || !localUsuario) return;
-  try {
-    const snap = await getDocs(collection(db, 'cajero_cierres'));
-    const registros = [];
-    snap.forEach(d => {
-      const data = d.data();
-      if (data.local === localUsuario && data.fecha === fecha) {
-        registros.push({ id: d.id, ...data });
-      }
-    });
-    registrosDelDia = registros;
-    renderResumenDelDia(registros);
-  } catch (e) {
-    console.error('Error refrescando resumen del día:', e);
-  }
-}
-
 function cargarDatos(data) {
   const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
+  firmasDelDia = data.firmas || [];
+  renderResumenDelDia();
   set('apertura-fuerte',       data.aperturaFuerte);
   set('apertura-registradora', data.aperturaRegistradora);
   set('cierre-fuerte',         data.cierreFuerte);
@@ -1065,8 +1052,6 @@ function limpiarFormulario() {
   if (elAlertaAp) elAlertaAp.style.display = 'none';
   const elAlertaPanes = document.getElementById('alerta-sobrante-panes');
   if (elAlertaPanes) elAlertaPanes.style.display = 'none';
-  const elModoEdicion = document.getElementById('modo-edicion');
-  if (elModoEdicion) elModoEdicion.style.display = 'none';
 }
 
 // ── GUARDAR ─────────────────────────────────────────────
@@ -1085,11 +1070,44 @@ window.guardarCierre = async function() {
     const totalGastos = gastosActuales.reduce((acc, g) => acc + (parseFloat(g.monto) || 0), 0);
     const md = getNum('md'), rappi = getNum('rappi'), pedidos = getNum('pedidosya'), uber = getNum('ubereats');
 
+    // Firma: deja constancia de quién guardó, a qué hora, y cómo le quedó en
+    // ese momento — sin cambiar nada de cómo se carga/edita el cierre del día.
+    const totalDelActual = deliveryBloques.reduce((acc, b) => acc + b.canales.reduce((a, c) => a + (parseFloat(c.monto)||0), 0), 0) - getNum('dif-delivery-input');
+    const tarjetasActualTotal = tarjetasActuales.reduce((acc, t) => acc + (parseFloat(t.importe) || 0), 0);
+    const resultadoActual = (getNum('cierre-fuerte') + getNum('cierre-registradora')) + tarjetasActualTotal + totalGastos + totalDelActual
+      - (getNum('apertura-fuerte') + getNum('apertura-registradora')) - getNum('ventas-iva') - getNum('posnet-balcarce');
+
+    let difPanesActual = null, panesVendidosActual = null;
+    if (esSubway) {
+      panesVendidosActual = getNum('panes-sistema');
+      const conteoRealActual = getNum('sobrantes-anterior') + getNum('retardador') + getNum('panes-egresados') + getNum('panes-tostados')
+        - getNum('desperdicios') - getNum('sobrantes-dia');
+      difPanesActual = panesVendidosActual - conteoRealActual;
+    }
+
+    const nuevaFirma = {
+      cajero: nombreUsuario,
+      hora: new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }),
+      difCaja: resultadoActual,
+      difPanes: difPanesActual,
+      panesVendidos: panesVendidosActual
+    };
+    // Si este cajero ya tiene una firma hoy, se actualiza (no se duplica) —
+    // así no importa cuántas veces guarde durante el turno, solo queda una
+    // fila por persona con su último número.
+    const idxFirmaExistente = firmasDelDia.findIndex(f => f.cajero === nombreUsuario);
+    if (idxFirmaExistente >= 0) {
+      firmasDelDia[idxFirmaExistente] = nuevaFirma;
+    } else {
+      firmasDelDia.push(nuevaFirma);
+    }
+
     const datos = {
       fecha:           document.getElementById('campo-fecha').value,
       cajero:          nombreUsuario,
       local:           localUsuario,
       timestamp:       serverTimestamp(),
+      firmas:          firmasDelDia,
       aperturaFuerte:        getNum('apertura-fuerte'),
       aperturaRegistradora:  getNum('apertura-registradora'),
       apertura:              getNum('apertura-fuerte') + getNum('apertura-registradora'),
@@ -1138,7 +1156,7 @@ window.guardarCierre = async function() {
       mostrarToast('✅ Cierre guardado', 'success');
     }
 
-    await refrescarResumenDelDia();
+    renderResumenDelDia();
 
     document.getElementById('btn-guardar').textContent = '✅ Guardado — volver a guardar para actualizar';
     setTimeout(() => { btn.disabled = false; btn.textContent = 'Guardar cierre del día'; }, 3000);
