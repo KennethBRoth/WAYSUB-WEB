@@ -12,8 +12,8 @@
   .btn-back { background: rgba(255,255,255,0.1); border: none; color: white; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 14px; }
   .header h1 { font-size: 18px; font-weight: 600; flex: 1; }
 
-  .tabs { display: flex; background: white; border-bottom: 2px solid #f0f2f5; position: sticky; top: 57px; z-index: 99; }
-  .tab { flex: 1; padding: 13px 8px; text-align: center; font-size: 13px; font-weight: 600; color: #999; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; }
+  .tabs { display: flex; background: white; border-bottom: 2px solid #f0f2f5; position: sticky; top: 57px; z-index: 99; overflow-x: auto; }
+  .tab { flex: 1; padding: 13px 8px; text-align: center; font-size: 12px; font-weight: 600; color: #999; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; white-space: nowrap; }
   .tab.activo { color: #1a1a2e; border-bottom-color: #1a1a2e; }
 
   .seccion { display: none; padding: 20px 16px 80px; max-width: 680px; margin: 0 auto; }
@@ -25,6 +25,7 @@
   .field { margin-bottom: 14px; }
   .field:last-child { margin-bottom: 0; }
   .field label { display: block; font-size: 13px; font-weight: 600; color: #555; margin-bottom: 6px; }
+  .field .ayuda { font-size: 11px; color: #aaa; font-weight: 400; }
   .field input { width: 100%; padding: 12px 14px; border: 1.5px solid #e8e8e8; border-radius: 10px; font-size: 15px; color: #1a1a2e; background: #fafafa; transition: border-color 0.2s; outline: none; font-family: inherit; }
   .field input:focus { border-color: #1a1a2e; background: white; }
   .field input[type="number"] { appearance: textfield; }
@@ -92,6 +93,12 @@
   .btn-pago.marcar-pagado { background: #2ecc71; color: #1a1a2e; }
   .btn-pago.marcar-pendiente { background: #f0f2f5; color: #888; }
 
+  /* POR PRODUCTO */
+  .producto-detalle-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; background: white; border-radius: 12px; margin-bottom: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+  .producto-detalle-nombre { font-size: 14px; font-weight: 600; color: #1a1a2e; flex: 1; min-width: 0; padding-right: 10px; }
+  .producto-detalle-cant { font-size: 18px; font-weight: 800; color: #2a9d5c; white-space: nowrap; }
+  .producto-detalle-cant .un { font-size: 12px; font-weight: 600; color: #888; }
+
   @media (max-width: 480px) {
     .two-col { grid-template-columns: 1fr; }
   }
@@ -99,14 +106,15 @@
 </head>
 <body>
 
-<div class="header">
+<header class="header">
   <button class="btn-back" onclick="window.location.href='index.html'">← Inicio</button>
   <h1>🥡 Stock Viandas</h1>
-</div>
+</header>
 
 <div class="tabs">
   <div class="tab activo" onclick="cambiarTab('carga', this)">➕ Cargar</div>
   <div class="tab" onclick="cambiarTab('lista', this)">📋 Lista</div>
+  <div class="tab" onclick="cambiarTab('producto', this)">📦 Por Producto</div>
   <div class="tab" onclick="cambiarTab('facturacion', this)">💰 Facturación</div>
 </div>
 
@@ -133,7 +141,7 @@
 
     <div class="two-col">
       <div class="field">
-        <label>Costo del pedido ($) <span style="font-weight:400;color:#aaa;">· automático</span></label>
+        <label>Costo del pedido ($) <span class="ayuda">· automático</span></label>
         <input type="number" id="inp-costo-pedido" placeholder="0" inputmode="decimal">
       </div>
       <div class="field">
@@ -184,7 +192,20 @@
   </div>
 </div>
 
-<div class="toast" id="toast"></div>
+<!-- TAB POR PRODUCTO -->
+<div class="seccion" id="tab-producto">
+  <div class="section">
+    <div class="section-title">📅 Mes</div>
+    <input type="month" id="prod-mes" onchange="renderPorProducto()" style="width:100%;padding:12px 14px;border:1.5px solid #e8e8e8;border-radius:10px;font-size:15px;color:#1a1a2e;background:#fafafa;outline:none;font-family:inherit;">
+  </div>
+  <div class="stats-grid" style="grid-template-columns:1fr;">
+    <div class="stat-box general">
+      <div class="stat-label">Total de viandas vendidas ese mes</div>
+      <div class="stat-value" id="prod-total-mes">0 un</div>
+    </div>
+  </div>
+  <div id="lista-por-producto"></div>
+</div>
 
 <!-- TAB FACTURACIÓN -->
 <div class="seccion" id="tab-facturacion">
@@ -226,6 +247,8 @@
     <div id="lista-facturacion"><div class="loading-box"><div class="spinner"></div><p>Cargando...</p></div></div>
   </div>
 </div>
+
+<div class="toast" id="toast"></div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -295,6 +318,10 @@ onAuthStateChanged(auth, async (user) => {
 
   await cargarViandas();
 
+  // Por Producto: arranca en el mes actual
+  document.getElementById('prod-mes').value = hoy.slice(0, 7);
+  renderPorProducto();
+
   // Facturación: arranca en el mes actual
   document.getElementById('fact-mes').value = hoy.slice(0, 7);
   await cargarFacturacionMes();
@@ -318,6 +345,7 @@ window.cambiarTab = function(tab, el) {
   document.querySelectorAll('.seccion').forEach(s => s.classList.remove('activa'));
   el.classList.add('activo');
   document.getElementById('tab-' + tab).classList.add('activa');
+  if (tab === 'producto') renderPorProducto();
 };
 
 // ---------- FILAS DE PRODUCTOS (carga) ----------
@@ -458,6 +486,14 @@ window.setFiltroPago = function(valor, el) {
   renderLista();
 };
 
+function getTotalPedidosDelMes(mes) {
+  // Solo el costo de los productos (sin envío) de todas las viandas cargadas ese mes (formato mes: "YYYY-MM")
+  return viandas.reduce((acc, v) => {
+    if (!v.fecha || !v.fecha.startsWith(mes)) return acc;
+    return acc + getCostoPedido(v);
+  }, 0);
+}
+
 window.renderLista = function() {
   const desde = document.getElementById('filtro-desde').value;
   const hasta = document.getElementById('filtro-hasta').value;
@@ -548,7 +584,7 @@ window.togglePago = async function(id, estabaPagado) {
 };
 
 window.eliminarVianda = async function(id) {
-  if (!confirm('¿Eliminar este pedido?')) return;
+  if (!confirm('¿Eliminar esta vianda?')) return;
   try {
     await deleteDoc(doc(db, 'stock_viandas', id));
     viandas = viandas.filter(v => v.id !== id);
@@ -573,15 +609,43 @@ function toast(msg, tipo = '') {
   setTimeout(() => t.classList.remove('show'), 3000);
 }
 
-// ---------- FACTURACIÓN MENSUAL ----------
+// ---------- POR PRODUCTO ----------
 
-function getTotalPedidosDelMes(mes) {
-  // Solo el costo de los productos (sin envío) de todas las viandas cargadas ese mes (formato mes: "YYYY-MM")
-  return viandas.reduce((acc, v) => {
-    if (!v.fecha || !v.fecha.startsWith(mes)) return acc;
-    return acc + getCostoPedido(v);
-  }, 0);
-}
+window.renderPorProducto = function() {
+  const mes = document.getElementById('prod-mes').value;
+  const cont = document.getElementById('lista-por-producto');
+  if (!mes) return;
+
+  const delMes = viandas.filter(v => v.fecha && v.fecha.startsWith(mes));
+
+  // Sumar cantidad vendida por nombre de producto
+  const totales = {};
+  delMes.forEach(v => {
+    getProductosDeVianda(v).forEach(p => {
+      totales[p.producto] = (totales[p.producto] || 0) + (p.cantidad || 0);
+    });
+  });
+
+  const totalMes = Object.values(totales).reduce((a, b) => a + b, 0);
+  document.getElementById('prod-total-mes').textContent = totalMes.toLocaleString('es-AR') + ' un';
+
+  // Ordenar de más vendido a menos vendido
+  const filas = Object.entries(totales).sort((a, b) => b[1] - a[1]);
+
+  if (!filas.length) {
+    cont.innerHTML = '<div class="sin-datos"><div class="icon">📭</div><p>Sin viandas vendidas ese mes</p></div>';
+    return;
+  }
+
+  cont.innerHTML = filas.map(([nombre, cant]) => `
+    <div class="producto-detalle-row">
+      <div class="producto-detalle-nombre">${nombre}</div>
+      <div class="producto-detalle-cant">${cant} <span class="un">un</span></div>
+    </div>
+  `).join('');
+};
+
+// ---------- FACTURACIÓN MENSUAL ----------
 
 window.calcularTotalMensual = function() {
   const mes = document.getElementById('fact-mes').value;
