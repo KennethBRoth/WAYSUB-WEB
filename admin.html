@@ -63,7 +63,7 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getFirestore, collection, doc, updateDoc, deleteDoc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getFirestore, collection, doc, updateDoc, deleteDoc, onSnapshot, getDoc, FieldPath } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
   import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
   const firebaseConfig = {
@@ -182,7 +182,7 @@
           html += `<div class="permiso-toggle">
             <span>${mod.label}</span>
             <label class="toggle">
-              <input type="checkbox" ${checked} onchange="window.togglePermiso('${u.id}', '${local}', '${mod.key}', this.checked)">
+              <input type="checkbox" ${checked} onchange="window.togglePermiso('${u.id}', '${local}', '${mod.key}', this.checked, this)">
               <span class="toggle-slider"></span>
             </label>
           </div>`;
@@ -200,7 +200,7 @@
         html += `<div class="cajero-toggle">
           <span>${cl.label}</span>
           <label class="toggle">
-            <input type="checkbox" ${checked} onchange="window.toggleCajero('${u.id}', '${cl.key}', this.checked)">
+            <input type="checkbox" ${checked} onchange="window.toggleCajero('${u.id}', '${cl.key}', this.checked, this)">
             <span class="toggle-slider"></span>
           </label>
         </div>`;
@@ -217,7 +217,7 @@
         html += `<div class="cajero-toggle">
           <span>${a.label}</span>
           <label class="toggle">
-            <input type="checkbox" ${checked} onchange="window.toggleAcceso('${u.id}', '${a.key}', this.checked)">
+            <input type="checkbox" ${checked} onchange="window.toggleAcceso('${u.id}', '${a.key}', this.checked, this)">
             <span class="toggle-slider"></span>
           </label>
         </div>`;
@@ -243,19 +243,38 @@
     await updateDoc(doc(db, "usuarios", uid), { rol: nuevoRol });
   }
 
-  window.togglePermiso = async function(uid, local, modulo, valor) {
-    const campo = 'permisos.' + local + '.' + modulo;
-    await updateDoc(doc(db, "usuarios", uid), { [campo]: valor });
+  // Los nombres de local ("Ramos Mejía", "Morón") tienen espacios y tildes, así
+  // que NO se pueden armar como texto tipo "permisos.Ramos Mejía.axionlog" — hay
+  // que usar FieldPath para que Firebase entienda cada parte como un nombre
+  // literal, sin importar qué caracteres tenga.
+  window.togglePermiso = async function(uid, local, modulo, valor, checkboxEl) {
+    try {
+      await updateDoc(doc(db, "usuarios", uid), new FieldPath('permisos', local, modulo), valor);
+    } catch (e) {
+      console.error('Error actualizando permiso:', e);
+      if (checkboxEl) checkboxEl.checked = !valor; // revertir visualmente si falló
+      alert('❌ No se pudo guardar ese permiso: ' + (e && e.message ? e.message : e));
+    }
   }
 
-  window.toggleCajero = async function(uid, localKey, valor) {
-    const campo = 'cajeros.' + localKey;
-    await updateDoc(doc(db, "usuarios", uid), { [campo]: valor });
+  window.toggleCajero = async function(uid, localKey, valor, checkboxEl) {
+    try {
+      await updateDoc(doc(db, "usuarios", uid), new FieldPath('cajeros', localKey), valor);
+    } catch (e) {
+      console.error('Error actualizando cajero:', e);
+      if (checkboxEl) checkboxEl.checked = !valor;
+      alert('❌ No se pudo guardar ese permiso: ' + (e && e.message ? e.message : e));
+    }
   }
 
-  window.toggleAcceso = async function(uid, key, valor) {
-    const campo = 'accesos.' + key;
-    await updateDoc(doc(db, "usuarios", uid), { [campo]: valor });
+  window.toggleAcceso = async function(uid, key, valor, checkboxEl) {
+    try {
+      await updateDoc(doc(db, "usuarios", uid), new FieldPath('accesos', key), valor);
+    } catch (e) {
+      console.error('Error actualizando acceso:', e);
+      if (checkboxEl) checkboxEl.checked = !valor;
+      alert('❌ No se pudo guardar ese permiso: ' + (e && e.message ? e.message : e));
+    }
   }
 
   window.eliminarUsuario = async function(uid) {
