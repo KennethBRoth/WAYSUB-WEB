@@ -28,7 +28,9 @@
   .prod-row { display: grid; grid-template-columns: 200px 1fr 1fr 1fr; gap: 10px; align-items: center; padding: 8px 0; border-bottom: 1px solid #f8f8f8; }
   .prod-row:last-child { border-bottom: none; }
   .prod-nombre { font-size: 13px; font-weight: 500; color: #333; }
-  .prod-stock-a { font-size: 13px; color: #888; background: #f8f9fa; padding: 8px 10px; border-radius: 8px; text-align: center; }
+  .prod-stock-a-input { width: 100%; font-size: 13px; color: #888; background: #f8f9fa; padding: 8px 10px; border-radius: 8px; text-align: center; border: 1.5px solid transparent; font-family: inherit; }
+  .prod-stock-a-input:disabled { cursor: not-allowed; }
+  .prod-stock-a-input:not(:disabled) { color: #1a1a2e; background: white; border-color: #1a1a2e; font-weight: 700; }
   .prod-input { width: 100%; padding: 8px 10px; border: 1.5px solid #e8e8e8; border-radius: 8px; font-size: 13px; color: #1a1a2e; background: #fafafa; outline: none; font-family: inherit; text-align: center; appearance: textfield; }
   .prod-input::-webkit-inner-spin-button { display: none; }
   .prod-input:focus { border-color: #1a1a2e; background: white; }
@@ -84,6 +86,7 @@
   /* BOTONES */
   .btn-primary { background: #1a1a2e; color: white; border: none; padding: 14px 20px; border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; }
   .btn-secondary { background: white; color: #1a1a2e; border: 1.5px solid #e8e8e8; padding: 12px 16px; border-radius: 12px; font-size: 14px; font-weight: 600; cursor: pointer; }
+  .btn-secondary.activo { background: #1a1a2e; color: white; }
   .btn-sm { padding: 8px 14px; font-size: 13px; border-radius: 8px; }
 
   .footer-btns { position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 1px solid #eee; padding: 12px 16px; display: flex; gap: 10px; z-index: 100; }
@@ -140,7 +143,10 @@
       <span style="font-size:11px;color:#aaa;font-weight:400;text-transform:none;">cargado automáticamente</span>
     </div>
     <div id="stock-a-resumen" style="font-size:13px;color:#666;">Cargando...</div>
-    <button class="btn-secondary btn-sm" onclick="recargarStockA()" style="margin-top:10px;">📥 Cargar Stock</button>
+    <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
+      <button class="btn-secondary btn-sm" style="flex:1;" onclick="recargarStockA()">📥 Cargar Stock</button>
+      <button class="btn-secondary btn-sm" id="btn-editar-stock-a" style="flex:1;" onclick="toggleEdicionStockA()">✏️ Editar Stock A manual</button>
+    </div>
   </div>
 
   <!-- FORMULARIO STOCK B + FACTURA -->
@@ -254,6 +260,7 @@ let resultadoCalculo = null;
 let transfers = [];
 let datosListos = null; // Promise que resuelve cuando productos/reglas/historial ya están cargados
 let primeraSemana = false; // Si está activo, el consumo calculado se aumenta 15%
+let edicionStockAManual = false; // Si está activo, el Stock A se puede escribir a mano
 
 window.togglePrimeraSemana = function() {
   primeraSemana = !primeraSemana;
@@ -316,8 +323,8 @@ async function cargarProductos() {
 async function cargarReglas() {
   const snap = await getDoc(doc(db, 'axionlog_config', 'reglas'));
   reglas = snap.exists() ? snap.data() : {
-    diasObjetivo:7, leadTime:2, margen:1, desvioRojo:80, desvioAmarillo:40,
-    panBlanco:220, panIntegral:165, protSecUmbral:5, salsas2Cajas:2,
+    diasObjetivo:8, leadTime:2, margen:0, desvioRojo:80, desvioAmarillo:40,
+    protSecUmbral:5, salsas2Cajas:2,
     snacksMin:35, papDeliMax:1, quesosAlerta:6, preventivos:['Mayonesa','Film PVC']
   };
 }
@@ -342,8 +349,7 @@ function refrescarColumnaStockA() {
   productos.filter(p => p.estado !== 'excluido').forEach(p => {
     const el = document.getElementById('sa-ref-' + p.id);
     if (!el) return;
-    const val = stockA[p.nombre] !== undefined ? stockA[p.nombre] : '—';
-    el.textContent = val !== '—' ? val + ' ' + p.unidad : '—';
+    el.value = stockA[p.nombre] !== undefined ? stockA[p.nombre] : '';
   });
 }
 
@@ -352,7 +358,28 @@ window.recargarStockA = async function() {
   const ultimo = await cargarStockA(localActual);
   mostrarResumenStockA(ultimo);
   refrescarColumnaStockA();
+  // Al recargar el valor automático, se sale del modo de edición manual —
+  // así queda claro que lo que se ve es el dato oficial, no algo tocado a mano.
+  if (edicionStockAManual) toggleEdicionStockA();
   toast(ultimo ? '✅ Stock A actualizado' : 'No hay Stock A guardado todavía', ultimo ? 'ok' : 'err');
+};
+
+// Prende/apaga la posibilidad de escribir el Stock A a mano. Por defecto está
+// bloqueado (muestra el dato automático); al activarlo, cada casillero de
+// Stock A se vuelve editable y lo que se escriba se usa directo en el cálculo.
+window.toggleEdicionStockA = function() {
+  edicionStockAManual = !edicionStockAManual;
+  document.querySelectorAll('.prod-stock-a-input').forEach(inp => {
+    inp.disabled = !edicionStockAManual;
+  });
+  const btn = document.getElementById('btn-editar-stock-a');
+  if (btn) btn.textContent = edicionStockAManual ? '🔒 Terminar de editar' : '✏️ Editar Stock A manual';
+  if (btn) btn.classList.toggle('activo', edicionStockAManual);
+  toast(edicionStockAManual ? '✏️ Ahora podés escribir el Stock A a mano' : 'Stock A vuelve a quedar fijo', '');
+};
+
+window.actualizarStockAManual = function(nombreProd, valor) {
+  stockA[nombreProd] = valor === '' ? undefined : parseFloat(valor);
 };
 
 function mostrarResumenStockA(ultimo) {
@@ -436,7 +463,7 @@ function construirFormulario() {
 
     prods.forEach(p => {
       const esExterno = p.estado === 'externo';
-      const stockAVal = stockA[p.nombre] !== undefined ? stockA[p.nombre] : '—';
+      const stockAVal = stockA[p.nombre] !== undefined ? stockA[p.nombre] : '';
       const row = document.createElement('div');
       row.className = 'prod-row';
       row.innerHTML = `
@@ -444,7 +471,10 @@ function construirFormulario() {
           <div class="prod-nombre">${p.nombre}</div>
           ${esExterno ? '<div style="font-size:10px;color:#e67e22;">Gestión externa</div>' : ''}
         </div>
-        <div class="prod-stock-a" id="sa-ref-${p.id}">${stockAVal !== '—' ? stockAVal + ' ' + p.unidad : '—'}</div>
+        <div>
+          <input type="number" class="prod-stock-a-input" id="sa-ref-${p.id}" value="${stockAVal}" step="any" disabled
+            oninput="window.actualizarStockAManual('${p.nombre.replace(/'/g, "\\'")}', this.value)">
+        </div>
         <div>
           <input type="number" class="prod-input" id="sb-${p.id}" placeholder="0" inputmode="decimal" step="any" ${esExterno ? 'disabled style="background:#f8f9fa;color:#ccc;"' : ''}>
           <div class="prod-unidad">${p.unidad}</div>
@@ -459,6 +489,10 @@ function construirFormulario() {
   });
 
   document.getElementById('form-carga').style.display = 'block';
+  // Cada vez que se reconstruye el formulario, el edit manual vuelve a apagarse
+  edicionStockAManual = false;
+  const btnEdit = document.getElementById('btn-editar-stock-a');
+  if (btnEdit) { btnEdit.textContent = '✏️ Editar Stock A manual'; btnEdit.classList.remove('activo'); }
 }
 
 // ── TRANSFERENCIAS ───────────────────────────────────
