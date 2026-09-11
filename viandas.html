@@ -228,6 +228,10 @@
       <label>Costo neteado ($) <span style="font-weight:400;color:#e63946;">· resta</span></label>
       <input type="number" id="fact-costo" placeholder="0" inputmode="decimal" oninput="calcularTotalMensual()">
     </div>
+    <div class="field">
+      <label>Diferencia mensual ($) <span style="font-weight:400;color:#aaa;">· solo para anotar, no afecta ninguna cuenta</span></label>
+      <input type="number" id="fact-diferencia" placeholder="0" inputmode="decimal">
+    </div>
     <button class="btn-save" id="btn-guardar-fact" onclick="guardarFacturacionMes()">Guardar mes</button>
   </div>
 
@@ -239,6 +243,22 @@
     <div class="stat-box general">
       <div class="stat-label">Total mensual</div>
       <div class="stat-value" id="fact-total-mensual">$0</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">🤝 Reparto de la ganancia <span style="font-size:11px;color:#aaa;font-weight:400;text-transform:none;letter-spacing:0;">a mano, del Total mensual de arriba</span></div>
+    <div class="field">
+      <label>Para el local ($)</label>
+      <input type="number" id="fact-reparto-local" placeholder="0" inputmode="decimal" oninput="actualizarSumaReparto()">
+    </div>
+    <div class="field">
+      <label>Para K ($)</label>
+      <input type="number" id="fact-reparto-k" placeholder="0" inputmode="decimal" oninput="actualizarSumaReparto()">
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;background:#f8f9fa;border-radius:10px;padding:10px 14px;margin-top:4px;">
+      <span style="font-size:13px;font-weight:700;color:#555;">Suma del reparto</span>
+      <span style="font-size:16px;font-weight:800;color:#1a1a2e;" id="fact-suma-reparto">$0</span>
     </div>
   </div>
 
@@ -672,15 +692,28 @@ window.cargarFacturacionMes = async function() {
       document.getElementById('fact-alquiler').value = d.ingresoAlquiler || '';
       document.getElementById('fact-cinco').value = d.ingreso5Facturacion || '';
       document.getElementById('fact-costo').value = d.costoNeteado || '';
+      document.getElementById('fact-diferencia').value = d.diferenciaMensual ?? '';
+      document.getElementById('fact-reparto-local').value = d.repartoLocal ?? '';
+      document.getElementById('fact-reparto-k').value = d.repartoK ?? '';
     } else {
       document.getElementById('fact-alquiler').value = '';
       document.getElementById('fact-cinco').value = '';
       document.getElementById('fact-costo').value = '';
+      document.getElementById('fact-diferencia').value = '';
+      document.getElementById('fact-reparto-local').value = '';
+      document.getElementById('fact-reparto-k').value = '';
     }
   } catch(e) {
     console.error(e);
   }
   calcularTotalMensual();
+  actualizarSumaReparto();
+};
+
+window.actualizarSumaReparto = function() {
+  const local = parseFloat(document.getElementById('fact-reparto-local').value) || 0;
+  const k = parseFloat(document.getElementById('fact-reparto-k').value) || 0;
+  document.getElementById('fact-suma-reparto').textContent = '$' + (local + k).toLocaleString('es-AR');
 };
 
 window.guardarFacturacionMes = async function() {
@@ -691,6 +724,9 @@ window.guardarFacturacionMes = async function() {
   btn.disabled = true; btn.textContent = 'Guardando...';
 
   const { alquiler, cinco, costo, totalPedidos, totalMensual } = calcularTotalMensual();
+  const diferenciaMensual = parseFloat(document.getElementById('fact-diferencia').value) || 0;
+  const repartoLocal = parseFloat(document.getElementById('fact-reparto-local').value) || 0;
+  const repartoK = parseFloat(document.getElementById('fact-reparto-k').value) || 0;
 
   try {
     await setDoc(doc(db, 'viandas_facturacion', mes), {
@@ -698,6 +734,9 @@ window.guardarFacturacionMes = async function() {
       ingresoAlquiler: alquiler,
       ingreso5Facturacion: cinco,
       costoNeteado: costo,
+      diferenciaMensual,
+      repartoLocal,
+      repartoK,
       totalPedidos,
       totalMensual,
       cargadoPor: nombreUsuario,
@@ -742,6 +781,8 @@ window.cargarListaFacturacion = async function() {
             <span>5%: <b>$${(m.ingreso5Facturacion||0).toLocaleString('es-AR')}</b></span>
             <span>Pedidos: <b>$${totalPedidos.toLocaleString('es-AR')}</b></span>
             <span>Costo: <b>-$${(m.costoNeteado||0).toLocaleString('es-AR')}</b></span>
+            ${m.diferenciaMensual ? `<span>Diferencia: <b>$${m.diferenciaMensual.toLocaleString('es-AR')}</b></span>` : ''}
+            ${(m.repartoLocal || m.repartoK) ? `<span>Local: <b>$${(m.repartoLocal||0).toLocaleString('es-AR')}</b></span><span>K: <b>$${(m.repartoK||0).toLocaleString('es-AR')}</b></span>` : ''}
           </div>
         </div>
         <span class="vianda-total">$${totalMensual.toLocaleString('es-AR')}</span>
