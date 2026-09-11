@@ -1105,7 +1105,7 @@ window.guardarCierre = async function() {
     const nuevaFirma = {
       cajero: nombreUsuario,
       hora: ahora.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }),
-      fechaGuardado: ahora.toISOString().split('T')[0], // fecha real del guardado/corrección, puede ser distinta a la del cierre
+      fechaGuardado: `${ahora.getFullYear()}-${String(ahora.getMonth()+1).padStart(2,'0')}-${String(ahora.getDate()).padStart(2,'0')}`, // fecha real del guardado/corrección en horario local, puede ser distinta a la del cierre
       difCaja: resultadoActual,
       difPanes: difPanesActual,
       panesVendidos: panesVendidosActual
