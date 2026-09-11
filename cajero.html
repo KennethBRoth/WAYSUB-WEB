@@ -42,19 +42,20 @@
 
   /* RESUMEN ARRIBA DE TODO */
   .resumen-top { background: #1a1a2e; border-radius: 16px; padding: 18px 20px; margin-bottom: 16px; color: white; }
-  .resumen-top-label { font-size: 11px; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
+  .resumen-top-label { font-size: 11px; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px; }
   .resumen-cajero-card { background: rgba(255,255,255,0.08); border-radius: 12px; padding: 12px 14px; margin-bottom: 8px; }
   .resumen-cajero-card:last-child { margin-bottom: 0; }
   .resumen-cajero-nombre { font-size: 14px; font-weight: 700; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
   .resumen-cajero-nombre .actual-badge { font-size: 9px; font-weight: 700; background: #e8b84b; color: #1a1a2e; padding: 2px 6px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .resumen-cajero-nombre .hora-fecha { margin-left: auto; font-size: 11px; font-weight: 400; color: rgba(255,255,255,0.4); text-align: right; }
   .resumen-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  .resumen-vacio { font-size: 13px; color: rgba(255,255,255,0.5); text-align: center; padding: 8px 0; }
   .resumen-item { background: rgba(255,255,255,0.08); border-radius: 10px; padding: 10px 12px; }
   .resumen-item .ri-label { font-size: 11px; color: rgba(255,255,255,0.5); margin-bottom: 2px; }
   .resumen-item .ri-val { font-size: 16px; font-weight: 800; }
   .resumen-item .ri-val.ok { color: #2ecc71; }
   .resumen-item .ri-val.warn { color: #e74c3c; }
   .resumen-item .ri-val.neutral { color: white; }
+  .resumen-vacio { font-size: 13px; color: rgba(255,255,255,0.5); text-align: center; padding: 8px 0; }
 
   /* SELECTOR FECHA */
   .fecha-nav { background: white; border-radius: 16px; padding: 16px 20px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); display: flex; align-items: center; gap: 12px; }
@@ -166,6 +167,8 @@
   @media (max-width: 480px) {
     .two-col, .panes-grid, .panes-result, .resultado-detalle, .resumen-grid { grid-template-columns: 1fr; }
     .gasto-item { flex-wrap: wrap; }
+    .resumen-cajero-nombre { flex-wrap: wrap; }
+    .resumen-cajero-nombre .hora-fecha { margin-left: 0; text-align: left; }
   }
 </style>
 </head>
@@ -204,9 +207,9 @@
 
     <!-- RESUMEN ARRIBA DE TODO -->
     <div class="resumen-top">
-      <div class="resumen-top-label">Resumen del día — todos los cajeros</div>
+      <div class="resumen-top-label">Resumen del día</div>
       <div id="resumen-del-dia">
-        <div class="resumen-vacio">Sin cierres guardados todavía para este día</div>
+        <div class="resumen-vacio">Todavía nadie dejó su resumen hoy</div>
       </div>
     </div>
 
@@ -753,7 +756,7 @@ window.verificarApertura = async function() {
 
 // ── AVISO: SOBRANTES DE PANES vs DÍA ANTERIOR ────────────
 // Compara "Sobrantes día anterior" de hoy contra "Sobrantes del día" que quedó
-// guardado ayer para el mismo local. No bloquea nada, solo avisa.
+// guardado ayer para el mismo local. No bloquea nada, solo avisa (en rojo).
 window.verificarSobrantePanes = async function() {
   const el = document.getElementById('alerta-sobrante-panes');
   const inputEl = document.getElementById('sobrantes-anterior');
@@ -939,8 +942,9 @@ function unificarTurnos(registros) {
 }
 
 // Muestra el registro de cajeros que ya guardaron ese día, cada uno con la hora
-// y cómo le quedó en ese momento — sin tocar para nada el formulario ni cómo se
-// carga/edita el cierre (eso sigue funcionando exactamente igual que siempre).
+// y fecha real del último guardado, y cómo le quedó en ese momento — sin tocar
+// para nada el formulario ni cómo se carga/edita el cierre (eso sigue
+// funcionando exactamente igual que siempre).
 function renderResumenDelDia() {
   const cont = document.getElementById('resumen-del-dia');
   if (!firmasDelDia.length) {
@@ -971,7 +975,7 @@ function renderResumenDelDia() {
       <div class="resumen-cajero-card">
         <div class="resumen-cajero-nombre">
           👤 ${f.cajero || '—'} ${esActual ? '<span class="actual-badge">Vos</span>' : ''}
-          <span style="margin-left:auto;font-size:11px;font-weight:400;color:rgba(255,255,255,0.4);">🕐 ${f.hora || ''}</span>
+          <span class="hora-fecha">🕐 ${f.hora || ''}${f.fechaGuardado ? ' · ' + formatFechaCorta(f.fechaGuardado) : ''}</span>
         </div>
         <div class="resumen-grid">
           <div class="resumen-item" style="grid-column:1/-1;">
@@ -1062,8 +1066,8 @@ function limpiarFormulario() {
   if (elAlertaAp) elAlertaAp.style.display = 'none';
   const elAlertaPanes = document.getElementById('alerta-sobrante-panes');
   if (elAlertaPanes) elAlertaPanes.style.display = 'none';
-  const elSobranteAnteriorInput = document.getElementById('sobrantes-anterior');
-  if (elSobranteAnteriorInput) { elSobranteAnteriorInput.style.borderColor = ''; elSobranteAnteriorInput.style.background = ''; }
+  const inputSobranteAnterior = document.getElementById('sobrantes-anterior');
+  if (inputSobranteAnterior) { inputSobranteAnterior.style.borderColor = ''; inputSobranteAnterior.style.background = ''; }
 }
 
 // ── GUARDAR ─────────────────────────────────────────────
@@ -1082,8 +1086,8 @@ window.guardarCierre = async function() {
     const totalGastos = gastosActuales.reduce((acc, g) => acc + (parseFloat(g.monto) || 0), 0);
     const md = getNum('md'), rappi = getNum('rappi'), pedidos = getNum('pedidosya'), uber = getNum('ubereats');
 
-    // Firma: deja constancia de quién guardó, a qué hora, y cómo le quedó en
-    // ese momento — sin cambiar nada de cómo se carga/edita el cierre del día.
+    // Firma: deja constancia de quién guardó, a qué hora y fecha reales, y cómo
+    // le quedó en ese momento — sin cambiar nada de cómo se carga/edita el cierre.
     const totalDelActual = deliveryBloques.reduce((acc, b) => acc + b.canales.reduce((a, c) => a + (parseFloat(c.monto)||0), 0), 0) - getNum('dif-delivery-input');
     const tarjetasActualTotal = tarjetasActuales.reduce((acc, t) => acc + (parseFloat(t.importe) || 0), 0);
     const resultadoActual = (getNum('cierre-fuerte') + getNum('cierre-registradora')) + tarjetasActualTotal + totalGastos + totalDelActual
@@ -1097,9 +1101,11 @@ window.guardarCierre = async function() {
       difPanesActual = panesVendidosActual - conteoRealActual;
     }
 
+    const ahora = new Date();
     const nuevaFirma = {
       cajero: nombreUsuario,
-      hora: new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }),
+      hora: ahora.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }),
+      fechaGuardado: ahora.toISOString().split('T')[0], // fecha real del guardado/corrección, puede ser distinta a la del cierre
       difCaja: resultadoActual,
       difPanes: difPanesActual,
       panesVendidos: panesVendidosActual
@@ -1186,6 +1192,12 @@ function mostrarToast(msg, tipo = '') {
   t.textContent = msg; t.className = 'toast ' + tipo;
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function formatFechaCorta(str) {
+  if (!str) return '';
+  const [y, m, d] = str.split('-');
+  return `${d}/${m}`;
 }
 </script>
 </body>
