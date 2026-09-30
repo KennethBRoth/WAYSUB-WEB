@@ -95,7 +95,9 @@
   .spinner { width: 36px; height: 36px; border: 3px solid #ddd; border-top-color: #1a1a2e; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px; }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(60px); background: #1a1a2e; color: white; padding: 12px 24px; border-radius: 10px; font-size: 14px; font-weight: 600; transition: transform 0.3s; z-index: 999; white-space: nowrap; }
+  /* Toast: subido bien arriba de la barra de botones de abajo, y con ancho
+     limitado para que un mensaje largo no se ponga demasiado ancho. */
+  .toast { position: fixed; bottom: 140px; left: 50%; transform: translateX(-50%) translateY(60px); background: #1a1a2e; color: white; padding: 12px 24px; border-radius: 10px; font-size: 14px; font-weight: 600; transition: transform 0.3s; z-index: 999; white-space: normal; max-width: 85vw; text-align: center; }
   .toast.show { transform: translateX(-50%) translateY(0); }
   .toast.ok { background: #2ecc71; color: #1a1a2e; }
   .toast.err { background: #e74c3c; }
