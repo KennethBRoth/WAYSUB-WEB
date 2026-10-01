@@ -175,7 +175,7 @@
     { marca: 'Balcarce', local: 'Morón',       color: '#d9822b' }
   ];
   const DIAS = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
-  const CAMPOS_NUM = ['pedidos','ticket','impresiones','menu','carrito','pedido','prep','reclamos'];
+  const CAMPOS_NUM = ['pedidos','ticket','conversion','impresiones','menu','carrito','pedido','prep','reclamos','recompra'];
   const PERIODOS = [ { n: 1, txt: 'Última semana' }, { n: 4, txt: '4 semanas' }, { n: 8, txt: '8 semanas' }, { n: 0, txt: 'Todo' } ];
 
   const params = new URLSearchParams(window.location.search);
@@ -226,6 +226,7 @@
     if (tipo === 'minutos') return n.toLocaleString('es-AR', { maximumFractionDigits: 1 }) + ' min';
     return n.toLocaleString('es-AR', { maximumFractionDigits: 2 });
   }
+  function fmtOpc(n, tipo) { return Number(n) > 0 ? fmt(n, tipo) : '—'; }
   function toast(msg, tipo) {
     const t = document.getElementById('toast');
     t.textContent = msg;
@@ -302,7 +303,7 @@
     selLocs = new Set(mio ? [mio.idx] : []);
   }
 
-  function appVacia() { return { v: [0,0,0,0,0,0,0], pedidos: 0, ticket: 0, impresiones: 0, menu: 0, carrito: 0, pedido: 0, prep: 0, reclamos: 0 }; }
+  function appVacia() { return { v: [0,0,0,0,0,0,0], pedidos: 0, ticket: 0, conversion: 0, impresiones: 0, menu: 0, carrito: 0, pedido: 0, prep: 0, reclamos: 0, recompra: 0 }; }
 
   function lunesElegido() {
     const f = document.getElementById('inp-fecha').value;
@@ -380,6 +381,8 @@
       </div>
       <div class="card">
         <h3>${nombreApp} · Embudo</h3>
+        <div class="vs-texto" style="padding:0 0 10px;">Cargá solo lo que muestra esta app. Lo que no tenga, dejalo en 0.</div>
+        <div class="campo"><label>Tasa de conversión (%)</label>${inp('conversion', a.conversion)}</div>
         <div class="campo"><label>Impresiones</label>${inp('impresiones', a.impresiones)}</div>
         <div class="campo"><label>Visualizaron el menú</label>${inp('menu', a.menu)}</div>
         <div class="campo"><label>De menú a carrito</label>${inp('carrito', a.carrito)}</div>
@@ -393,6 +396,10 @@
         <div class="campo"><label>Tiempo de preparación (minutos)</label>${inp('prep', a.prep)}</div>
         <div class="campo"><label>Pedidos con reclamo</label>${inp('reclamos', a.reclamos)}</div>
         <div class="total-fila"><span>% de pedidos con reclamo</span><strong id="calc-recl">0%</strong></div>
+      </div>
+      <div class="card">
+        <h3>${nombreApp} · Clientes</h3>
+        <div class="campo" style="margin-bottom:0;"><label>Tasa de recompra (%)</label>${inp('recompra', a.recompra)}</div>
       </div>
       <div class="card">
         <h3>Nota de la semana (opcional)</h3>
@@ -417,9 +424,10 @@
     const ventas = a.v.reduce((x, y) => x + y, 0);
     const set = (id, txt) => { const e = document.getElementById(id); if (e) e.textContent = txt; };
     set('calc-ventas', fmt(ventas, 'dinero'));
-    set('calc-c1', fmt(a.impresiones > 0 ? a.menu / a.impresiones * 100 : 0, 'porcentaje'));
-    set('calc-c2', fmt(a.menu > 0 ? a.carrito / a.menu * 100 : 0, 'porcentaje'));
-    set('calc-c3', fmt(a.carrito > 0 ? a.pedido / a.carrito * 100 : 0, 'porcentaje'));
+    const pc = (n, d) => d > 0 ? fmt(n / d * 100, 'porcentaje') : '—';
+    set('calc-c1', pc(a.menu, a.impresiones));
+    set('calc-c2', pc(a.carrito, a.menu));
+    set('calc-c3', pc(a.pedido, a.carrito));
     set('calc-recl', fmt(a.pedidos > 0 ? a.reclamos / a.pedidos * 100 : 0, 'porcentaje'));
   }
 
@@ -444,19 +452,22 @@
     { titulo: 'Ventas', items: [
       { k: 'ventas', label: 'Ventas', tipo: 'dinero' },
       { k: 'pedidos', label: 'Pedidos', tipo: 'numero' },
-      { k: 'ticket', label: 'Ticket promedio', tipo: 'dinero' } ] },
-    { titulo: 'Embudo', items: [
-      { k: 'impresiones', label: 'Impresiones', tipo: 'numero' },
-      { k: 'menu', label: 'Visualizaron el menú', tipo: 'numero' },
-      { k: 'carrito', label: 'De menú a carrito', tipo: 'numero' },
-      { k: 'pedido', label: 'Realizaron un pedido', tipo: 'numero' },
-      { k: 'c_menu', label: 'Impresión a menú', tipo: 'porcentaje' },
-      { k: 'c_carrito', label: 'Menú a carrito', tipo: 'porcentaje' },
-      { k: 'c_pedido', label: 'Carrito a pedido', tipo: 'porcentaje' } ] },
+      { k: 'ticket', label: 'Ticket promedio', tipo: 'dinero', opcional: true } ] },
+    { titulo: 'Embudo', nota: 'Las apps que no muestran un dato del embudo no se cuentan en ese número.', items: [
+      { k: 'conversion', label: 'Tasa de conversión', tipo: 'porcentaje', opcional: true },
+      { k: 'impresiones', label: 'Impresiones', tipo: 'numero', opcional: true },
+      { k: 'menu', label: 'Visualizaron el menú', tipo: 'numero', opcional: true },
+      { k: 'carrito', label: 'De menú a carrito', tipo: 'numero', opcional: true },
+      { k: 'pedido', label: 'Realizaron un pedido', tipo: 'numero', opcional: true },
+      { k: 'c_menu', label: 'Impresión a menú', tipo: 'porcentaje', opcional: true },
+      { k: 'c_carrito', label: 'Menú a carrito', tipo: 'porcentaje', opcional: true },
+      { k: 'c_pedido', label: 'Carrito a pedido', tipo: 'porcentaje', opcional: true } ] },
     { titulo: 'Operación', items: [
-      { k: 'prep', label: 'Tiempo de preparación', tipo: 'minutos', menos: true },
+      { k: 'prep', label: 'Tiempo de preparación', tipo: 'minutos', menos: true, opcional: true },
       { k: 'reclamos', label: 'Pedidos con reclamo', tipo: 'numero', menos: true },
-      { k: 'pctReclamos', label: '% de pedidos con reclamo', tipo: 'porcentaje', menos: true } ] }
+      { k: 'pctReclamos', label: '% de pedidos con reclamo', tipo: 'porcentaje', menos: true } ] },
+    { titulo: 'Clientes', nota: 'Solo cuenta las apps que cargan la tasa de recompra.', items: [
+      { k: 'recompra', label: 'Tasa de recompra', tipo: 'porcentaje', opcional: true } ] }
   ];
 
   function acumular(o, val, peso) {
@@ -470,6 +481,8 @@
     const r = { ventas: 0, dias: [0,0,0,0,0,0,0], pedidos: 0, impresiones: 0, menu: 0, carrito: 0, pedido: 0, reclamos: 0 };
     const prep = { num: 0, den: 0, sum: 0, n: 0 };
     const tick = { num: 0, den: 0, sum: 0, n: 0 };
+    const recom = { num: 0, den: 0, sum: 0, n: 0 };
+    const conv = { ped: 0, vis: 0, sum: 0, n: 0 };
     docs.forEach(sem => {
       ids.forEach(id => {
         const a = sem.apps && sem.apps[id];
@@ -484,11 +497,20 @@
         r.reclamos += Number(a.reclamos) || 0;
         acumular(prep, Number(a.prep) || 0, ped);
         acumular(tick, Number(a.ticket) || 0, ped);
+        acumular(recom, Number(a.recompra) || 0, ped);
+        // Conversión = pedidos / visitas. Se reconstruyen las visitas de cada app para combinarlas bien.
+        const tasa = Number(a.conversion) || 0;
+        if (tasa > 0) {
+          conv.sum += tasa; conv.n++;
+          if (ped > 0) { conv.ped += ped; conv.vis += ped / (tasa / 100); }
+        }
       });
     });
-    // Tiempo y ticket: promedio ponderado por la cantidad de pedidos
+    // Tiempo, ticket y recompra: promedio ponderado por la cantidad de pedidos
     r.prep = promedio(prep);
     r.ticket = promedio(tick);
+    r.recompra = promedio(recom);
+    r.conversion = conv.vis > 0 ? conv.ped / conv.vis * 100 : (conv.n > 0 ? conv.sum / conv.n : 0);
     r.c_menu = r.impresiones > 0 ? r.menu / r.impresiones * 100 : 0;
     r.c_carrito = r.menu > 0 ? r.carrito / r.menu * 100 : 0;
     r.c_pedido = r.carrito > 0 ? r.pedido / r.carrito * 100 : 0;
@@ -524,9 +546,12 @@
   function kpisHtml(cur, prev) {
     let html = '';
     GRUPOS.forEach(g => {
-      html += `<div class="grupo-titulo">${g.titulo}</div><div class="kpi-grid">`;
+      html += `<div class="grupo-titulo">${g.titulo}</div>` + (g.nota ? `<div class="vs-texto" style="padding-bottom:0;">${g.nota}</div>` : '') + `<div class="kpi-grid">`;
       g.items.forEach(it => {
-        html += `<div class="kpi"><div class="kpi-label">${it.label}</div><div class="kpi-valor">${fmt(cur[it.k], it.tipo)}</div>${prev ? deltaHtml(cur[it.k], prev[it.k], it.tipo, it.menos) : ''}</div>`;
+        const sinDato = it.opcional && !cur[it.k];
+        const valor = sinDato ? '—' : fmt(cur[it.k], it.tipo);
+        const conDelta = prev && !sinDato && !(it.opcional && !prev[it.k]);
+        html += `<div class="kpi"><div class="kpi-label">${it.label}</div><div class="kpi-valor">${valor}</div>${conDelta ? deltaHtml(cur[it.k], prev[it.k], it.tipo, it.menos) : ''}</div>`;
       });
       html += '</div>';
     });
@@ -574,7 +599,7 @@
       let filas = '';
       APPS.forEach(a => {
         const r = agregar(actual, a.id);
-        filas += `<tr><td>${a.nombre}</td><td>${fmt(r.ventas, 'dinero')}</td><td>${fmt(r.pedidos, 'numero')}</td><td>${fmt(r.ticket, 'dinero')}</td><td>${fmt(r.reclamos, 'numero')}</td></tr>`;
+        filas += `<tr><td>${a.nombre}</td><td>${fmt(r.ventas, 'dinero')}</td><td>${fmt(r.pedidos, 'numero')}</td><td>${fmtOpc(r.ticket, 'dinero')}</td><td>${fmt(r.reclamos, 'numero')}</td></tr>`;
       });
       html += `<div class="card"><h3>Por aplicación</h3><div style="overflow-x:auto;"><table class="tabla">
         <thead><tr><th>App</th><th>Ventas</th><th>Pedidos</th><th>Ticket</th><th>Reclamos</th></tr></thead>
@@ -681,7 +706,8 @@
     html += `<div class="card"><h3>Ventas por semana${elegidos.length > 1 ? ' (por local)' : ''}</h3><canvas id="ch-an-sem" height="190"></canvas></div>`;
     html += `<div class="card"><h3>Ventas por día de la semana (suma del período)</h3><canvas id="ch-an-dias" height="170"></canvas></div>`;
     if (anApp === 'todas') html += `<div class="card"><h3>Ventas por aplicación</h3><canvas id="ch-an-apps" height="150"></canvas></div>`;
-    html += `<div class="card"><h3>Embudo</h3><canvas id="ch-an-emb" height="150"></canvas></div>`;
+    const tieneEmbudo = cur.impresiones > 0 || cur.menu > 0 || cur.carrito > 0 || cur.pedido > 0;
+    if (tieneEmbudo) html += `<div class="card"><h3>Embudo</h3><canvas id="ch-an-emb" height="150"></canvas></div>`;
 
     if (elegidos.length > 1) {
       let filas = '';
@@ -689,7 +715,7 @@
         const dl = actualDocs.filter(s => s.marca === l.marca && s.local === l.local);
         const r = agregarVarios(dl, anApp);
         const sem = new Set(dl.map(s => s.semana)).size;
-        filas += `<tr><td><span class="dot" style="background:${l.color}"></span>${nombreLocal(l)}<span class="peque">${sem} ${sem === 1 ? 'semana' : 'semanas'} con datos</span></td><td>${fmt(r.ventas, 'dinero')}</td><td>${fmt(r.pedidos, 'numero')}</td><td>${fmt(r.ticket, 'dinero')}</td><td>${fmt(r.pctReclamos, 'porcentaje')}</td><td>${fmt(r.prep, 'minutos')}</td></tr>`;
+        filas += `<tr><td><span class="dot" style="background:${l.color}"></span>${nombreLocal(l)}<span class="peque">${sem} ${sem === 1 ? 'semana' : 'semanas'} con datos</span></td><td>${fmt(r.ventas, 'dinero')}</td><td>${fmt(r.pedidos, 'numero')}</td><td>${fmtOpc(r.ticket, 'dinero')}</td><td>${fmt(r.pctReclamos, 'porcentaje')}</td><td>${fmtOpc(r.prep, 'minutos')}</td></tr>`;
       });
       html += `<div class="card"><h3>Por local</h3><div style="overflow-x:auto;"><table class="tabla">
         <thead><tr><th>Local</th><th>Ventas</th><th>Pedidos</th><th>Ticket</th><th>% recl.</th><th>Prep.</th></tr></thead>
@@ -700,7 +726,7 @@
       let filas = '';
       APPS.forEach(a => {
         const r = agregarVarios(actualDocs, a.id);
-        filas += `<tr><td><span class="dot" style="background:${a.color}"></span>${a.nombre}</td><td>${fmt(r.ventas, 'dinero')}</td><td>${fmt(r.pedidos, 'numero')}</td><td>${fmt(r.ticket, 'dinero')}</td><td>${fmt(r.pctReclamos, 'porcentaje')}</td><td>${fmt(r.prep, 'minutos')}</td></tr>`;
+        filas += `<tr><td><span class="dot" style="background:${a.color}"></span>${a.nombre}</td><td>${fmt(r.ventas, 'dinero')}</td><td>${fmt(r.pedidos, 'numero')}</td><td>${fmtOpc(r.ticket, 'dinero')}</td><td>${fmt(r.pctReclamos, 'porcentaje')}</td><td>${fmtOpc(r.prep, 'minutos')}</td></tr>`;
       });
       html += `<div class="card"><h3>Por aplicación</h3><div style="overflow-x:auto;"><table class="tabla">
         <thead><tr><th>App</th><th>Ventas</th><th>Pedidos</th><th>Ticket</th><th>% recl.</th><th>Prep.</th></tr></thead>
