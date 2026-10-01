@@ -606,6 +606,9 @@
         <tbody>${filas}</tbody></table></div></div>`;
     }
 
+    html += `<div class="card"><h3>Mover esta semana a otra fecha</h3>
+      <div class="campo"><label>Elegí cualquier día de la semana correcta</label><input type="date" id="inp-mover"></div>
+      <button class="btn-primario" onclick="moverSemana('${actual.id}')">📅 Mover</button></div>`;
     html += `<div style="padding:8px 16px 0;text-align:center;"><button class="btn-peligro" onclick="eliminarSemana('${actual.id}')">🗑 Eliminar esta semana</button></div>`;
     cont.innerHTML = html;
 
@@ -641,6 +644,33 @@
       renderComparar();
       toast('Semana eliminada', 'ok');
     } catch(e) { toast('No se pudo eliminar: ' + e.message, 'error'); }
+  }
+
+  window.moverSemana = async function(id) {
+    const s = semanas.find(x => x.id === id);
+    if (!s) return;
+    const f = document.getElementById('inp-mover').value;
+    if (!f) { toast('Elegí la fecha nueva', 'error'); return; }
+    const nuevo = lunesDe(f);
+    if (nuevo === s.semana) { toast('Esa ya es la semana donde está guardado', 'error'); return; }
+    const destino = semanas.find(x => x.semana === nuevo);
+    const msg = destino
+      ? 'La semana del ' + corto(nuevo) + ' ya tiene datos y se van a reemplazar. ¿Mover igual?'
+      : '¿Mover la semana del ' + corto(s.semana) + ' a la semana del ' + corto(nuevo) + '?';
+    if (!confirm(msg)) return;
+    try {
+      // Primero se guarda en la fecha nueva y recién después se borra la vieja
+      await setDoc(doc(db, COLECCION, slug(localActual) + '_' + slug(marcaActual) + '_' + nuevo), {
+        local: s.local, marca: s.marca, semana: nuevo, apps: s.apps, nota: s.nota || '', timestamp: Date.now()
+      });
+      await deleteDoc(doc(db, COLECCION, id));
+      await cargarTodo();
+      compSemana = nuevo;
+      prepararDraft();
+      renderCargar();
+      renderComparar();
+      toast('Semana movida', 'ok');
+    } catch(e) { toast('No se pudo mover: ' + e.message, 'error'); }
   }
 
   // ── ANÁLISIS (uno o varios locales) ──────────────────────────────
