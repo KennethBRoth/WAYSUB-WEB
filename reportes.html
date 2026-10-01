@@ -12,162 +12,137 @@
     .btn-volver { background: rgba(255,255,255,0.15); border: none; color: white; border-radius: 8px; padding: 6px 12px; font-size: 18px; cursor: pointer; }
     header h1 { font-size: 18px; flex: 1; }
     .local-badge { background: rgba(255,255,255,0.15); border-radius: 20px; padding: 4px 12px; font-size: 12px; }
-    .tabs { display: flex; background: white; border-bottom: 2px solid #f0f2f5; position: sticky; top: 57px; z-index: 99; }
-    .tab { flex: 1; padding: 12px 4px; text-align: center; font-size: 11px; font-weight: 600; color: #999; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; }
-    .tab.activo { color: #1a1a2e; border-bottom-color: #1a1a2e; }
-    .seccion { display: none; padding-bottom: 100px; }
+
+    .marca-bar { display: flex; gap: 10px; padding: 12px 16px 0; }
+    .marca-btn { flex: 1; background: white; border: 2px solid #e0e0e0; border-radius: 12px; padding: 12px 8px; text-align: center; cursor: pointer; font-size: 14px; font-weight: 700; color: #999; }
+    .marca-btn.activo-Subway { background: #1F4E79; border-color: #1F4E79; color: white; }
+    .marca-btn.activo-Balcarce { background: #843C0C; border-color: #843C0C; color: white; }
+
+    .tabs { display: flex; background: white; border-bottom: 2px solid #f0f2f5; position: sticky; top: 57px; z-index: 99; margin-top: 12px; }
+    .tab { flex: 1; padding: 12px 4px; text-align: center; font-size: 13px; font-weight: 600; color: #999; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; }
+    .tab.activo { color: #1a1a2e; border-bottom-color: #e8b84b; }
+    .seccion { display: none; padding-bottom: 110px; }
     .seccion.activa { display: block; }
+
     .card { background: white; margin: 12px 16px 0; border-radius: 12px; padding: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); }
-    .card h3 { font-size: 13px; font-weight: 700; color: #999; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 14px; }
+    .card h3 { font-size: 13px; font-weight: 700; color: #999; margin-bottom: 14px; }
+    .card h3.sub { margin-top: 16px; margin-bottom: 10px; }
     .campo { margin-bottom: 12px; }
     .campo label { font-size: 12px; color: #666; display: block; margin-bottom: 4px; font-weight: 600; }
-    .campo input, .campo select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; }
-    .campo textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; resize: vertical; min-height: 80px; }
-    .seccion-titulo { padding: 12px 16px 4px; font-size: 11px; font-weight: 700; color: #999; text-transform: uppercase; letter-spacing: 1px; }
-    .marca-tabs-carga { display: flex; gap: 10px; margin: 12px 16px 0; }
-    .marca-tab-carga { flex: 1; background: white; border: 2px solid #e0e0e0; border-radius: 12px; padding: 12px 8px; text-align: center; cursor: pointer; font-size: 13px; font-weight: 700; color: #999; transition: all 0.2s; }
-    .marca-tab-carga.activo { border-color: #1a1a2e; background: #1a1a2e; color: white; }
-    .marca-form { display: none; }
-    .marca-form.activa { display: block; }
-    .generando { text-align: center; padding: 16px; color: #1a1a2e; font-size: 13px; background: #f0f4ff; border-radius: 10px; margin: 8px 16px 0; }
-    /* REPORTE */
-    .reporte-header { background: #1a1a2e; color: white; padding: 20px 16px; }
-    .reporte-header h2 { font-size: 18px; }
-    .reporte-header p { font-size: 12px; color: #aaa; margin-top: 4px; }
-    .marca-tabs-rep { display: flex; background: white; border-bottom: 2px solid #f0f2f5; }
-    .marca-tab-rep { flex: 1; padding: 12px 8px; text-align: center; font-size: 12px; font-weight: 700; color: #999; cursor: pointer; border-bottom: 3px solid transparent; margin-bottom: -2px; }
-    .marca-tab-rep.activo-subway { color: #1F4E79; border-bottom-color: #1F4E79; }
-    .marca-tab-rep.activo-balcarce { color: #843C0C; border-bottom-color: #843C0C; }
-    .reporte-seccion { display: none; }
-    .reporte-seccion.activa { display: block; }
-    .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 12px 16px 0; }
-    .kpi-card { background: white; border-radius: 10px; padding: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
-    .kpi-label { font-size: 10px; color: #999; text-transform: uppercase; font-weight: 700; margin-bottom:6px; }
-    .kpi-compare { display: flex; justify-content: space-around; }
-    .kpi-val { text-align: center; }
-    .kpi-val span { font-size: 10px; display: block; font-weight: 700; color: #999; }
-    .kpi-val strong { font-size: 14px; display: block; margin-top: 2px; }
-    .kpi-val.ramos strong { color: #1F4E79; }
-    .kpi-val.moron strong { color: #843C0C; }
-    .chart-card { background: white; margin: 12px 16px 0; border-radius: 12px; padding: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); }
-    .chart-card h4 { font-size: 12px; font-weight: 700; color: #999; text-transform: uppercase; margin-bottom: 12px; }
-    .mix-tabla { width: 100%; border-collapse: collapse; font-size: 12px; }
-    .mix-tabla th { padding: 7px 6px; font-size: 10px; color: #999; font-weight: 700; border-bottom: 2px solid #f0f2f5; text-align: center; }
-    .mix-tabla td { padding: 6px; border-bottom: 1px solid #f8f8f8; text-align: center; }
-    .mix-tabla td:first-child { text-align: left; font-weight: 600; }
-    .analisis-bloque { margin-bottom: 16px; padding: 12px; background: #f8f9ff; border-radius: 10px; border-left: 4px solid #1a1a2e; }
-    .analisis-bloque.subway { border-left-color: #1F4E79; }
-    .analisis-bloque.balcarce { border-left-color: #843C0C; }
-    .analisis-bloque.oportunidad { border-left-color: #2a9d5c; }
-    .analisis-bloque.alerta { border-left-color: #e63946; }
-    .analisis-bloque h5 { font-size: 12px; font-weight: 700; color: #1a1a2e; text-transform: uppercase; margin-bottom: 6px; }
-    .analisis-bloque p { font-size: 13px; color: #444; line-height: 1.6; }
-    .historial-item { background: white; margin: 8px 16px 0; border-radius: 12px; padding: 14px 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); cursor: pointer; }
-    .hist-header { display: flex; justify-content: space-between; align-items: center; }
-    .hist-fecha { font-size: 13px; font-weight: 700; }
-    .hist-sub { font-size: 11px; color: #999; margin-top: 2px; }
-    .btn-eliminar-hist { background: none; border: none; color: #ccc; cursor: pointer; font-size: 16px; }
-    .sin-historial { text-align: center; padding: 40px 20px; color: #bbb; font-size: 14px; }
-    .footer-btns { position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 1px solid #eee; padding: 12px 16px; display: flex; gap: 8px; z-index: 100; }
-    .btn-generar { flex: 2; background: #1a1a2e; color: white; border: none; border-radius: 10px; padding: 13px; font-size: 14px; font-weight: 700; cursor: pointer; }
-    .btn-guardar-rep { flex: 1; background: #f0f4ff; color: #1a1a2e; border: 1px solid #c5cff5; border-radius: 10px; padding: 13px; font-size: 12px; font-weight: 600; cursor: pointer; display: none; }
-    .banner-comparativo { background: #f0fff4; border: 1px solid #c3e6cb; border-radius: 10px; padding: 12px 14px; margin: 12px 16px 0; font-size: 13px; color: #2a9d5c; display: none; cursor: pointer; }
-    .banner-comparativo:hover { background: #e0f7e9; }
-    .comparativo-header { background: linear-gradient(135deg, #1F4E79, #843C0C); color: white; padding: 20px 16px; border-radius: 0; }
-    .comparativo-header h2 { font-size: 18px; }
-    .comparativo-header p { font-size: 12px; color: rgba(255,255,255,0.7); margin-top: 4px; }
-    .comp-tabla { width: 100%; border-collapse: collapse; font-size: 12px; }
-    .comp-tabla th { padding: 8px 6px; font-size: 10px; color: #999; font-weight: 700; border-bottom: 2px solid #f0f2f5; text-align: center; }
-    .comp-tabla th:first-child { text-align: left; }
-    .comp-tabla td { padding: 7px 6px; border-bottom: 1px solid #f8f8f8; text-align: center; }
-    .comp-tabla td:first-child { text-align: left; font-weight: 600; font-size: 12px; }
-    .comp-tabla .mejor { color: #2a9d5c; font-weight: 700; }
-    .comp-tabla .peor { color: #e63946; }
-    .loading-spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid #ccc; border-top-color: #1a1a2e; border-radius: 50%; animation: spin 0.8s linear infinite; margin-right: 8px; vertical-align: middle; }
-    @keyframes spin { to { transform: rotate(360deg); } }
+    .campo input, .campo select, .campo textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; background: white; }
+    .campo textarea { resize: vertical; min-height: 70px; font-size: 13px; font-family: inherit; }
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; }
+    .semana-rango { font-size: 12px; color: #666; margin-top: 2px; }
+    .semana-estado { display: inline-block; margin-top: 6px; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
+    .semana-estado.nueva { background: #f0f4ff; color: #3b4a9c; }
+    .semana-estado.existente { background: #fff6e0; color: #9a6b00; }
+    .total-fila { display: flex; justify-content: space-between; align-items: center; background: #f7f8fa; border-radius: 8px; padding: 10px 12px; font-size: 13px; color: #555; margin-top: 4px; }
+    .total-fila + .total-fila { margin-top: 6px; }
+    .total-fila strong { font-size: 14px; color: #1a1a2e; }
+    .vacio { text-align: center; padding: 36px 20px; color: #999; font-size: 14px; line-height: 1.5; }
+
+    .chips { display: flex; gap: 8px; overflow-x: auto; padding: 12px 16px 0; -webkit-overflow-scrolling: touch; }
+    .chips-wrap { display: flex; flex-wrap: wrap; gap: 8px; }
+    .chip { flex: 0 0 auto; background: white; border: 2px solid #e0e0e0; border-radius: 20px; padding: 8px 14px; font-size: 13px; font-weight: 700; color: #888; cursor: pointer; white-space: nowrap; }
+    .chip.activo { background: #1a1a2e; border-color: #1a1a2e; color: white; }
+    .chip.con-datos { border-color: #2ecc71; }
+    .chip.accion { background: #f0f2f5; border-color: #f0f2f5; color: #555; font-size: 12px; }
+    .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
+
+    .btn-primario { width: 100%; background: #1a1a2e; color: white; border: none; border-radius: 10px; padding: 13px; font-size: 14px; font-weight: 700; cursor: pointer; }
+    .btn-peligro { background: none; border: none; color: #c0392b; font-size: 12px; font-weight: 600; cursor: pointer; padding: 8px 0; }
+    .footer-btns { position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 1px solid #eee; padding: 12px 16px; z-index: 100; }
+
+    .grupo-titulo { padding: 18px 16px 0; font-size: 13px; font-weight: 800; color: #1a1a2e; }
+    .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 8px 16px 0; }
+    .kpi { background: white; border-radius: 10px; padding: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+    .kpi-label { font-size: 11px; color: #888; font-weight: 700; min-height: 26px; }
+    .kpi-valor { font-size: 19px; font-weight: 800; color: #1a1a2e; margin-top: 2px; word-break: break-word; }
+    .delta { display: inline-block; margin-top: 6px; font-size: 11px; font-weight: 800; padding: 3px 8px; border-radius: 20px; white-space: nowrap; }
+    .delta.bien { background: #e6f8ee; color: #1f9d55; }
+    .delta.mal { background: #fdeaea; color: #d63031; }
+    .delta.igual { background: #f0f2f5; color: #888; }
+    .vs-texto { padding: 8px 16px 0; font-size: 12px; color: #888; line-height: 1.5; }
+    .nota-semana { background: #fff9e6; border-left: 4px solid #e8b84b; border-radius: 8px; padding: 10px 12px; font-size: 13px; color: #555; margin: 12px 16px 0; line-height: 1.5; white-space: pre-wrap; }
+    .tabla { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .tabla th { padding: 7px 6px; font-size: 11px; color: #999; font-weight: 700; border-bottom: 2px solid #f0f2f5; text-align: right; white-space: nowrap; }
+    .tabla th:first-child, .tabla td:first-child { text-align: left; }
+    .tabla td { padding: 8px 6px; border-bottom: 1px solid #f5f5f5; text-align: right; white-space: nowrap; }
+    .tabla td:first-child { font-weight: 700; white-space: normal; }
+    .tabla .peque { display: block; font-size: 10px; color: #aaa; font-weight: 600; }
+
+    .toast { position: fixed; left: 50%; bottom: 140px; transform: translateX(-50%); background: #1a1a2e; color: white; padding: 12px 18px; border-radius: 10px; font-size: 13px; max-width: 85vw; width: max-content; white-space: normal; text-align: center; z-index: 300; display: none; }
+    .toast.error { background: #c0392b; }
+    .toast.ok { background: #1f9d55; }
   </style>
 </head>
 <body>
 
 <header>
   <button class="btn-volver" onclick="window.location.href='index.html'">←</button>
-  <h1>📊 Reportes Mensuales</h1>
+  <h1>📈 Reportes</h1>
   <span class="local-badge" id="local-nombre">—</span>
 </header>
 
+<div class="marca-bar" id="marca-bar">
+  <div class="marca-btn activo-Subway" id="mb-Subway" onclick="setMarca('Subway')">🥪 Subway</div>
+  <div class="marca-btn" id="mb-Balcarce" onclick="setMarca('Balcarce')">☕ Balcarce</div>
+</div>
+
 <div class="tabs">
-  <div class="tab activo" onclick="cambiarTab('carga')">📥 Cargar datos</div>
-  <div class="tab" onclick="cambiarTab('reporte')">📊 Reporte</div>
-  <div class="tab" onclick="cambiarTab('historial')">📋 Historial</div>
+  <div class="tab" id="tab-btn-comparar" onclick="cambiarTab('comparar')">📊 Comparar</div>
+  <div class="tab" id="tab-btn-analisis" onclick="cambiarTab('analisis')">🏪 Análisis</div>
+  <div class="tab activo" id="tab-btn-cargar" onclick="cambiarTab('cargar')">📥 Cargar</div>
 </div>
 
-<!-- TAB CARGA -->
-<div class="seccion activa" id="tab-carga">
-  <div class="card" style="margin-top:12px;">
-    <h3>Mes del reporte</h3>
-    <div class="campo"><input type="month" id="inp-mes"></div>
-  </div>
-
-  <div id="banner-comparativo" class="banner-comparativo" onclick="verComparativo()">
-    📊 ¡Los dos locales tienen datos de este mes! Tocá para ver el reporte comparativo completo →
-  </div>
-
-  <div class="seccion-titulo">¿Qué datos cargás?</div>
-  <div class="marca-tabs-carga">
-    <div class="marca-tab-carga activo" id="ctab-subway" onclick="setMarcaCarga('subway')">🥪 Subway</div>
-    <div class="marca-tab-carga" id="ctab-balcarce" onclick="setMarcaCarga('balcarce')">☕ Balcarce</div>
-  </div>
-
-  <!-- FORM SUBWAY -->
-  <div class="marca-form activa" id="form-subway">
-    <div class="card">
-      <h3 id="sw-titulo">🥪 Subway</h3>
-      <div class="campo"><label>Ventas totales ($)</label><input type="number" id="sw-ventas" placeholder="0"></div>
-      <div class="campo"><label>15cm — Quincena 1</label><input type="number" id="sw-15q1" placeholder="0"></div>
-      <div class="campo"><label>30cm — Quincena 1</label><input type="number" id="sw-30q1" placeholder="0"></div>
-      <div class="campo"><label>15cm — Quincena 2</label><input type="number" id="sw-15q2" placeholder="0"></div>
-      <div class="campo"><label>30cm — Quincena 2</label><input type="number" id="sw-30q2" placeholder="0"></div>
-      <div class="campo"><label>Tickets por día (separados por coma)</label><textarea id="sw-tickets" placeholder="120,135,98,110,..."></textarea></div>
+<!-- TAB CARGAR -->
+<div class="seccion activa" id="tab-cargar">
+  <div class="card">
+    <h3>Semana</h3>
+    <div class="campo">
+      <label>Elegí cualquier día de la semana</label>
+      <input type="date" id="inp-fecha">
     </div>
+    <div class="semana-rango" id="semana-rango"></div>
+    <span class="semana-estado nueva" id="semana-estado" style="display:none;"></span>
   </div>
-
-  <!-- FORM BALCARCE -->
-  <div class="marca-form" id="form-balcarce">
-    <div class="card">
-      <h3 id="bc-titulo">☕ Balcarce</h3>
-      <div class="campo"><label>Ventas totales ($)</label><input type="number" id="bc-ventas" placeholder="0"></div>
-      <div class="campo"><label>Total tickets</label><input type="number" id="bc-tickets-total" placeholder="0"></div>
-      <div class="campo"><label>Productos Q1 (producto:cantidad, uno por línea)</label><textarea id="bc-q1" placeholder="Medialunas:150&#10;Café:200&#10;Croissant:80"></textarea></div>
-      <div class="campo"><label>Productos Q2</label><textarea id="bc-q2" placeholder="Medialunas:140&#10;Café:210&#10;Croissant:75"></textarea></div>
-      <div class="campo"><label>Tickets por día (separados por coma)</label><textarea id="bc-tickets" placeholder="45,52,38,..."></textarea></div>
-    </div>
-  </div>
-
-  <div class="generando" id="generando" style="display:none;">
-    <span class="loading-spinner"></span>Generando análisis con IA...
-  </div>
+  <div class="chips" id="cargar-chips"></div>
+  <div id="form-valores"></div>
 </div>
 
-<!-- TAB REPORTE -->
-<div class="seccion" id="tab-reporte">
-  <div id="reporte-contenido">
-    <div class="sin-historial">Cargá los datos y tocá "Generar reporte"</div>
+<!-- TAB COMPARAR (un local + marca, semana contra semana) -->
+<div class="seccion" id="tab-comparar">
+  <div class="card">
+    <h3>Semana a mirar</h3>
+    <div class="campo" style="margin-bottom:0;"><select id="sel-semana"></select></div>
   </div>
+  <div class="chips" id="comp-chips"></div>
+  <div id="comparar-contenido"></div>
 </div>
 
-<!-- TAB HISTORIAL -->
-<div class="seccion" id="tab-historial">
-  <div id="lista-historial" style="padding-bottom:20px;"></div>
+<!-- TAB ANÁLISIS (uno o varios locales) -->
+<div class="seccion" id="tab-analisis">
+  <div class="card">
+    <h3>Locales (podés elegir varios)</h3>
+    <div class="chips-wrap" id="an-locs"></div>
+    <h3 class="sub">Período</h3>
+    <div class="chips-wrap" id="an-periodo"></div>
+    <h3 class="sub">Aplicación</h3>
+    <div class="chips-wrap" id="an-apps"></div>
+  </div>
+  <div id="analisis-contenido"></div>
 </div>
 
-<div class="footer-btns">
-  <button class="btn-generar" id="btn-generar" onclick="generarReporte()">⚡ Generar y guardar</button>
-  <button class="btn-guardar-rep" id="btn-guardar" onclick="verComparativo()">📊 Ver comparativo</button>
+<div class="footer-btns" id="footer-guardar">
+  <button class="btn-primario" onclick="guardarSemana()">💾 Guardar semana</button>
 </div>
+
+<div class="toast" id="toast"></div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, query, where, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { getFirestore, collection, getDocs, setDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyAB2-btgFqGiCe1YdZSDv4EShV601N-uQs",
@@ -180,422 +155,621 @@
 
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
+  const auth = getAuth(app);
 
-  let localActual = '';
-  let marcaCarga = 'subway';
-  let reporteActual = null;
-  let chartsActivos = [];
-  let datosOtroLocal = null;
+  const COLECCION = 'reportes_semanales';
+
+  // ── LISTA DE APPS DE DELIVERY ────────────────────────────────────
+  // Para agregar o sacar una app, se edita esta lista (id sin espacios ni tildes).
+  const APPS = [
+    { id: 'rappi',           nombre: 'Rappi',            color: '#e8b84b' },
+    { id: 'pedidosya',       nombre: 'PedidosYa',        color: '#1a1a2e' },
+    { id: 'mercadodelivery', nombre: 'Mercado Delivery', color: '#2ecc71' },
+    { id: 'ubereats',        nombre: 'Uber Eats',        color: '#8e7cc3' }
+  ];
+  // Los 4 locales (marca + local) con su color en los gráficos
+  const LOCALES_DEF = [
+    { marca: 'Subway',   local: 'Ramos Mejía', color: '#1F4E79' },
+    { marca: 'Subway',   local: 'Morón',       color: '#5b9bd5' },
+    { marca: 'Balcarce', local: 'Ramos Mejía', color: '#843C0C' },
+    { marca: 'Balcarce', local: 'Morón',       color: '#d9822b' }
+  ];
+  const DIAS = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
+  const CAMPOS_NUM = ['pedidos','ticket','impresiones','menu','carrito','pedido','prep','reclamos'];
+  const PERIODOS = [ { n: 1, txt: 'Última semana' }, { n: 4, txt: '4 semanas' }, { n: 8, txt: '8 semanas' }, { n: 0, txt: 'Todo' } ];
 
   const params = new URLSearchParams(window.location.search);
-  localActual = params.get('local') || 'Desconocido';
+  const localActual = params.get('local') || 'Desconocido';
   document.getElementById('local-nombre').textContent = localActual;
-  document.getElementById('sw-titulo').textContent = '🥪 Subway ' + localActual;
-  document.getElementById('bc-titulo').textContent = '☕ Balcarce ' + localActual;
 
-  const hoy = new Date();
-  document.getElementById('inp-mes').value = hoy.toISOString().slice(0,7);
+  let marcaActual = 'Subway';
+  let todas = [];          // todos los documentos de la colección
+  let semanas = [];        // los de este local + marca, de vieja a nueva
+  let draft = null;        // lo que se está tipeando en Cargar
+  let appActual = APPS[0].id;
+  let compSemana = '';
+  let compScope = 'todas';
+  let charts = [];
+  let tabActual = 'cargar';
 
-  cargarHistorial();
-  verificarComparativo();
+  // Análisis
+  let visibles = [];       // locales (de LOCALES_DEF) que este usuario puede ver
+  let selLocs = new Set(); // índices de LOCALES_DEF seleccionados
+  let anPeriodo = 4;
+  let anApp = 'todas';
 
-  // ── TABS ─────────────────────────────────────────────────────────
+  // ── HELPERS ──────────────────────────────────────────────────────
+  function esc(s) { return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function slug(s) {
+    return s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9]+/g,'_').toLowerCase();
+  }
+  function pad(n) { return String(n).padStart(2,'0'); }
+  function claveFecha(d) { return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()); }
+  function parseFecha(str) { const [y,m,d] = str.split('-').map(Number); return new Date(y, m-1, d); }
+  function sumarDias(str, n) { const d = parseFecha(str); d.setDate(d.getDate() + n); return claveFecha(d); }
+  function lunesDe(str) {
+    const d = parseFecha(str);
+    d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+    return claveFecha(d);
+  }
+  function corto(str) { const d = parseFecha(str); return d.getDate() + '/' + (d.getMonth()+1); }
+  function rangoSemana(lunes) {
+    const ini = parseFecha(lunes);
+    const fin = new Date(ini); fin.setDate(fin.getDate() + 6);
+    const opt = { day: 'numeric', month: 'short' };
+    return 'Del ' + ini.toLocaleDateString('es-AR', opt) + ' al ' + fin.toLocaleDateString('es-AR', opt);
+  }
+  function fmt(n, tipo) {
+    n = Number(n) || 0;
+    if (tipo === 'dinero') return '$' + Math.round(n).toLocaleString('es-AR');
+    if (tipo === 'porcentaje') return n.toLocaleString('es-AR', { maximumFractionDigits: 1 }) + '%';
+    if (tipo === 'minutos') return n.toLocaleString('es-AR', { maximumFractionDigits: 1 }) + ' min';
+    return n.toLocaleString('es-AR', { maximumFractionDigits: 2 });
+  }
+  function toast(msg, tipo) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast ' + (tipo || '');
+    t.style.display = 'block';
+    clearTimeout(window._toastTimer);
+    window._toastTimer = setTimeout(() => { t.style.display = 'none'; }, 3500);
+  }
+  function destruirCharts() { charts.forEach(c => c.destroy()); charts = []; }
+  function nuevoChart(id, cfg) {
+    const c = document.getElementById(id);
+    if (c) charts.push(new Chart(c.getContext('2d'), cfg));
+  }
+  function nombreLocal(l) { return l.marca + ' ' + l.local; }
+
+  // ── TABS Y MARCA ─────────────────────────────────────────────────
   window.cambiarTab = function(tab) {
-    document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('activo', ['carga','reporte','historial'][i] === tab));
-    document.querySelectorAll('.seccion').forEach(s => s.classList.remove('activa'));
-    document.getElementById('tab-' + tab).classList.add('activa');
-    const btnGen = document.getElementById('btn-generar');
-    const btnComp = document.getElementById('btn-guardar');
-    if (tab === 'reporte') {
-      btnGen.style.display = 'none';
-      btnComp.style.display = datosOtroLocal ? 'block' : 'none';
-    } else if (tab === 'historial') {
-      btnGen.style.display = 'none';
-      btnComp.style.display = 'none';
-    } else {
-      btnGen.style.display = 'block';
-      btnComp.style.display = 'none';
-    }
-  }
-
-  window.setMarcaCarga = function(m) {
-    marcaCarga = m;
-    ['subway','balcarce'].forEach(x => {
-      document.getElementById('ctab-' + x).classList.toggle('activo', x === m);
-      document.getElementById('form-' + x).classList.toggle('activa', x === m);
+    tabActual = tab;
+    ['cargar','comparar','analisis'].forEach(t => {
+      document.getElementById('tab-' + t).classList.toggle('activa', t === tab);
+      document.getElementById('tab-btn-' + t).classList.toggle('activo', t === tab);
     });
+    document.getElementById('footer-guardar').style.display = tab === 'cargar' ? 'block' : 'none';
+    document.getElementById('marca-bar').style.display = tab === 'analisis' ? 'none' : 'flex';
+    if (tab === 'comparar') renderComparar();
+    if (tab === 'analisis') renderAnalisis();
   }
 
-  // ── HELPERS ───────────────────────────────────────────────────────
-  function parsearTickets(str) { return str.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n)); }
-  function parsearProductos(str) {
-    const obj = {};
-    str.split('\n').forEach(l => {
-      const idx = l.lastIndexOf(':');
-      if (idx > 0) { const p = l.substring(0,idx).trim(), c = l.substring(idx+1).trim(); if (p && c) obj[p] = parseInt(c)||0; }
+  window.setMarca = function(m) {
+    marcaActual = m;
+    ['Subway','Balcarce'].forEach(x => {
+      document.getElementById('mb-' + x).className = 'marca-btn' + (x === m ? ' activo-' + x : '');
     });
-    return obj;
-  }
-  function fmt(n) { return '$' + Math.round(n).toLocaleString('es-AR'); }
-  function pct(n) { return (n*100).toFixed(1) + '%'; }
-  function nombreMesStr(mes) {
-    const [a,m] = mes.split('-');
-    return new Date(a, m-1, 1).toLocaleString('es-AR', { month:'long', year:'numeric' });
-  }
-
-  // ── LEER FORMULARIO ───────────────────────────────────────────────
-  function leerDatos() {
-    const sw = {
-      ventas: Number(document.getElementById('sw-ventas').value)||0,
-      s15q1: Number(document.getElementById('sw-15q1').value)||0,
-      s30q1: Number(document.getElementById('sw-30q1').value)||0,
-      s15q2: Number(document.getElementById('sw-15q2').value)||0,
-      s30q2: Number(document.getElementById('sw-30q2').value)||0,
-      tickets: parsearTickets(document.getElementById('sw-tickets').value)
-    };
-    sw.sandwiches = sw.s15q1+sw.s30q1+sw.s15q2+sw.s30q2;
-    sw.totalTickets = sw.tickets.reduce((a,b)=>a+b,0);
-    sw.ticketProm = sw.totalTickets>0 ? sw.ventas/sw.totalTickets : 0;
-    sw.upt = sw.totalTickets>0 ? sw.sandwiches/sw.totalTickets : 0;
-    sw.mix30 = sw.sandwiches>0 ? (sw.s30q1+sw.s30q2)/sw.sandwiches : 0;
-    sw.ingXsand = sw.sandwiches>0 ? sw.ventas/sw.sandwiches : 0;
-
-    const bc = {
-      ventas: Number(document.getElementById('bc-ventas').value)||0,
-      ticketsTotal: Number(document.getElementById('bc-tickets-total').value)||0,
-      q1: parsearProductos(document.getElementById('bc-q1').value),
-      q2: parsearProductos(document.getElementById('bc-q2').value),
-      tickets: parsearTickets(document.getElementById('bc-tickets').value)
-    };
-    bc.unidades = Object.values(bc.q1).reduce((a,b)=>a+b,0)+Object.values(bc.q2).reduce((a,b)=>a+b,0);
-    bc.ticketProm = bc.ticketsTotal>0 ? bc.ventas/bc.ticketsTotal : 0;
-    bc.upt = bc.ticketsTotal>0 ? bc.unidades/bc.ticketsTotal : 0;
-    bc.precioPromUn = bc.unidades>0 ? bc.ventas/bc.unidades : 0;
-
-    return { sw, bc };
+    filtrarSemanas();
+    compSemana = '';
+    compScope = 'todas';
+    prepararDraft();
+    renderCargar();
+    if (tabActual === 'comparar') renderComparar();
   }
 
-  // ── GENERAR Y GUARDAR ─────────────────────────────────────────────
-  window.generarReporte = async function() {
-    const mes = document.getElementById('inp-mes').value;
-    if (!mes) { alert('Seleccioná el mes'); return; }
+  // ── DATOS ────────────────────────────────────────────────────────
+  async function cargarTodo() {
+    // Se trae toda la colección y se filtra acá (sin query con varios where)
+    const snap = await getDocs(collection(db, COLECCION));
+    todas = [];
+    snap.forEach(d => todas.push({ id: d.id, ...d.data() }));
+    filtrarSemanas();
+  }
+  function filtrarSemanas() {
+    semanas = todas.filter(s => s.local === localActual && s.marca === marcaActual)
+                   .sort((a,b) => a.semana.localeCompare(b.semana));
+  }
 
-    const { sw, bc } = leerDatos();
-    const tieneSwData = sw.ventas > 0 || sw.sandwiches > 0;
-    const tieneBcData = bc.ventas > 0 || bc.unidades > 0;
-
-    if (!tieneSwData && !tieneBcData) { alert('Cargá al menos algunos datos antes de generar'); return; }
-
-    document.getElementById('generando').style.display = 'block';
-
-    // Guardar en Firebase — reemplazar si ya existe
+  // Qué locales puede ver este usuario en la pestaña Análisis
+  async function calcularVisibles(user) {
+    let locales = [localActual];
     try {
-      const snapExist = await getDocs(query(collection(db, 'reportes_mensuales'), where('local','==',localActual), where('mes','==',mes)));
-      for (const d of snapExist.docs) { await deleteDoc(doc(db, 'reportes_mensuales', d.id)); }
-      await addDoc(collection(db, 'reportes_mensuales'), { mes, local: localActual, timestamp: Date.now(), sw, bc });
-    } catch(e) { document.getElementById('generando').style.display = 'none'; alert('Error al guardar: ' + e.message); return; }
-
-    // Verificar si el otro local también tiene datos
-    const otroLocal = localActual.includes('Ramos') ? 'Morón' : 'Ramos Mejía';
-    let otroData = null;
-    try {
-      const otroSnap = await getDocs(query(collection(db, 'reportes_mensuales'), where('local','==',otroLocal), where('mes','==',mes)));
-      if (!otroSnap.empty) otroData = otroSnap.docs[0].data();
-    } catch(e) {}
-
-    // Generar análisis IA
-    let analisis = null;
-    try {
-      analisis = await generarAnalisisIA(mes, localActual, sw, bc, otroLocal, otroData);
-    } catch(e) { analisis = null; }
-
-    document.getElementById('generando').style.display = 'none';
-
-    reporteActual = { mes, local: localActual, sw, bc, analisis, otroData, otroLocal };
-    datosOtroLocal = otroData;
-
-    renderReporte(reporteActual);
-    cargarHistorial();
-    verificarComparativo();
-    cambiarTab('reporte');
-  }
-
-  // ── ANÁLISIS IA ───────────────────────────────────────────────────
-  async function generarAnalisisIA(mes, local, sw, bc, otroLocal, otroData) {
-    const mesStr = nombreMesStr(mes).charAt(0).toUpperCase() + nombreMesStr(mes).slice(1);
-
-    // Buscar mes anterior del mismo local
-    const [anio, mesNum] = mes.split('-').map(Number);
-    const mesPrevDate = new Date(anio, mesNum - 2, 1);
-    const mesPrev = mesPrevDate.getFullYear() + '-' + String(mesPrevDate.getMonth()+1).padStart(2,'0');
-    let dataMesAnterior = null;
-    try {
-      const prevSnap = await getDocs(query(collection(db, 'reportes_mensuales'), where('local','==',local), where('mes','==',mesPrev)));
-      if (!prevSnap.empty) dataMesAnterior = prevSnap.docs[0].data();
-    } catch(e) {}
-
-    let contextoSubway = `Subway ${local}: ventas=${fmt(sw.ventas)}, tickets=${sw.totalTickets}, ticket_prom=${fmt(sw.ticketProm)}, UPT=${sw.upt.toFixed(2)}, mix_30cm=${pct(sw.mix30)}, ingreso_por_sandwich=${fmt(sw.ingXsand)}, sandwiches_total=${sw.sandwiches}`;
-    let contextoBalcarce = `Balcarce ${local}: ventas=${fmt(bc.ventas)}, tickets=${bc.ticketsTotal}, ticket_prom=${fmt(bc.ticketProm)}, UPT=${bc.upt.toFixed(2)}, unidades=${bc.unidades}, precio_prom_unidad=${fmt(bc.precioPromUn)}`;
-    let contextoComparativo = '';
-    let contextoPrevio = '';
-
-    if (otroData) {
-      const osw = otroData.sw, obc = otroData.bc;
-      contextoComparativo = ` | Subway ${otroLocal}: ventas=${fmt(osw.ventas)}, tickets=${osw.totalTickets}, ticket_prom=${fmt(osw.ticketProm)}, UPT=${osw.upt.toFixed(2)}, mix_30cm=${pct(osw.mix30)}. Balcarce ${otroLocal}: ventas=${fmt(obc.ventas)}, tickets=${obc.ticketsTotal}, ticket_prom=${fmt(obc.ticketProm)}, UPT=${obc.upt.toFixed(2)}.`;
-    }
-
-    if (dataMesAnterior) {
-      const psw = dataMesAnterior.sw, pbc = dataMesAnterior.bc;
-      const mesPrevStr = nombreMesStr(mesPrev).charAt(0).toUpperCase() + nombreMesStr(mesPrev).slice(1);
-      contextoPrevio = ` | MES ANTERIOR (${mesPrevStr}) mismo local: Subway ventas=${fmt(psw.ventas)}, tickets=${psw.totalTickets}, ticket_prom=${fmt(psw.ticketProm)}, UPT=${psw.upt.toFixed(2)}, mix_30cm=${pct(psw.mix30)}, ingreso_por_sandwich=${fmt(psw.ingXsand)}. Balcarce ventas=${fmt(pbc.ventas)}, tickets=${pbc.ticketsTotal}, ticket_prom=${fmt(pbc.ticketProm)}, UPT=${pbc.upt.toFixed(2)}.`;
-    }
-
-    const prompt = `Sos mi analista comercial de confianza para negocios gastronómicos en Argentina. 
-Mes actual: ${mesStr}.
-Datos: ${contextoSubway}. ${contextoBalcarce}.${contextoComparativo}${contextoPrevio}
-
-Generá un análisis gerencial completo y detallado. ${dataMesAnterior ? 'Tenés datos del mes anterior — comparalos con el mes actual e indicá si cada KPI mejoró o empeoró y cuánto.' : ''}
-Respondé SOLO con JSON sin backticks ni texto extra:
-{
-  "diagnostico_general": "párrafo de 3-4 oraciones con diagnóstico general del mes para ambas marcas${dataMesAnterior ? ', incluyendo comparación vs mes anterior' : ''}",
-  "subway_diagnostico": "análisis específico de Subway: performance de ventas, ticket promedio, UPT y mix de productos${dataMesAnterior ? '. Comparar con mes anterior indicando % de variación en ventas, ticket y UPT' : ''}. Detectá si el mix 30cm es alto o bajo",
-  "subway_oportunidades": "2-3 acciones concretas y específicas para mejorar resultados en Subway",
-  "balcarce_diagnostico": "análisis específico de Balcarce: performance${dataMesAnterior ? ', comparando con mes anterior' : ''}",
-  "balcarce_oportunidades": "2-3 acciones concretas y específicas para mejorar resultados en Balcarce",
-  ${otroData ? '"comparativo": "comparación entre los dos locales: cuál performa mejor y en qué KPIs, qué puede aprender uno del otro",' : ''}
-  "alertas": "si hay algún número preocupante que requiera atención inmediata, mencionalo. Si todo está bien, escribí OK",
-  "recomendacion_clave": "la recomendación más importante del mes en una sola oración directa"
-}
-Usá español argentino directo y profesional. Sé específico con los números y porcentajes de variación.
-
-    const resp = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ model: "claude-sonnet-4-20250514", max_tokens: 1500, messages: [{ role: "user", content: prompt }] })
-    });
-    const data = await resp.json();
-    if (data.error) throw new Error(data.error.message);
-    const texto = data.content.find(b => b.type==='text')?.text || '{}';
-    const clean = texto.replace(/```json|```/g,'').trim();
-    return JSON.parse(clean);
-  }
-
-  // ── RENDER REPORTE ────────────────────────────────────────────────
-  function renderReporte(r) {
-    chartsActivos.forEach(c => c.destroy());
-    chartsActivos = [];
-    const { mes, local, sw, bc, analisis, otroData, otroLocal } = r;
-    const mesStr = nombreMesStr(mes).charAt(0).toUpperCase() + nombreMesStr(mes).slice(1);
-
-    // Mix productos Balcarce
-    const todosProds = new Set([...Object.keys(bc.q1||{}), ...Object.keys(bc.q2||{})]);
-    const totalUn = bc.unidades || 1;
-    let rowsMix = '';
-    [...todosProds].forEach(p => {
-      const q1=(bc.q1||{})[p]||0, q2=(bc.q2||{})[p]||0, tot=q1+q2;
-      rowsMix += `<tr><td>${p}</td><td>${q1}</td><td>${q2}</td><td>${tot}</td><td>${(tot/totalUn*100).toFixed(1)}%</td></tr>`;
-    });
-
-    // Análisis HTML
-    const analisisHTML = analisis ? `
-      <div class="card" style="margin-top:12px;">
-        <h3 style="font-size:15px;color:#1a1a2e;font-weight:800;text-transform:none;letter-spacing:0;border-left:4px solid #1a1a2e;padding-left:10px;margin-bottom:14px;">📋 Análisis Gerencial</h3>
-        <div class="analisis-bloque">
-          <h5>🔍 Diagnóstico General</h5>
-          <p>${analisis.diagnostico_general || '—'}</p>
-        </div>
-        ${analisis.alertas && analisis.alertas !== 'OK' ? `<div class="analisis-bloque alerta"><h5>⚠️ Alertas</h5><p>${analisis.alertas}</p></div>` : ''}
-        <div class="analisis-bloque subway">
-          <h5>🥪 Subway — Diagnóstico</h5>
-          <p>${analisis.subway_diagnostico || '—'}</p>
-        </div>
-        <div class="analisis-bloque oportunidad">
-          <h5>🥪 Subway — Acciones Sugeridas</h5>
-          <p>${analisis.subway_oportunidades || '—'}</p>
-        </div>
-        <div class="analisis-bloque balcarce">
-          <h5>☕ Balcarce — Diagnóstico</h5>
-          <p>${analisis.balcarce_diagnostico || '—'}</p>
-        </div>
-        <div class="analisis-bloque oportunidad">
-          <h5>☕ Balcarce — Acciones Sugeridas</h5>
-          <p>${analisis.balcarce_oportunidades || '—'}</p>
-        </div>
-        ${analisis.comparativo ? `<div class="analisis-bloque"><h5>⚖️ Comparativo ${local} vs ${otroLocal||''}</h5><p>${analisis.comparativo}</p></div>` : ''}
-        <div class="analisis-bloque" style="border-left-color:#f4a261;background:#fff8f0;">
-          <h5>⭐ Recomendación Clave del Mes</h5>
-          <p><strong>${analisis.recomendacion_clave || '—'}</strong></p>
-        </div>
-      </div>` : `<div class="card" style="margin-top:12px;"><p style="color:#999;font-size:13px;text-align:center;">Análisis no disponible — requiere conexión con API de IA</p></div>`;
-
-    document.getElementById('reporte-contenido').innerHTML = `
-<div class="reporte-header">
-  <h2>📊 Reporte Mensual</h2>
-  <p>${mesStr} · ${local}</p>
-</div>
-<div class="marca-tabs-rep">
-  <div class="marca-tab-rep activo-subway" id="mtab-subway" onclick="window.cambiarMarcaTab('subway')">🥪 Subway</div>
-  <div class="marca-tab-rep" id="mtab-balcarce" onclick="window.cambiarMarcaTab('balcarce')">☕ Balcarce</div>
-</div>
-
-<div class="reporte-seccion activa" id="rsec-subway">
-  <div class="kpi-grid">
-    <div class="kpi-card"><div class="kpi-label">Ventas Totales</div><div class="kpi-compare"><div class="kpi-val ramos"><strong>${fmt(sw.ventas)}</strong></div></div></div>
-    <div class="kpi-card"><div class="kpi-label">Ticket Promedio</div><div class="kpi-compare"><div class="kpi-val ramos"><strong>${fmt(sw.ticketProm)}</strong></div></div></div>
-    <div class="kpi-card"><div class="kpi-label">UPT</div><div class="kpi-compare"><div class="kpi-val ramos"><strong>${sw.upt.toFixed(2)}</strong></div></div></div>
-    <div class="kpi-card"><div class="kpi-label">Mix 30cm</div><div class="kpi-compare"><div class="kpi-val ramos"><strong>${pct(sw.mix30)}</strong></div></div></div>
-    <div class="kpi-card"><div class="kpi-label">Total Sándwiches</div><div class="kpi-compare"><div class="kpi-val ramos"><strong>${sw.sandwiches}</strong></div></div></div>
-    <div class="kpi-card"><div class="kpi-label">Ingreso/Sándwich</div><div class="kpi-compare"><div class="kpi-val ramos"><strong>${fmt(sw.ingXsand)}</strong></div></div></div>
-  </div>
-  <div class="chart-card"><h4>Tráfico diario — Subway</h4><canvas id="chart-sw" height="180"></canvas></div>
-  <div class="chart-card"><h4>Mix Q1 vs Q2</h4>
-    <table class="mix-tabla"><thead><tr><th></th><th>Q1</th><th>Q2</th><th>Total</th></tr></thead>
-    <tbody>
-      <tr><td>15cm</td><td>${sw.s15q1}</td><td>${sw.s15q2}</td><td>${sw.s15q1+sw.s15q2}</td></tr>
-      <tr><td>30cm</td><td>${sw.s30q1}</td><td>${sw.s30q2}</td><td>${sw.s30q1+sw.s30q2}</td></tr>
-    </tbody></table>
-  </div>
-</div>
-
-<div class="reporte-seccion" id="rsec-balcarce">
-  <div class="kpi-grid">
-    <div class="kpi-card"><div class="kpi-label">Ventas Totales</div><div class="kpi-compare"><div class="kpi-val moron"><strong>${fmt(bc.ventas)}</strong></div></div></div>
-    <div class="kpi-card"><div class="kpi-label">Ticket Promedio</div><div class="kpi-compare"><div class="kpi-val moron"><strong>${fmt(bc.ticketProm)}</strong></div></div></div>
-    <div class="kpi-card"><div class="kpi-label">UPT</div><div class="kpi-compare"><div class="kpi-val moron"><strong>${bc.upt.toFixed(2)}</strong></div></div></div>
-    <div class="kpi-card"><div class="kpi-label">Total Tickets</div><div class="kpi-compare"><div class="kpi-val moron"><strong>${bc.ticketsTotal}</strong></div></div></div>
-    <div class="kpi-card"><div class="kpi-label">Unidades</div><div class="kpi-compare"><div class="kpi-val moron"><strong>${bc.unidades}</strong></div></div></div>
-    <div class="kpi-card"><div class="kpi-label">Precio Prom/Un</div><div class="kpi-compare"><div class="kpi-val moron"><strong>${fmt(bc.precioPromUn)}</strong></div></div></div>
-  </div>
-  <div class="chart-card"><h4>Tráfico diario — Balcarce</h4><canvas id="chart-bc" height="180"></canvas></div>
-  <div class="chart-card"><h4>Mix de Productos</h4>
-    <div style="overflow-x:auto;"><table class="mix-tabla">
-      <thead><tr><th>Producto</th><th>Q1</th><th>Q2</th><th>Total</th><th>%</th></tr></thead>
-      <tbody>${rowsMix}</tbody>
-    </table></div>
-  </div>
-</div>
-
-${analisisHTML}`;
-
-    setTimeout(() => {
-      const ctxSw = document.getElementById('chart-sw')?.getContext('2d');
-      if (ctxSw && sw.tickets.length > 0) {
-        chartsActivos.push(new Chart(ctxSw, {
-          type: 'line',
-          data: { labels: sw.tickets.map((_,i) => 'D'+(i+1)), datasets: [{ label: 'Tickets', data: sw.tickets, borderColor: '#1F4E79', backgroundColor: 'rgba(31,78,121,0.1)', tension: 0.4, fill: true, pointRadius: 2 }] },
-          options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
-        }));
-      }
-      const ctxBc = document.getElementById('chart-bc')?.getContext('2d');
-      if (ctxBc && bc.tickets.length > 0) {
-        chartsActivos.push(new Chart(ctxBc, {
-          type: 'line',
-          data: { labels: bc.tickets.map((_,i) => 'D'+(i+1)), datasets: [{ label: 'Tickets', data: bc.tickets, borderColor: '#843C0C', backgroundColor: 'rgba(132,60,12,0.1)', tension: 0.4, fill: true, pointRadius: 2 }] },
-          options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
-        }));
-      }
-    }, 150);
-  }
-
-  window.cambiarMarcaTab = function(marca) {
-    ['subway','balcarce'].forEach(m => {
-      const tab = document.getElementById('mtab-' + m);
-      if (tab) tab.className = 'marca-tab-rep' + (m === marca ? ' activo-' + m : '');
-      const sec = document.getElementById('rsec-' + m);
-      if (sec) sec.classList.toggle('activa', m === marca);
-    });
-  }
-
-  // ── COMPARATIVO ───────────────────────────────────────────────────
-  async function verificarComparativo() {
-    const mes = document.getElementById('inp-mes').value;
-    if (!mes) return;
-    const otroLocal = localActual.includes('Ramos') ? 'Morón' : 'Ramos Mejía';
-    try {
-      const snap = await getDocs(query(collection(db, 'reportes_mensuales'), where('local','==',otroLocal), where('mes','==',mes)));
-      const banner = document.getElementById('banner-comparativo');
-      if (!snap.empty) {
-        datosOtroLocal = snap.docs[0].data();
-        banner.style.display = 'block';
-        banner.textContent = '📊 ' + otroLocal + ' ya tiene datos de este mes. Tocá para ver el reporte comparativo →';
-      } else {
-        datosOtroLocal = null;
-        banner.style.display = 'none';
-      }
-    } catch(e) {}
-  }
-
-  window.verComparativo = async function() {
-    const mes = document.getElementById('inp-mes').value;
-    const otroLocal = localActual.includes('Ramos') ? 'Morón' : 'Ramos Mejía';
-    document.getElementById('generando').style.display = 'block';
-
-    try {
-      const [miSnap, otroSnap] = await Promise.all([
-        getDocs(query(collection(db, 'reportes_mensuales'), where('local','==',localActual), where('mes','==',mes))),
-        getDocs(query(collection(db, 'reportes_mensuales'), where('local','==',otroLocal), where('mes','==',mes)))
-      ]);
-      if (miSnap.empty || otroSnap.empty) {
-        document.getElementById('generando').style.display = 'none';
-        alert('Falta guardar los datos de alguno de los dos locales para este mes.');
-        return;
-      }
-      const miData = miSnap.docs[0].data(), otroData = otroSnap.docs[0].data();
-      const analisis = await generarAnalisisIA(mes, localActual, miData.sw, miData.bc, otroLocal, otroData);
-      document.getElementById('generando').style.display = 'none';
-      reporteActual = { ...miData, analisis, otroData, otroLocal };
-      renderReporte(reporteActual);
-      cambiarTab('reporte');
-    } catch(e) {
-      document.getElementById('generando').style.display = 'none';
-      alert('Error: ' + e.message);
-    }
-  }
-
-  // ── HISTORIAL ─────────────────────────────────────────────────────
-  async function cargarHistorial() {
-    const lista = document.getElementById('lista-historial');
-    lista.innerHTML = '<div class="sin-historial">Cargando...</div>';
-    try {
-      const snap = await getDocs(collection(db, 'reportes_mensuales'));
-      const items = [];
-      snap.forEach(d => { const dat = d.data(); if (dat.local === localActual) items.push({ id: d.id, ...dat }); });
-      items.sort((a,b) => b.timestamp - a.timestamp);
-      if (!items.length) { lista.innerHTML = '<div class="sin-historial">Sin reportes guardados aún</div>'; return; }
-      lista.innerHTML = '';
-      items.forEach(dat => {
-        const mesStr = nombreMesStr(dat.mes);
-        const div = document.createElement('div');
-        div.className = 'historial-item';
-        div.innerHTML = `<div class="hist-header">
-          <div>
-            <div class="hist-fecha">📅 ${mesStr.charAt(0).toUpperCase()+mesStr.slice(1)}</div>
-            <div class="hist-sub">${dat.local} · Subway + Balcarce</div>
-          </div>
-          <button class="btn-eliminar-hist" onclick="event.stopPropagation();window.eliminarReporte('${dat.id}')">🗑</button>
-        </div>
-        <div style="display:flex;gap:8px;margin-top:8px;font-size:12px;color:#666;">
-          <span>🥪 ${fmt(dat.sw?.ventas||0)}</span>
-          <span>☕ ${fmt(dat.bc?.ventas||0)}</span>
-        </div>`;
-        div.onclick = () => {
-          reporteActual = dat;
-          renderReporte(dat);
-          cambiarTab('reporte');
-        };
-        lista.appendChild(div);
+      const snap = await getDocs(collection(db, 'usuarios'));
+      const email = (user.email || '').toLowerCase();
+      let yo = null;
+      snap.forEach(d => {
+        const x = d.data();
+        if (d.id === user.uid || (x.email || '').toLowerCase() === email) yo = x;
       });
-    } catch(e) { lista.innerHTML = '<div class="sin-historial">Error al cargar</div>'; }
+      if (yo) {
+        if (yo.rol === 'admin') locales = ['Ramos Mejía', 'Morón'];
+        else locales = ['Ramos Mejía', 'Morón'].filter(l => yo.permisos && yo.permisos[l] && yo.permisos[l].reportes);
+      }
+    } catch(e) { /* si falla, queda solo el local actual */ }
+    visibles = LOCALES_DEF.map((l, i) => ({ ...l, idx: i })).filter(l => locales.includes(l.local));
+    if (!visibles.length) visibles = LOCALES_DEF.map((l, i) => ({ ...l, idx: i })).filter(l => l.local === localActual);
+    const mio = visibles.find(l => l.local === localActual && l.marca === marcaActual) || visibles[0];
+    selLocs = new Set(mio ? [mio.idx] : []);
   }
 
-  window.eliminarReporte = async function(id) {
-    if (!confirm('¿Eliminar este reporte?')) return;
-    await deleteDoc(doc(db, 'reportes_mensuales', id));
-    cargarHistorial();
+  function appVacia() { return { v: [0,0,0,0,0,0,0], pedidos: 0, ticket: 0, impresiones: 0, menu: 0, carrito: 0, pedido: 0, prep: 0, reclamos: 0 }; }
+
+  function lunesElegido() {
+    const f = document.getElementById('inp-fecha').value;
+    return f ? lunesDe(f) : '';
   }
 
-  // Actualizar comparativo cuando cambia el mes
-  document.getElementById('inp-mes').addEventListener('change', verificarComparativo);
+  function prepararDraft() {
+    const lunes = lunesElegido();
+    const existente = lunes ? semanas.find(s => s.semana === lunes) : null;
+    draft = { apps: {}, nota: existente ? (existente.nota || '') : '' };
+    APPS.forEach(a => {
+      const base = appVacia();
+      const src = existente && existente.apps && existente.apps[a.id];
+      if (src) {
+        base.v = Array.from({ length: 7 }, (_, i) => Number(src.v && src.v[i]) || 0);
+        CAMPOS_NUM.forEach(c => { base[c] = Number(src[c]) || 0; });
+      }
+      draft.apps[a.id] = base;
+    });
+  }
+
+  function appTieneDatos(a) {
+    return a.v.some(x => x > 0) || CAMPOS_NUM.some(c => a[c] > 0);
+  }
+
+  // ── CARGAR ───────────────────────────────────────────────────────
+  function inp(campo, valor) {
+    return `<input type="number" inputmode="decimal" step="any" min="0" data-campo="${campo}" value="${valor}"
+      onfocus="if(this.value==='0')this.value=''" onblur="if(this.value==='')this.value='0'" oninput="onCampo(this)">`;
+  }
+
+  function renderChipsCarga() {
+    document.getElementById('cargar-chips').innerHTML = APPS.map(a => {
+      const con = draft && appTieneDatos(draft.apps[a.id]);
+      return `<div class="chip ${a.id === appActual ? 'activo' : ''} ${con ? 'con-datos' : ''}" onclick="setApp('${a.id}')">${a.nombre}</div>`;
+    }).join('');
+  }
+
+  window.setApp = function(id) { appActual = id; renderChipsCarga(); renderFormApp(); }
+
+  function renderCargar() {
+    const lunes = lunesElegido();
+    const rango = document.getElementById('semana-rango');
+    const estado = document.getElementById('semana-estado');
+    const cont = document.getElementById('form-valores');
+    if (!lunes) {
+      rango.textContent = ''; estado.style.display = 'none';
+      document.getElementById('cargar-chips').innerHTML = '';
+      cont.innerHTML = '';
+      return;
+    }
+    rango.textContent = rangoSemana(lunes) + ' · ' + marcaActual + ' ' + localActual;
+    const existente = semanas.find(s => s.semana === lunes);
+    estado.style.display = 'inline-block';
+    estado.className = 'semana-estado ' + (existente ? 'existente' : 'nueva');
+    estado.textContent = existente ? 'Ya tiene datos: al guardar se reemplazan' : 'Semana nueva';
+    renderChipsCarga();
+    renderFormApp();
+  }
+
+  function renderFormApp() {
+    const a = draft.apps[appActual];
+    const nombreApp = APPS.find(x => x.id === appActual).nombre;
+    const dias = DIAS.map((d, i) => `<div class="campo"><label>${d}</label>${inp('v' + i, a.v[i])}</div>`).join('');
+    document.getElementById('form-valores').innerHTML = `
+      <div class="card">
+        <h3>${nombreApp} · Ventas por día ($)</h3>
+        <div class="grid2">${dias}</div>
+        <div class="total-fila"><span>Total de la semana</span><strong id="calc-ventas">$0</strong></div>
+      </div>
+      <div class="card">
+        <h3>${nombreApp} · Pedidos</h3>
+        <div class="campo"><label>Pedidos de la semana</label>${inp('pedidos', a.pedidos)}</div>
+        <div class="campo" style="margin-bottom:0;"><label>Ticket promedio ($, como lo muestra la app)</label>${inp('ticket', a.ticket)}</div>
+      </div>
+      <div class="card">
+        <h3>${nombreApp} · Embudo</h3>
+        <div class="campo"><label>Impresiones</label>${inp('impresiones', a.impresiones)}</div>
+        <div class="campo"><label>Visualizaron el menú</label>${inp('menu', a.menu)}</div>
+        <div class="campo"><label>De menú a carrito</label>${inp('carrito', a.carrito)}</div>
+        <div class="campo"><label>Realizaron un pedido</label>${inp('pedido', a.pedido)}</div>
+        <div class="total-fila"><span>Impresión a menú</span><strong id="calc-c1">0%</strong></div>
+        <div class="total-fila"><span>Menú a carrito</span><strong id="calc-c2">0%</strong></div>
+        <div class="total-fila"><span>Carrito a pedido</span><strong id="calc-c3">0%</strong></div>
+      </div>
+      <div class="card">
+        <h3>${nombreApp} · Operación</h3>
+        <div class="campo"><label>Tiempo de preparación (minutos)</label>${inp('prep', a.prep)}</div>
+        <div class="campo"><label>Pedidos con reclamo</label>${inp('reclamos', a.reclamos)}</div>
+        <div class="total-fila"><span>% de pedidos con reclamo</span><strong id="calc-recl">0%</strong></div>
+      </div>
+      <div class="card">
+        <h3>Nota de la semana (opcional)</h3>
+        <div class="campo" style="margin-bottom:0;"><textarea id="inp-nota" oninput="onNota(this)" placeholder="Algo que explique los números: feriado, promo, faltante...">${esc(draft.nota)}</textarea></div>
+      </div>`;
+    actualizarCalculos();
+  }
+
+  window.onCampo = function(el) {
+    const campo = el.dataset.campo;
+    const val = Number(el.value) || 0;
+    const a = draft.apps[appActual];
+    if (/^v[0-6]$/.test(campo)) a.v[Number(campo.slice(1))] = val;
+    else a[campo] = val;
+    actualizarCalculos();
+    renderChipsCarga();
+  }
+  window.onNota = function(el) { draft.nota = el.value; }
+
+  function actualizarCalculos() {
+    const a = draft.apps[appActual];
+    const ventas = a.v.reduce((x, y) => x + y, 0);
+    const set = (id, txt) => { const e = document.getElementById(id); if (e) e.textContent = txt; };
+    set('calc-ventas', fmt(ventas, 'dinero'));
+    set('calc-c1', fmt(a.impresiones > 0 ? a.menu / a.impresiones * 100 : 0, 'porcentaje'));
+    set('calc-c2', fmt(a.menu > 0 ? a.carrito / a.menu * 100 : 0, 'porcentaje'));
+    set('calc-c3', fmt(a.carrito > 0 ? a.pedido / a.carrito * 100 : 0, 'porcentaje'));
+    set('calc-recl', fmt(a.pedidos > 0 ? a.reclamos / a.pedidos * 100 : 0, 'porcentaje'));
+  }
+
+  window.guardarSemana = async function() {
+    const lunes = lunesElegido();
+    if (!lunes) { toast('Elegí la semana', 'error'); return; }
+    if (!APPS.some(a => appTieneDatos(draft.apps[a.id]))) { toast('Cargá al menos un dato antes de guardar', 'error'); return; }
+    try {
+      await setDoc(doc(db, COLECCION, slug(localActual) + '_' + slug(marcaActual) + '_' + lunes), {
+        local: localActual, marca: marcaActual, semana: lunes,
+        apps: draft.apps, nota: (draft.nota || '').trim(), timestamp: Date.now()
+      });
+      await cargarTodo();
+      prepararDraft();
+      renderCargar();
+      toast('Semana guardada', 'ok');
+    } catch(e) { toast('No se pudo guardar: ' + e.message, 'error'); }
+  }
+
+  // ── CÁLCULOS COMPARTIDOS (Comparar y Análisis) ───────────────────
+  const GRUPOS = [
+    { titulo: 'Ventas', items: [
+      { k: 'ventas', label: 'Ventas', tipo: 'dinero' },
+      { k: 'pedidos', label: 'Pedidos', tipo: 'numero' },
+      { k: 'ticket', label: 'Ticket promedio', tipo: 'dinero' } ] },
+    { titulo: 'Embudo', items: [
+      { k: 'impresiones', label: 'Impresiones', tipo: 'numero' },
+      { k: 'menu', label: 'Visualizaron el menú', tipo: 'numero' },
+      { k: 'carrito', label: 'De menú a carrito', tipo: 'numero' },
+      { k: 'pedido', label: 'Realizaron un pedido', tipo: 'numero' },
+      { k: 'c_menu', label: 'Impresión a menú', tipo: 'porcentaje' },
+      { k: 'c_carrito', label: 'Menú a carrito', tipo: 'porcentaje' },
+      { k: 'c_pedido', label: 'Carrito a pedido', tipo: 'porcentaje' } ] },
+    { titulo: 'Operación', items: [
+      { k: 'prep', label: 'Tiempo de preparación', tipo: 'minutos', menos: true },
+      { k: 'reclamos', label: 'Pedidos con reclamo', tipo: 'numero', menos: true },
+      { k: 'pctReclamos', label: '% de pedidos con reclamo', tipo: 'porcentaje', menos: true } ] }
+  ];
+
+  function acumular(o, val, peso) {
+    if (val > 0) { o.sum += val; o.n++; if (peso > 0) { o.num += val * peso; o.den += peso; } }
+  }
+  function promedio(o) { return o.den > 0 ? o.num / o.den : (o.n > 0 ? o.sum / o.n : 0); }
+
+  // Suma una lista de documentos de semana (de uno o varios locales) para una app o todas
+  function agregarVarios(docs, scope) {
+    const ids = scope === 'todas' ? APPS.map(a => a.id) : [scope];
+    const r = { ventas: 0, dias: [0,0,0,0,0,0,0], pedidos: 0, impresiones: 0, menu: 0, carrito: 0, pedido: 0, reclamos: 0 };
+    const prep = { num: 0, den: 0, sum: 0, n: 0 };
+    const tick = { num: 0, den: 0, sum: 0, n: 0 };
+    docs.forEach(sem => {
+      ids.forEach(id => {
+        const a = sem.apps && sem.apps[id];
+        if (!a) return;
+        for (let i = 0; i < 7; i++) { const v = Number(a.v && a.v[i]) || 0; r.dias[i] += v; r.ventas += v; }
+        const ped = Number(a.pedidos) || 0;
+        r.pedidos += ped;
+        r.impresiones += Number(a.impresiones) || 0;
+        r.menu += Number(a.menu) || 0;
+        r.carrito += Number(a.carrito) || 0;
+        r.pedido += Number(a.pedido) || 0;
+        r.reclamos += Number(a.reclamos) || 0;
+        acumular(prep, Number(a.prep) || 0, ped);
+        acumular(tick, Number(a.ticket) || 0, ped);
+      });
+    });
+    // Tiempo y ticket: promedio ponderado por la cantidad de pedidos
+    r.prep = promedio(prep);
+    r.ticket = promedio(tick);
+    r.c_menu = r.impresiones > 0 ? r.menu / r.impresiones * 100 : 0;
+    r.c_carrito = r.menu > 0 ? r.carrito / r.menu * 100 : 0;
+    r.c_pedido = r.carrito > 0 ? r.pedido / r.carrito * 100 : 0;
+    r.pctReclamos = r.pedidos > 0 ? r.reclamos / r.pedidos * 100 : 0;
+    return r;
+  }
+  function agregar(sem, scope) { return agregarVarios(sem ? [sem] : [], scope); }
+
+  function deltaHtml(cur, prev, tipo, menos) {
+    let clase = 'igual', txt;
+    if (tipo === 'porcentaje') {
+      const dif = cur - prev;
+      if (Math.abs(dif) < 0.05) { txt = '= igual'; }
+      else {
+        const sube = dif > 0;
+        clase = (menos ? !sube : sube) ? 'bien' : 'mal';
+        txt = (sube ? '▲ ' : '▼ ') + Math.abs(dif).toLocaleString('es-AR', { maximumFractionDigits: 1 }) + ' pts';
+      }
+    } else if (prev === 0) {
+      txt = cur === 0 ? '= igual' : 'Nuevo';
+    } else {
+      const p = (cur - prev) / Math.abs(prev) * 100;
+      if (Math.abs(p) < 0.05) { txt = '= igual'; }
+      else {
+        const sube = p > 0;
+        clase = (menos ? !sube : sube) ? 'bien' : 'mal';
+        txt = (sube ? '▲ ' : '▼ ') + Math.abs(p).toLocaleString('es-AR', { maximumFractionDigits: 1 }) + '%';
+      }
+    }
+    return `<span class="delta ${clase}">${txt}</span>`;
+  }
+
+  function kpisHtml(cur, prev) {
+    let html = '';
+    GRUPOS.forEach(g => {
+      html += `<div class="grupo-titulo">${g.titulo}</div><div class="kpi-grid">`;
+      g.items.forEach(it => {
+        html += `<div class="kpi"><div class="kpi-label">${it.label}</div><div class="kpi-valor">${fmt(cur[it.k], it.tipo)}</div>${prev ? deltaHtml(cur[it.k], prev[it.k], it.tipo, it.menos) : ''}</div>`;
+      });
+      html += '</div>';
+    });
+    return html;
+  }
+
+  // ── COMPARAR (un local + marca, semana contra semana) ────────────
+  document.getElementById('sel-semana').addEventListener('change', e => { compSemana = e.target.value; renderComparar(); });
+  window.setScope = function(s) { compScope = s; renderComparar(); }
+
+  function renderComparar() {
+    const cont = document.getElementById('comparar-contenido');
+    const sel = document.getElementById('sel-semana');
+    const chipsCont = document.getElementById('comp-chips');
+    destruirCharts();
+
+    if (!semanas.length) {
+      sel.innerHTML = '';
+      chipsCont.innerHTML = '';
+      cont.innerHTML = '<div class="vacio">Todavía no hay semanas cargadas para ' + marcaActual + ' ' + localActual + '.<br>Cargá la primera en la pestaña 📥.</div>';
+      return;
+    }
+
+    if (!compSemana || !semanas.some(s => s.semana === compSemana)) compSemana = semanas[semanas.length - 1].semana;
+    sel.innerHTML = [...semanas].reverse().map(s => `<option value="${s.semana}" ${s.semana === compSemana ? 'selected' : ''}>${rangoSemana(s.semana)}</option>`).join('');
+
+    const scopes = [{ id: 'todas', nombre: 'Todas las apps' }, ...APPS];
+    chipsCont.innerHTML = scopes.map(s => `<div class="chip ${s.id === compScope ? 'activo' : ''}" onclick="setScope('${s.id}')">${s.nombre}</div>`).join('');
+
+    const idx = semanas.findIndex(s => s.semana === compSemana);
+    const actual = semanas[idx];
+    const previa = idx > 0 ? semanas[idx - 1] : null;
+    const cur = agregar(actual, compScope);
+    const prev = previa ? agregar(previa, compScope) : null;
+
+    let html = '';
+    html += `<div class="vs-texto">${previa ? 'Comparado con la semana del ' + corto(previa.semana) : 'Es la primera semana cargada, todavía no hay con qué comparar.'}</div>`;
+    if (actual.nota) html += `<div class="nota-semana">📝 ${esc(actual.nota)}</div>`;
+    html += kpisHtml(cur, prev);
+
+    html += `<div class="card"><h3>Ventas por día</h3><canvas id="ch-dias" height="170"></canvas></div>`;
+    html += `<div class="card"><h3>Ventas de las últimas semanas</h3><canvas id="ch-evol" height="150"></canvas></div>`;
+
+    if (compScope === 'todas') {
+      let filas = '';
+      APPS.forEach(a => {
+        const r = agregar(actual, a.id);
+        filas += `<tr><td>${a.nombre}</td><td>${fmt(r.ventas, 'dinero')}</td><td>${fmt(r.pedidos, 'numero')}</td><td>${fmt(r.ticket, 'dinero')}</td><td>${fmt(r.reclamos, 'numero')}</td></tr>`;
+      });
+      html += `<div class="card"><h3>Por aplicación</h3><div style="overflow-x:auto;"><table class="tabla">
+        <thead><tr><th>App</th><th>Ventas</th><th>Pedidos</th><th>Ticket</th><th>Reclamos</th></tr></thead>
+        <tbody>${filas}</tbody></table></div></div>`;
+    }
+
+    html += `<div style="padding:8px 16px 0;text-align:center;"><button class="btn-peligro" onclick="eliminarSemana('${actual.id}')">🗑 Eliminar esta semana</button></div>`;
+    cont.innerHTML = html;
+
+    const datasets = [{ label: 'Esta semana', data: cur.dias, backgroundColor: '#e8b84b' }];
+    if (prev) datasets.push({ label: 'Semana anterior', data: prev.dias, backgroundColor: '#cfd3dc' });
+    nuevoChart('ch-dias', {
+      type: 'bar',
+      data: { labels: DIAS, datasets },
+      options: { responsive: true, plugins: { legend: { display: !!prev } }, scales: { y: { beginAtZero: true } } }
+    });
+
+    const hasta = semanas.slice(Math.max(0, idx - 7), idx + 1);
+    nuevoChart('ch-evol', {
+      type: 'line',
+      data: {
+        labels: hasta.map(s => corto(s.semana)),
+        datasets: [{ data: hasta.map(s => agregar(s, compScope).ventas), borderColor: '#e8b84b', backgroundColor: 'rgba(232,184,75,0.15)', tension: 0.3, fill: true, pointRadius: 3, pointBackgroundColor: '#1a1a2e' }]
+      },
+      options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+    });
+  }
+
+  window.eliminarSemana = async function(id) {
+    const s = semanas.find(x => x.id === id);
+    if (!s) return;
+    if (!confirm('¿Eliminar los datos de la semana del ' + corto(s.semana) + ' (' + marcaActual + ' ' + localActual + ')?')) return;
+    try {
+      await deleteDoc(doc(db, COLECCION, id));
+      await cargarTodo();
+      compSemana = '';
+      prepararDraft();
+      renderCargar();
+      renderComparar();
+      toast('Semana eliminada', 'ok');
+    } catch(e) { toast('No se pudo eliminar: ' + e.message, 'error'); }
+  }
+
+  // ── ANÁLISIS (uno o varios locales) ──────────────────────────────
+  window.toggleLoc = function(idx) {
+    if (selLocs.has(idx)) {
+      if (selLocs.size === 1) { toast('Tiene que quedar al menos un local elegido', 'error'); return; }
+      selLocs.delete(idx);
+    } else selLocs.add(idx);
+    renderAnalisis();
+  }
+  window.selRapida = function(tipo) {
+    const lista = visibles.filter(l => tipo === 'todos' || l.marca === tipo);
+    if (!lista.length) { toast('No hay locales de ' + tipo + ' disponibles para vos', 'error'); return; }
+    selLocs = new Set(lista.map(l => l.idx));
+    renderAnalisis();
+  }
+  window.setPeriodo = function(n) { anPeriodo = n; renderAnalisis(); }
+  window.setAnApp = function(a) { anApp = a; renderAnalisis(); }
+
+  function renderAnalisis() {
+    destruirCharts();
+    const cont = document.getElementById('analisis-contenido');
+
+    // Selectores
+    document.getElementById('an-locs').innerHTML =
+      visibles.map(l => `<div class="chip ${selLocs.has(l.idx) ? 'activo' : ''}" onclick="toggleLoc(${l.idx})"><span class="dot" style="background:${l.color}"></span>${nombreLocal(l)}</div>`).join('') +
+      `<div class="chip accion" onclick="selRapida('todos')">Todos</div>` +
+      `<div class="chip accion" onclick="selRapida('Subway')">Solo Subway</div>` +
+      `<div class="chip accion" onclick="selRapida('Balcarce')">Solo Balcarce</div>`;
+    document.getElementById('an-periodo').innerHTML =
+      PERIODOS.map(p => `<div class="chip ${p.n === anPeriodo ? 'activo' : ''}" onclick="setPeriodo(${p.n})">${p.txt}</div>`).join('');
+    document.getElementById('an-apps').innerHTML =
+      [{ id: 'todas', nombre: 'Todas' }, ...APPS].map(a => `<div class="chip ${a.id === anApp ? 'activo' : ''}" onclick="setAnApp('${a.id}')">${a.nombre}</div>`).join('');
+
+    // Documentos de los locales elegidos
+    const elegidos = visibles.filter(l => selLocs.has(l.idx));
+    const docs = todas.filter(s => elegidos.some(l => l.marca === s.marca && l.local === s.local));
+    if (!docs.length) {
+      cont.innerHTML = '<div class="vacio">Todavía no hay semanas cargadas para los locales elegidos.</div>';
+      return;
+    }
+
+    // Período: las últimas N semanas desde la más reciente cargada entre los locales elegidos
+    const ultima = docs.reduce((m, s) => s.semana > m ? s.semana : m, '');
+    let actualDocs = docs, prevDocs = [];
+    if (anPeriodo > 0) {
+      const ini = sumarDias(ultima, -(anPeriodo - 1) * 7);
+      const iniPrev = sumarDias(ini, -anPeriodo * 7);
+      actualDocs = docs.filter(s => s.semana >= ini);
+      prevDocs = docs.filter(s => s.semana >= iniPrev && s.semana < ini);
+    }
+
+    const semanasUnicas = [...new Set(actualDocs.map(s => s.semana))].sort();
+    const cur = agregarVarios(actualDocs, anApp);
+    const prev = prevDocs.length ? agregarVarios(prevDocs, anApp) : null;
+
+    let html = '';
+    html += `<div class="vs-texto">Del ${corto(semanasUnicas[0])} al ${corto(sumarDias(semanasUnicas[semanasUnicas.length - 1], 6))} · ${semanasUnicas.length} ${semanasUnicas.length === 1 ? 'semana' : 'semanas'} con datos.<br>${
+      prev ? 'Comparado con el período anterior (' + new Set(prevDocs.map(s => s.semana)).size + ' semanas con datos).' :
+      (anPeriodo > 0 ? 'No hay datos del período anterior para comparar.' : '')}</div>`;
+    html += kpisHtml(cur, prev);
+
+    html += `<div class="card"><h3>Ventas por semana${elegidos.length > 1 ? ' (por local)' : ''}</h3><canvas id="ch-an-sem" height="190"></canvas></div>`;
+    html += `<div class="card"><h3>Ventas por día de la semana (suma del período)</h3><canvas id="ch-an-dias" height="170"></canvas></div>`;
+    if (anApp === 'todas') html += `<div class="card"><h3>Ventas por aplicación</h3><canvas id="ch-an-apps" height="150"></canvas></div>`;
+    html += `<div class="card"><h3>Embudo</h3><canvas id="ch-an-emb" height="150"></canvas></div>`;
+
+    if (elegidos.length > 1) {
+      let filas = '';
+      elegidos.forEach(l => {
+        const dl = actualDocs.filter(s => s.marca === l.marca && s.local === l.local);
+        const r = agregarVarios(dl, anApp);
+        const sem = new Set(dl.map(s => s.semana)).size;
+        filas += `<tr><td><span class="dot" style="background:${l.color}"></span>${nombreLocal(l)}<span class="peque">${sem} ${sem === 1 ? 'semana' : 'semanas'} con datos</span></td><td>${fmt(r.ventas, 'dinero')}</td><td>${fmt(r.pedidos, 'numero')}</td><td>${fmt(r.ticket, 'dinero')}</td><td>${fmt(r.pctReclamos, 'porcentaje')}</td><td>${fmt(r.prep, 'minutos')}</td></tr>`;
+      });
+      html += `<div class="card"><h3>Por local</h3><div style="overflow-x:auto;"><table class="tabla">
+        <thead><tr><th>Local</th><th>Ventas</th><th>Pedidos</th><th>Ticket</th><th>% recl.</th><th>Prep.</th></tr></thead>
+        <tbody>${filas}</tbody></table></div></div>`;
+    }
+
+    if (anApp === 'todas') {
+      let filas = '';
+      APPS.forEach(a => {
+        const r = agregarVarios(actualDocs, a.id);
+        filas += `<tr><td><span class="dot" style="background:${a.color}"></span>${a.nombre}</td><td>${fmt(r.ventas, 'dinero')}</td><td>${fmt(r.pedidos, 'numero')}</td><td>${fmt(r.ticket, 'dinero')}</td><td>${fmt(r.pctReclamos, 'porcentaje')}</td><td>${fmt(r.prep, 'minutos')}</td></tr>`;
+      });
+      html += `<div class="card"><h3>Por aplicación</h3><div style="overflow-x:auto;"><table class="tabla">
+        <thead><tr><th>App</th><th>Ventas</th><th>Pedidos</th><th>Ticket</th><th>% recl.</th><th>Prep.</th></tr></thead>
+        <tbody>${filas}</tbody></table></div></div>`;
+    }
+    cont.innerHTML = html;
+
+    // Gráfico: ventas por semana, una barra apilada por local
+    nuevoChart('ch-an-sem', {
+      type: 'bar',
+      data: {
+        labels: semanasUnicas.map(corto),
+        datasets: elegidos.map(l => ({
+          label: nombreLocal(l),
+          backgroundColor: l.color,
+          data: semanasUnicas.map(w => {
+            const d = actualDocs.find(s => s.marca === l.marca && s.local === l.local && s.semana === w);
+            return d ? agregarVarios([d], anApp).ventas : 0;
+          })
+        }))
+      },
+      options: { responsive: true, plugins: { legend: { display: elegidos.length > 1 } }, scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } } }
+    });
+
+    // Gráfico: ventas por día de la semana
+    nuevoChart('ch-an-dias', {
+      type: 'bar',
+      data: { labels: DIAS, datasets: [{ data: cur.dias, backgroundColor: '#e8b84b' }] },
+      options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+    });
+
+    // Gráfico: ventas por app
+    if (anApp === 'todas') {
+      nuevoChart('ch-an-apps', {
+        type: 'bar',
+        data: {
+          labels: APPS.map(a => a.nombre),
+          datasets: [{ data: APPS.map(a => agregarVarios(actualDocs, a.id).ventas), backgroundColor: APPS.map(a => a.color) }]
+        },
+        options: { indexAxis: 'y', responsive: true, plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true } } }
+      });
+    }
+
+    // Gráfico: embudo
+    nuevoChart('ch-an-emb', {
+      type: 'bar',
+      data: {
+        labels: ['Impresiones', 'Visualizaron el menú', 'De menú a carrito', 'Realizaron un pedido'],
+        datasets: [{ data: [cur.impresiones, cur.menu, cur.carrito, cur.pedido], backgroundColor: ['#cfd3dc', '#e8b84b', '#d9822b', '#2ecc71'] }]
+      },
+      options: { indexAxis: 'y', responsive: true, plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true } } }
+    });
+  }
+
+  // ── INICIO ───────────────────────────────────────────────────────
+  document.getElementById('inp-fecha').value = claveFecha(new Date());
+  document.getElementById('inp-fecha').addEventListener('change', () => { prepararDraft(); renderCargar(); });
+
+  onAuthStateChanged(auth, async user => {
+    if (!user) { window.location.href = 'login.html'; return; }
+    try {
+      await cargarTodo();
+    } catch(e) {
+      toast('No se pudieron cargar los datos: ' + e.message, 'error');
+    }
+    await calcularVisibles(user);
+    prepararDraft();
+    renderCargar();
+  });
 </script>
 </body>
 </html>
