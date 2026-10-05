@@ -369,9 +369,14 @@
 
     <!-- EGRESOS (solo Subway) -->
     <div class="section" id="seccion-egresos" style="display:none;">
-      <div class="section-title">📤 Egresos <span style="font-size:11px;color:#aaa;font-weight:400;text-transform:none;letter-spacing:0;">solo informativo · descripción y monto obligatorios</span></div>
-      <div class="gastos-lista" id="egresos-lista"></div>
-      <button class="btn-add-gasto" onclick="agregarEgreso()">+ Agregar egreso</button>
+      <div class="section-title">📤 Egresos <span style="font-size:11px;color:#e63946;font-weight:700;text-transform:none;letter-spacing:0;">obligatorio para cada cajero · descripción y monto</span></div>
+      <label style="display:flex;align-items:center;gap:10px;background:#f8f9fa;border-radius:10px;padding:12px 14px;margin-bottom:12px;font-size:14px;font-weight:600;color:#555;cursor:pointer;">
+        <input type="checkbox" id="sin-egresos" onchange="toggleSinEgresos()" style="width:20px;height:20px;"> No tuve egresos en mi turno
+      </label>
+      <div id="egresos-bloque">
+        <div class="gastos-lista" id="egresos-lista"></div>
+        <button class="btn-add-gasto" id="btn-add-egreso" onclick="agregarEgreso()">+ Agregar egreso</button>
+      </div>
     </div>
 
     <!-- PANES (solo Subway) -->
@@ -634,7 +639,17 @@ window.eliminarTarjeta = function(i) {
 };
 
 // ── EGRESOS ─────────────────────────────────────────────
+// Cada fila de egreso lleva el nombre del cajero que la cargó. Cada cajero tiene que
+// cargar el suyo (o tildar "No tuve egresos en mi turno"). Los egresos de otros cajeros
+// se ven, pero no se pueden editar ni cuentan para cumplir la obligación de uno mismo.
 let egresosActuales = [];
+
+function escHtml(s) {
+  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// Se puede editar si es mío o si es de un registro viejo sin dueño
+function esEditable(e) { return !e.cajero || e.cajero === nombreUsuario; }
 
 // Un egreso con algo cargado (descripción o monto) tiene que tener los dos:
 // descripción con texto y monto mayor a 0. Una fila totalmente vacía se ignora.
@@ -645,11 +660,16 @@ function egresoIncompleto(e) {
   return algoCargado && !(tieneDesc && tieneMonto);
 }
 
+// Un egreso completo tiene descripción con texto y monto mayor a 0
+function egresoCompleto(e) {
+  return !!(e.desc && String(e.desc).trim()) && (parseFloat(e.monto) || 0) > 0;
+}
+
 // Marca en rojo lo que falta, sin volver a dibujar la lista (así no se pierde el foco al tipear)
 window.marcarEgresos = function() {
   document.querySelectorAll('#egresos-lista .gasto-item').forEach((item, i) => {
     const e = egresosActuales[i];
-    if (!e) return;
+    if (!e || !esEditable(e)) return;
     const incompleto = egresoIncompleto(e);
     const faltaDesc = incompleto && !(e.desc && String(e.desc).trim());
     const faltaMonto = incompleto && !((parseFloat(e.monto) || 0) > 0);
@@ -671,34 +691,71 @@ window.marcarEgresos = function() {
 function renderEgresos() {
   const lista = document.getElementById('egresos-lista');
   if (!lista) return;
-  lista.innerHTML = egresosActuales.map((e, i) => `
-    <div class="gasto-item">
-      <input type="text" class="gasto-desc" placeholder="Descripción" value="${e.desc || ''}"
-        oninput="window.actualizarEgreso(${i}, 'desc', this.value)" onblur="marcarEgresos()">
-      <input type="number" class="gasto-monto" placeholder="$0" value="${e.monto || ''}"
-        inputmode="decimal" oninput="window.actualizarEgreso(${i}, 'monto', this.value)" onblur="marcarEgresos()">
-      <button class="btn-del-gasto" onclick="window.eliminarEgreso(${i})">🗑</button>
-    </div>
-  `).join('');
+  lista.innerHTML = egresosActuales.map((e, i) => {
+    const propio = esEditable(e);
+    const dueno = e.cajero ? escHtml(e.cajero) + (e.cajero === nombreUsuario ? ' (vos)' : '') : 'Sin asignar';
+    const bloqueado = propio ? '' : 'disabled style="background:#eceef1;color:#777;"';
+    const evDesc = propio ? `oninput="window.actualizarEgreso(${i}, 'desc', this.value)" onblur="marcarEgresos()"` : '';
+    const evMonto = propio ? `oninput="window.actualizarEgreso(${i}, 'monto', this.value)" onblur="marcarEgresos()"` : '';
+    return `
+    <div class="gasto-item" style="flex-wrap:wrap;">
+      <div style="flex:0 0 100%;font-size:11px;font-weight:700;color:#888;">👤 ${dueno}</div>
+      <input type="text" class="gasto-desc" placeholder="Descripción" value="${escHtml(e.desc || '')}" ${bloqueado} ${evDesc}>
+      <input type="number" class="gasto-monto" placeholder="$0" value="${escHtml(e.monto || '')}" inputmode="decimal" ${bloqueado} ${evMonto}>
+      ${propio ? `<button class="btn-del-gasto" onclick="window.eliminarEgreso(${i})">🗑</button>` : ''}
+    </div>`;
+  }).join('');
   marcarEgresos();
 }
 
 window.agregarEgreso = function() {
-  egresosActuales.push({ desc: '', monto: '' });
+  marcarSeccionEgresos(false);
+  egresosActuales.push({ desc: '', monto: '', cajero: nombreUsuario });
   renderEgresos();
   setTimeout(() => {
-    const inputs = document.querySelectorAll('#egresos-lista .gasto-desc');
+    const inputs = document.querySelectorAll('#egresos-lista .gasto-desc:not([disabled])');
     if (inputs.length) inputs[inputs.length - 1].focus();
   }, 50);
 };
 
 window.actualizarEgreso = function(i, campo, valor) {
+  if (!egresosActuales[i].cajero) egresosActuales[i].cajero = nombreUsuario; // un registro viejo sin dueño pasa a ser de quien lo edita
   egresosActuales[i][campo] = valor;
 };
 
 window.eliminarEgreso = function(i) {
   egresosActuales.splice(i, 1);
   renderEgresos();
+};
+
+// Borde rojo en toda la sección cuando falta cargar el egreso al guardar
+function marcarSeccionEgresos(activo) {
+  const sec = document.getElementById('seccion-egresos');
+  if (sec) sec.style.boxShadow = activo ? '0 0 0 2px #e63946' : '';
+}
+
+// Tilde "No tuve egresos en mi turno": se guarda en la firma de cada cajero
+function aplicarSinEgresos(valor) {
+  const chk = document.getElementById('sin-egresos');
+  const btn = document.getElementById('btn-add-egreso');
+  if (chk) chk.checked = !!valor;
+  if (btn) btn.style.display = valor ? 'none' : 'block';
+}
+
+window.toggleSinEgresos = function() {
+  const chk = document.getElementById('sin-egresos');
+  if (chk.checked) {
+    // No se puede decir "no tuve egresos" si ya cargué alguno
+    if (egresosActuales.some(e => e.cajero === nombreUsuario && ((e.desc && String(e.desc).trim()) || (parseFloat(e.monto) || 0) > 0))) {
+      chk.checked = false;
+      mostrarToast('Borrá primero los egresos que cargaste vos', 'error');
+      return;
+    }
+    egresosActuales = egresosActuales.filter(e => e.cajero !== nombreUsuario); // saca mis filas vacías
+    renderEgresos();
+  }
+  aplicarSinEgresos(chk.checked);
+  marcarSeccionEgresos(false);
 };
 
 // ── GASTOS ──────────────────────────────────────────────
@@ -1063,6 +1120,8 @@ function cargarDatos(data) {
   // Egresos
   egresosActuales = data.egresos || [];
   renderEgresos();
+  const miFirma = firmasDelDia.find(f => f.cajero === nombreUsuario);
+  aplicarSinEgresos(!!(miFirma && miFirma.sinEgresos === true));
 
   // Panes
   if (data.panes && esSubway) {
@@ -1095,6 +1154,8 @@ function limpiarFormulario() {
   renderTarjetas();
   egresosActuales = [];
   renderEgresos();
+  aplicarSinEgresos(false);
+  marcarSeccionEgresos(false);
   const elAlertaAp = document.getElementById('alerta-apertura');
   if (elAlertaAp) elAlertaAp.style.display = 'none';
   const elAlertaPanes = document.getElementById('alerta-sobrante-panes');
@@ -1112,12 +1173,21 @@ window.guardarCierre = async function() {
     return;
   }
 
-  // Un egreso cargado tiene que tener descripción y monto, los dos
-  if (egresosActuales.some(e => egresoIncompleto(e))) {
+  // Cada cajero tiene que cargar SU egreso (o tildar que no tuvo). Los egresos de otros cajeros no cuentan.
+  if (egresosActuales.some(e => esEditable(e) && egresoIncompleto(e))) {
     marcarEgresos();
-    mostrarToast('❌ Hay un egreso sin descripción o sin monto — completá los dos antes de guardar', 'error');
+    mostrarToast('❌ Hay un egreso sin descripción o sin monto — completá los dos', 'error');
     return;
   }
+  const sinEgresos = document.getElementById('sin-egresos').checked;
+  const tengoEgreso = egresosActuales.some(e => e.cajero === nombreUsuario && egresoCompleto(e));
+  if (!sinEgresos && !tengoEgreso) {
+    marcarSeccionEgresos(true);
+    document.getElementById('seccion-egresos').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    mostrarToast('❌ Cargá tu egreso o marcá "No tuve egresos en mi turno"', 'error');
+    return;
+  }
+  marcarSeccionEgresos(false);
 
   const btn = document.getElementById('btn-guardar');
   btn.disabled = true; btn.textContent = 'Guardando...';
@@ -1148,7 +1218,8 @@ window.guardarCierre = async function() {
       fechaGuardado: `${ahora.getFullYear()}-${String(ahora.getMonth()+1).padStart(2,'0')}-${String(ahora.getDate()).padStart(2,'0')}`, // fecha real del guardado/corrección en horario local, puede ser distinta a la del cierre
       difCaja: resultadoActual,
       difPanes: difPanesActual,
-      panesVendidos: panesVendidosActual
+      panesVendidos: panesVendidosActual,
+      sinEgresos: sinEgresos
     };
     alert('La fecha que se va a guardar es: ' + nuevaFirma.fechaGuardado);
     // Si este cajero ya tiene una firma hoy, se actualiza (no se duplica) —
