@@ -369,7 +369,7 @@
 
     <!-- EGRESOS (solo Subway) -->
     <div class="section" id="seccion-egresos" style="display:none;">
-      <div class="section-title">📤 Egresos <span style="font-size:11px;color:#aaa;font-weight:400;text-transform:none;letter-spacing:0;">solo informativo</span></div>
+      <div class="section-title">📤 Egresos <span style="font-size:11px;color:#aaa;font-weight:400;text-transform:none;letter-spacing:0;">solo informativo · descripción y monto obligatorios</span></div>
       <div class="gastos-lista" id="egresos-lista"></div>
       <button class="btn-add-gasto" onclick="agregarEgreso()">+ Agregar egreso</button>
     </div>
@@ -636,18 +636,51 @@ window.eliminarTarjeta = function(i) {
 // ── EGRESOS ─────────────────────────────────────────────
 let egresosActuales = [];
 
+// Un egreso con algo cargado (descripción o monto) tiene que tener los dos:
+// descripción con texto y monto mayor a 0. Una fila totalmente vacía se ignora.
+function egresoIncompleto(e) {
+  const tieneDesc = !!(e.desc && String(e.desc).trim());
+  const tieneMonto = (parseFloat(e.monto) || 0) > 0;
+  const algoCargado = tieneDesc || (e.monto !== '' && e.monto !== null && e.monto !== undefined);
+  return algoCargado && !(tieneDesc && tieneMonto);
+}
+
+// Marca en rojo lo que falta, sin volver a dibujar la lista (así no se pierde el foco al tipear)
+window.marcarEgresos = function() {
+  document.querySelectorAll('#egresos-lista .gasto-item').forEach((item, i) => {
+    const e = egresosActuales[i];
+    if (!e) return;
+    const incompleto = egresoIncompleto(e);
+    const faltaDesc = incompleto && !(e.desc && String(e.desc).trim());
+    const faltaMonto = incompleto && !((parseFloat(e.monto) || 0) > 0);
+    const inDesc = item.querySelector('.gasto-desc');
+    const inMonto = item.querySelector('.gasto-monto');
+    if (inDesc) {
+      inDesc.style.borderColor = faltaDesc ? '#e63946' : '';
+      inDesc.style.background = faltaDesc ? '#fff5f5' : '';
+      inDesc.placeholder = faltaDesc ? '⚠️ Descripción obligatoria' : 'Descripción';
+    }
+    if (inMonto) {
+      inMonto.style.borderColor = faltaMonto ? '#e63946' : '';
+      inMonto.style.background = faltaMonto ? '#fff5f5' : '';
+      inMonto.placeholder = faltaMonto ? '⚠️ Monto obligatorio' : '$0';
+    }
+  });
+};
+
 function renderEgresos() {
   const lista = document.getElementById('egresos-lista');
   if (!lista) return;
   lista.innerHTML = egresosActuales.map((e, i) => `
     <div class="gasto-item">
       <input type="text" class="gasto-desc" placeholder="Descripción" value="${e.desc || ''}"
-        oninput="window.actualizarEgreso(${i}, 'desc', this.value)">
+        oninput="window.actualizarEgreso(${i}, 'desc', this.value)" onblur="marcarEgresos()">
       <input type="number" class="gasto-monto" placeholder="$0" value="${e.monto || ''}"
-        inputmode="decimal" oninput="window.actualizarEgreso(${i}, 'monto', this.value)">
+        inputmode="decimal" oninput="window.actualizarEgreso(${i}, 'monto', this.value)" onblur="marcarEgresos()">
       <button class="btn-del-gasto" onclick="window.eliminarEgreso(${i})">🗑</button>
     </div>
   `).join('');
+  marcarEgresos();
 }
 
 window.agregarEgreso = function() {
@@ -1076,6 +1109,13 @@ window.guardarCierre = async function() {
   const gastoIncompleto = gastosActuales.find(g => (parseFloat(g.monto) || 0) > 0 && !(g.desc && g.desc.trim()));
   if (gastoIncompleto) {
     mostrarToast('❌ Hay un gasto con monto pero sin descripción — completalo antes de guardar', 'error');
+    return;
+  }
+
+  // Un egreso cargado tiene que tener descripción y monto, los dos
+  if (egresosActuales.some(e => egresoIncompleto(e))) {
+    marcarEgresos();
+    mostrarToast('❌ Hay un egreso sin descripción o sin monto — completá los dos antes de guardar', 'error');
     return;
   }
 
