@@ -31,7 +31,6 @@
     .campo label { font-size: 12px; color: #666; display: block; margin-bottom: 4px; font-weight: 600; }
     .campo input, .campo select, .campo textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; background: white; }
     .campo textarea { resize: vertical; min-height: 70px; font-size: 13px; font-family: inherit; }
-    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; }
     .semana-rango { font-size: 12px; color: #666; margin-top: 2px; }
     .semana-estado { display: inline-block; margin-top: 6px; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
     .semana-estado.nueva { background: #f0f4ff; color: #3b4a9c; }
@@ -40,6 +39,11 @@
     .total-fila + .total-fila { margin-top: 6px; }
     .total-fila strong { font-size: 14px; color: #1a1a2e; }
     .vacio { text-align: center; padding: 36px 20px; color: #999; font-size: 14px; line-height: 1.5; }
+    .venta-grande { font-size: 28px; font-weight: 800; color: #1a1a2e; }
+    .dias-lista { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    .dia-chip { background: #f0f2f5; border-radius: 8px; padding: 4px 8px; font-size: 11px; color: #555; }
+    .aviso { background: #fff8ee; border: 1px solid #ffd9a0; color: #a04000; border-radius: 10px; padding: 10px 14px; margin: 12px 16px 0; font-size: 13px; line-height: 1.5; }
+    .aviso.info { background: #f0f4ff; border-color: #c5cff5; color: #3b4a9c; }
 
     .chips { display: flex; gap: 8px; overflow-x: auto; padding: 12px 16px 0; -webkit-overflow-scrolling: touch; }
     .chips-wrap { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -95,26 +99,27 @@
   <div class="tab activo" id="tab-btn-cargar" onclick="cambiarTab('cargar')">📥 Cargar</div>
 </div>
 
-<!-- TAB CARGAR -->
+<!-- TAB CARGAR (un mes de un local + marca) -->
 <div class="seccion activa" id="tab-cargar">
   <div class="card">
-    <h3>Semana</h3>
+    <h3>Mes</h3>
     <div class="campo">
-      <label>Elegí cualquier día de la semana</label>
-      <input type="date" id="inp-fecha">
+      <label>Elegí el mes</label>
+      <input type="month" id="inp-mes">
     </div>
-    <div class="semana-rango" id="semana-rango"></div>
-    <span class="semana-estado nueva" id="semana-estado" style="display:none;"></span>
+    <div class="semana-rango" id="mes-rango"></div>
+    <span class="semana-estado nueva" id="mes-estado" style="display:none;"></span>
   </div>
+  <div id="cargar-avisos"></div>
   <div class="chips" id="cargar-chips"></div>
   <div id="form-valores"></div>
 </div>
 
-<!-- TAB COMPARAR (un local + marca, semana contra semana) -->
+<!-- TAB COMPARAR (un local + marca, mes contra mes) -->
 <div class="seccion" id="tab-comparar">
   <div class="card">
-    <h3>Semana a mirar</h3>
-    <div class="campo" style="margin-bottom:0;"><select id="sel-semana"></select></div>
+    <h3>Mes a mirar</h3>
+    <div class="campo" style="margin-bottom:0;"><select id="sel-mes"></select></div>
   </div>
   <div class="chips" id="comp-chips"></div>
   <div id="comparar-contenido"></div>
@@ -134,7 +139,7 @@
 </div>
 
 <div class="footer-btns" id="footer-guardar">
-  <button class="btn-primario" onclick="guardarSemana()">💾 Guardar semana</button>
+  <button class="btn-primario" onclick="guardarMes()">💾 Guardar mes</button>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -157,10 +162,12 @@
   const db = getFirestore(app);
   const auth = getAuth(app);
 
-  const COLECCION = 'reportes_semanales';
+  const COLECCION = 'reportes_mes';        // lo que se carga a mano, un documento por local + marca + mes
+  const COL_CIERRES = 'cajero_cierres';    // de acá salen las ventas, solas
 
   // ── LISTA DE APPS DE DELIVERY ────────────────────────────────────
-  // Para agregar o sacar una app, se edita esta lista (id sin espacios ni tildes).
+  // El id tiene que coincidir con el nombre del canal en el Cierre de Caja, sin espacios ni mayúsculas
+  // (Mercado Delivery, Rappi, Pedidos Ya, Uber Eats). Para sumar o sacar una app, se edita esta lista.
   const APPS = [
     { id: 'rappi',           nombre: 'Rappi',            color: '#e8b84b' },
     { id: 'pedidosya',       nombre: 'PedidosYa',        color: '#1a1a2e' },
@@ -175,19 +182,21 @@
     { marca: 'Balcarce', local: 'Morón',       color: '#d9822b' }
   ];
   const DIAS = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
+  // Datos que se cargan a mano (las ventas NO están acá: vienen de los cierres de caja)
   const CAMPOS_NUM = ['pedidos','ticket','conversion','impresiones','menu','carrito','pedido','prep','reclamos','recompra'];
-  const PERIODOS = [ { n: 1, txt: 'Última semana' }, { n: 4, txt: '4 semanas' }, { n: 8, txt: '8 semanas' }, { n: 0, txt: 'Todo' } ];
+  const PERIODOS = [ { n: 1, txt: 'Último mes' }, { n: 3, txt: '3 meses' }, { n: 6, txt: '6 meses' }, { n: 12, txt: '12 meses' }, { n: 0, txt: 'Todo' } ];
 
   const params = new URLSearchParams(window.location.search);
   const localActual = params.get('local') || 'Desconocido';
   document.getElementById('local-nombre').textContent = localActual;
 
   let marcaActual = 'Subway';
-  let todas = [];          // todos los documentos de la colección
-  let semanas = [];        // los de este local + marca, de vieja a nueva
+  let docs = [];           // documentos guardados a mano (reportes_mes)
+  let cierres = [];        // cierres de caja
+  let registros = [];      // un registro por local + marca + mes, con las ventas ya calculadas
   let draft = null;        // lo que se está tipeando en Cargar
   let appActual = APPS[0].id;
-  let compSemana = '';
+  let compMes = '';
   let compScope = 'todas';
   let charts = [];
   let tabActual = 'cargar';
@@ -195,7 +204,7 @@
   // Análisis
   let visibles = [];       // locales (de LOCALES_DEF) que este usuario puede ver
   let selLocs = new Set(); // índices de LOCALES_DEF seleccionados
-  let anPeriodo = 4;
+  let anPeriodo = 3;
   let anApp = 'todas';
 
   // ── HELPERS ──────────────────────────────────────────────────────
@@ -204,20 +213,21 @@
     return s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9]+/g,'_').toLowerCase();
   }
   function pad(n) { return String(n).padStart(2,'0'); }
-  function claveFecha(d) { return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()); }
-  function parseFecha(str) { const [y,m,d] = str.split('-').map(Number); return new Date(y, m-1, d); }
-  function sumarDias(str, n) { const d = parseFecha(str); d.setDate(d.getDate() + n); return claveFecha(d); }
-  function lunesDe(str) {
-    const d = parseFecha(str);
-    d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
-    return claveFecha(d);
+  function mesActual() { const d = new Date(); return d.getFullYear() + '-' + pad(d.getMonth() + 1); }
+  function sumarMeses(mes, n) {
+    const [y, m] = mes.split('-').map(Number);
+    const d = new Date(y, m - 1 + n, 1);
+    return d.getFullYear() + '-' + pad(d.getMonth() + 1);
   }
-  function corto(str) { const d = parseFecha(str); return d.getDate() + '/' + (d.getMonth()+1); }
-  function rangoSemana(lunes) {
-    const ini = parseFecha(lunes);
-    const fin = new Date(ini); fin.setDate(fin.getDate() + 6);
-    const opt = { day: 'numeric', month: 'short' };
-    return 'Del ' + ini.toLocaleDateString('es-AR', opt) + ' al ' + fin.toLocaleDateString('es-AR', opt);
+  function diasDelMes(mes) { const [y, m] = mes.split('-').map(Number); return new Date(y, m, 0).getDate(); }
+  function nombreMes(mes) {
+    const [y, m] = mes.split('-').map(Number);
+    const t = new Date(y, m - 1, 1).toLocaleDateString('es-AR', { month: 'long', year: 'numeric' });
+    return t.charAt(0).toUpperCase() + t.slice(1);
+  }
+  function mesCorto(mes) {
+    const [y, m] = mes.split('-').map(Number);
+    return new Date(y, m - 1, 1).toLocaleDateString('es-AR', { month: 'short', year: '2-digit' });
   }
   function fmt(n, tipo) {
     n = Number(n) || 0;
@@ -260,25 +270,156 @@
     ['Subway','Balcarce'].forEach(x => {
       document.getElementById('mb-' + x).className = 'marca-btn' + (x === m ? ' activo-' + x : '');
     });
-    filtrarSemanas();
-    compSemana = '';
+    compMes = '';
     compScope = 'todas';
     prepararDraft();
     renderCargar();
     if (tabActual === 'comparar') renderComparar();
   }
 
+  // ── VENTAS AUTOMÁTICAS DESDE LOS CIERRES DE CAJA ─────────────────
+  // Suma lo que los cajeros anotaron en Delivery, separado por aplicación.
+  // Nota: la "Diferencia" de delivery del cierre no está asignada a ninguna app, así que no se resta acá.
+  function ventasPorApp(d) {
+    const r = {};
+    APPS.forEach(a => { r[a.id] = 0; });
+    const sumar = (nombre, monto) => {
+      const id = String(nombre || '').toLowerCase().replace(/[^a-z]/g, '');
+      if (id in r) r[id] += Number(monto) || 0;
+    };
+    if (d.deliveryBloques && d.deliveryBloques.length) {
+      d.deliveryBloques.forEach(b => (b.canales || []).forEach(c => sumar(c.canal, c.monto)));
+    } else if (d.delivery && d.delivery.length) {
+      d.delivery.forEach(c => sumar(c.canal, c.monto));
+    } else {
+      // registros muy viejos, con un campo por aplicación
+      sumar('mercadodelivery', d.mercadoDelivery);
+      sumar('rappi', d.rappi);
+      sumar('pedidosya', d.pedidosYa);
+      sumar('ubereats', d.uberEats);
+    }
+    return r;
+  }
+
+  function tiempoDe(d) {
+    const t = d.timestamp;
+    if (!t) return 0;
+    if (typeof t.toMillis === 'function') return t.toMillis();
+    if (t.seconds) return t.seconds * 1000;
+    return Number(t) || 0;
+  }
+
+  // Arma un registro por local + marca + mes, juntando lo cargado a mano con las ventas de los cierres
+  function construirRegistros() {
+    // 1) Por cada local y día se usa el cierre guardado más recientemente (si hubiera más de uno)
+    const porDia = {};
+    cierres.forEach(d => {
+      if (!d.local || !d.fecha) return;
+      const k = d.local + '|' + d.fecha;
+      const t = tiempoDe(d);
+      if (!porDia[k]) porDia[k] = { d, t, n: 1 };
+      else { porDia[k].n++; if (t >= porDia[k].t) { porDia[k].d = d; porDia[k].t = t; } }
+    });
+
+    // 2) Ventas por local, mes, app y día
+    const idx = {};
+    Object.values(porDia).forEach(x => {
+      const d = x.d;
+      const mes = String(d.fecha).slice(0, 7);
+      const dia = Number(String(d.fecha).slice(8, 10));
+      const k = d.local + '|' + mes;
+      if (!idx[k]) idx[k] = { porApp: {}, dias: new Set(), duplicados: 0 };
+      const e = idx[k];
+      e.dias.add(dia);
+      if (x.n > 1) e.duplicados++;
+      const v = ventasPorApp(d);
+      APPS.forEach(a => {
+        if (!e.porApp[a.id]) e.porApp[a.id] = {};
+        e.porApp[a.id][dia] = (e.porApp[a.id][dia] || 0) + v[a.id];
+      });
+    });
+
+    // 3) Documentos cargados a mano
+    const guardados = {};
+    docs.forEach(s => { guardados[s.marca + '|' + s.local + '|' + s.mes] = s; });
+
+    // 4) Un registro por cada combinación que tenga ventas o datos cargados
+    const claves = new Set(Object.keys(guardados));
+    Object.keys(idx).forEach(k => {
+      const [localStr, mes] = k.split('|');
+      const l = LOCALES_DEF.find(x => nombreLocal(x) === localStr);
+      if (l) claves.add(l.marca + '|' + l.local + '|' + mes);
+    });
+
+    registros = [...claves].map(k => armarRegistro(k, guardados[k], idx))
+                           .sort((a, b) => a.mes.localeCompare(b.mes));
+    registros._idx = idx;
+  }
+
+  function armarRegistro(clave, guardado, idx) {
+    const [marca, local, mes] = clave.split('|');
+    const e = idx[marca + ' ' + local + '|' + mes];
+    const n = diasDelMes(mes);
+    const [y, m] = mes.split('-').map(Number);
+    const apps = {};
+    APPS.forEach(a => {
+      const o = { ventas: 0, sem: [0,0,0,0,0,0,0], diasMes: Array(n).fill(0) };
+      CAMPOS_NUM.forEach(c => { o[c] = Number(guardado && guardado.apps && guardado.apps[a.id] && guardado.apps[a.id][c]) || 0; });
+      const porDia = e && e.porApp[a.id];
+      if (porDia) {
+        Object.keys(porDia).forEach(k => {
+          const dia = Number(k);
+          const v = porDia[k];
+          if (dia >= 1 && dia <= n) {
+            o.diasMes[dia - 1] = v;
+            o.ventas += v;
+            o.sem[(new Date(y, m - 1, dia).getDay() + 6) % 7] += v;
+          }
+        });
+      }
+      apps[a.id] = o;
+    });
+
+    // Días del mes sin ningún cierre cargado (para el mes en curso, hasta ayer)
+    const hoy = new Date();
+    let limite = n;
+    if (mes === mesActual()) limite = hoy.getDate() - 1;
+    else if (mes > mesActual()) limite = 0;
+    const sinCierre = [];
+    for (let d = 1; d <= limite; d++) { if (!(e && e.dias.has(d))) sinCierre.push(d); }
+
+    return {
+      marca, local, mes,
+      id: guardado ? guardado.id : null,
+      existe: !!guardado,
+      nota: guardado ? (guardado.nota || '') : '',
+      apps,
+      diasConCierre: e ? e.dias.size : 0,
+      sinCierre,
+      duplicados: e ? e.duplicados : 0
+    };
+  }
+
+  function registroDe(marca, local, mes) {
+    return registros.find(r => r.marca === marca && r.local === local && r.mes === mes)
+        || armarRegistro(marca + '|' + local + '|' + mes, null, registros._idx || {});
+  }
+  function registrosDe(marca, local) {
+    return registros.filter(r => r.marca === marca && r.local === local);
+  }
+
   // ── DATOS ────────────────────────────────────────────────────────
   async function cargarTodo() {
-    // Se trae toda la colección y se filtra acá (sin query con varios where)
-    const snap = await getDocs(collection(db, COLECCION));
-    todas = [];
-    snap.forEach(d => todas.push({ id: d.id, ...d.data() }));
-    filtrarSemanas();
-  }
-  function filtrarSemanas() {
-    semanas = todas.filter(s => s.local === localActual && s.marca === marcaActual)
-                   .sort((a,b) => a.semana.localeCompare(b.semana));
+    // Se trae todo y se filtra acá (sin query con varios where)
+    const [snapDocs, snapCierres] = await Promise.all([
+      getDocs(collection(db, COLECCION)),
+      getDocs(collection(db, COL_CIERRES))
+    ]);
+    docs = [];
+    snapDocs.forEach(d => docs.push({ id: d.id, ...d.data() }));
+    cierres = [];
+    snapCierres.forEach(d => cierres.push(d.data()));
+    construirRegistros();
   }
 
   // Qué locales puede ver este usuario en la pestaña Análisis
@@ -303,33 +444,28 @@
     selLocs = new Set(mio ? [mio.idx] : []);
   }
 
-  function appVacia() { return { v: [0,0,0,0,0,0,0], pedidos: 0, ticket: 0, conversion: 0, impresiones: 0, menu: 0, carrito: 0, pedido: 0, prep: 0, reclamos: 0, recompra: 0 }; }
+  // ── CARGAR ───────────────────────────────────────────────────────
+  function mesElegido() { return document.getElementById('inp-mes').value || ''; }
 
-  function lunesElegido() {
-    const f = document.getElementById('inp-fecha').value;
-    return f ? lunesDe(f) : '';
+  function appVacia() {
+    const o = {};
+    CAMPOS_NUM.forEach(c => { o[c] = 0; });
+    return o;
   }
 
   function prepararDraft() {
-    const lunes = lunesElegido();
-    const existente = lunes ? semanas.find(s => s.semana === lunes) : null;
-    draft = { apps: {}, nota: existente ? (existente.nota || '') : '' };
+    const mes = mesElegido();
+    const reg = mes ? registroDe(marcaActual, localActual, mes) : null;
+    draft = { apps: {}, nota: reg ? reg.nota : '' };
     APPS.forEach(a => {
       const base = appVacia();
-      const src = existente && existente.apps && existente.apps[a.id];
-      if (src) {
-        base.v = Array.from({ length: 7 }, (_, i) => Number(src.v && src.v[i]) || 0);
-        CAMPOS_NUM.forEach(c => { base[c] = Number(src[c]) || 0; });
-      }
+      if (reg) CAMPOS_NUM.forEach(c => { base[c] = Number(reg.apps[a.id][c]) || 0; });
       draft.apps[a.id] = base;
     });
   }
 
-  function appTieneDatos(a) {
-    return a.v.some(x => x > 0) || CAMPOS_NUM.some(c => a[c] > 0);
-  }
+  function appTieneDatos(a) { return CAMPOS_NUM.some(c => a[c] > 0); }
 
-  // ── CARGAR ───────────────────────────────────────────────────────
   function inp(campo, valor) {
     return `<input type="number" inputmode="decimal" step="any" min="0" data-campo="${campo}" value="${valor}"
       onfocus="if(this.value==='0')this.value=''" onblur="if(this.value==='')this.value='0'" oninput="onCampo(this)">`;
@@ -345,38 +481,62 @@
   window.setApp = function(id) { appActual = id; renderChipsCarga(); renderFormApp(); }
 
   function renderCargar() {
-    const lunes = lunesElegido();
-    const rango = document.getElementById('semana-rango');
-    const estado = document.getElementById('semana-estado');
+    const mes = mesElegido();
+    const rango = document.getElementById('mes-rango');
+    const estado = document.getElementById('mes-estado');
+    const avisos = document.getElementById('cargar-avisos');
     const cont = document.getElementById('form-valores');
-    if (!lunes) {
-      rango.textContent = ''; estado.style.display = 'none';
+    if (!mes) {
+      rango.textContent = ''; estado.style.display = 'none'; avisos.innerHTML = '';
       document.getElementById('cargar-chips').innerHTML = '';
       cont.innerHTML = '';
       return;
     }
-    rango.textContent = rangoSemana(lunes) + ' · ' + marcaActual + ' ' + localActual;
-    const existente = semanas.find(s => s.semana === lunes);
+    const reg = registroDe(marcaActual, localActual, mes);
+    rango.textContent = nombreMes(mes) + ' · ' + marcaActual + ' ' + localActual;
     estado.style.display = 'inline-block';
-    estado.className = 'semana-estado ' + (existente ? 'existente' : 'nueva');
-    estado.textContent = existente ? 'Ya tiene datos: al guardar se reemplazan' : 'Semana nueva';
+    estado.className = 'semana-estado ' + (reg.existe ? 'existente' : 'nueva');
+    estado.textContent = reg.existe ? 'Ya tiene datos cargados: al guardar se reemplazan' : 'Mes nuevo';
+
+    // Avisos sobre los cierres de caja de ese mes
+    let html = '';
+    if (reg.diasConCierre === 0) {
+      html += `<div class="aviso">Todavía no hay cierres de caja de ${nombreMes(mes)} para ${marcaActual} ${localActual}, así que las ventas dan $0.</div>`;
+    } else {
+      html += `<div class="aviso info">Ventas tomadas de ${reg.diasConCierre} ${reg.diasConCierre === 1 ? 'día' : 'días'} con cierre de caja.</div>`;
+      if (reg.sinCierre.length) html += `<div class="aviso">Días sin cierre cargado: ${reg.sinCierre.join(', ')}. Si el local estuvo cerrado esos días, es normal.</div>`;
+      if (reg.duplicados) html += `<div class="aviso">Hay ${reg.duplicados} ${reg.duplicados === 1 ? 'día' : 'días'} con más de un cierre guardado. En esos días se usó el último.</div>`;
+    }
+    avisos.innerHTML = html;
+
     renderChipsCarga();
     renderFormApp();
   }
 
   function renderFormApp() {
+    const mes = mesElegido();
+    const reg = registroDe(marcaActual, localActual, mes);
     const a = draft.apps[appActual];
+    const ap = reg.apps[appActual];
     const nombreApp = APPS.find(x => x.id === appActual).nombre;
-    const dias = DIAS.map((d, i) => `<div class="campo"><label>${d}</label>${inp('v' + i, a.v[i])}</div>`).join('');
+    const totalLocal = APPS.reduce((acc, x) => acc + reg.apps[x.id].ventas, 0);
+
+    let chips = '';
+    ap.diasMes.forEach((v, i) => { if (v > 0) chips += `<span class="dia-chip">Día ${i + 1}: ${fmt(v, 'dinero')}</span>`; });
+    const detalle = `<details style="margin-top:10px;"><summary style="font-size:12px;font-weight:700;color:#555;cursor:pointer;">Ver por día</summary>
+      <div class="dias-lista">${chips || '<span class="dia-chip">Sin ventas cargadas</span>'}</div></details>`;
+
     document.getElementById('form-valores').innerHTML = `
       <div class="card">
-        <h3>${nombreApp} · Ventas por día ($)</h3>
-        <div class="grid2">${dias}</div>
-        <div class="total-fila"><span>Total de la semana</span><strong id="calc-ventas">$0</strong></div>
+        <h3>${nombreApp} · Ventas del mes (automático)</h3>
+        <div class="venta-grande">${fmt(ap.ventas, 'dinero')}</div>
+        <div class="vs-texto" style="padding:6px 0 0;">Se calculan solas con lo que cargan los cajeros en el Cierre de Caja. Si un número está mal, se corrige en el cierre de ese día.</div>
+        ${detalle}
+        <div class="total-fila" style="margin-top:12px;"><span>Total de todas las apps</span><strong>${fmt(totalLocal, 'dinero')}</strong></div>
       </div>
       <div class="card">
         <h3>${nombreApp} · Pedidos</h3>
-        <div class="campo"><label>Pedidos de la semana</label>${inp('pedidos', a.pedidos)}</div>
+        <div class="campo"><label>Pedidos del mes</label>${inp('pedidos', a.pedidos)}</div>
         <div class="campo" style="margin-bottom:0;"><label>Ticket promedio ($, como lo muestra la app)</label>${inp('ticket', a.ticket)}</div>
       </div>
       <div class="card">
@@ -387,33 +547,29 @@
         <div class="campo"><label>Visualizaron el menú</label>${inp('menu', a.menu)}</div>
         <div class="campo"><label>De menú a carrito</label>${inp('carrito', a.carrito)}</div>
         <div class="campo"><label>Realizaron un pedido</label>${inp('pedido', a.pedido)}</div>
-        <div class="total-fila"><span>Impresión a menú</span><strong id="calc-c1">0%</strong></div>
-        <div class="total-fila"><span>Menú a carrito</span><strong id="calc-c2">0%</strong></div>
-        <div class="total-fila"><span>Carrito a pedido</span><strong id="calc-c3">0%</strong></div>
+        <div class="total-fila"><span>Impresión a menú</span><strong id="calc-c1">—</strong></div>
+        <div class="total-fila"><span>Menú a carrito</span><strong id="calc-c2">—</strong></div>
+        <div class="total-fila"><span>Carrito a pedido</span><strong id="calc-c3">—</strong></div>
       </div>
       <div class="card">
         <h3>${nombreApp} · Operación</h3>
         <div class="campo"><label>Tiempo de preparación (minutos)</label>${inp('prep', a.prep)}</div>
         <div class="campo"><label>Pedidos con reclamo</label>${inp('reclamos', a.reclamos)}</div>
-        <div class="total-fila"><span>% de pedidos con reclamo</span><strong id="calc-recl">0%</strong></div>
+        <div class="total-fila"><span>% de pedidos con reclamo</span><strong id="calc-recl">—</strong></div>
       </div>
       <div class="card">
         <h3>${nombreApp} · Clientes</h3>
         <div class="campo" style="margin-bottom:0;"><label>Tasa de recompra (%)</label>${inp('recompra', a.recompra)}</div>
       </div>
       <div class="card">
-        <h3>Nota de la semana (opcional)</h3>
-        <div class="campo" style="margin-bottom:0;"><textarea id="inp-nota" oninput="onNota(this)" placeholder="Algo que explique los números: feriado, promo, faltante...">${esc(draft.nota)}</textarea></div>
+        <h3>Nota del mes (opcional)</h3>
+        <div class="campo" style="margin-bottom:0;"><textarea id="inp-nota" oninput="onNota(this)" placeholder="Algo que explique los números: feriados, promos, obras, faltantes...">${esc(draft.nota)}</textarea></div>
       </div>`;
     actualizarCalculos();
   }
 
   window.onCampo = function(el) {
-    const campo = el.dataset.campo;
-    const val = Number(el.value) || 0;
-    const a = draft.apps[appActual];
-    if (/^v[0-6]$/.test(campo)) a.v[Number(campo.slice(1))] = val;
-    else a[campo] = val;
+    draft.apps[appActual][el.dataset.campo] = Number(el.value) || 0;
     actualizarCalculos();
     renderChipsCarga();
   }
@@ -421,35 +577,33 @@
 
   function actualizarCalculos() {
     const a = draft.apps[appActual];
-    const ventas = a.v.reduce((x, y) => x + y, 0);
     const set = (id, txt) => { const e = document.getElementById(id); if (e) e.textContent = txt; };
-    set('calc-ventas', fmt(ventas, 'dinero'));
     const pc = (n, d) => d > 0 ? fmt(n / d * 100, 'porcentaje') : '—';
     set('calc-c1', pc(a.menu, a.impresiones));
     set('calc-c2', pc(a.carrito, a.menu));
     set('calc-c3', pc(a.pedido, a.carrito));
-    set('calc-recl', fmt(a.pedidos > 0 ? a.reclamos / a.pedidos * 100 : 0, 'porcentaje'));
+    set('calc-recl', pc(a.reclamos, a.pedidos));
   }
 
-  window.guardarSemana = async function() {
-    const lunes = lunesElegido();
-    if (!lunes) { toast('Elegí la semana', 'error'); return; }
+  window.guardarMes = async function() {
+    const mes = mesElegido();
+    if (!mes) { toast('Elegí el mes', 'error'); return; }
     if (!APPS.some(a => appTieneDatos(draft.apps[a.id]))) { toast('Cargá al menos un dato antes de guardar', 'error'); return; }
     try {
-      await setDoc(doc(db, COLECCION, slug(localActual) + '_' + slug(marcaActual) + '_' + lunes), {
-        local: localActual, marca: marcaActual, semana: lunes,
+      await setDoc(doc(db, COLECCION, slug(localActual) + '_' + slug(marcaActual) + '_' + mes), {
+        local: localActual, marca: marcaActual, mes,
         apps: draft.apps, nota: (draft.nota || '').trim(), timestamp: Date.now()
       });
       await cargarTodo();
       prepararDraft();
       renderCargar();
-      toast('Semana guardada', 'ok');
+      toast('Mes guardado', 'ok');
     } catch(e) { toast('No se pudo guardar: ' + e.message, 'error'); }
   }
 
   // ── CÁLCULOS COMPARTIDOS (Comparar y Análisis) ───────────────────
   const GRUPOS = [
-    { titulo: 'Ventas', items: [
+    { titulo: 'Ventas', nota: 'Las ventas salen de los cierres de caja.', items: [
       { k: 'ventas', label: 'Ventas', tipo: 'dinero' },
       { k: 'pedidos', label: 'Pedidos', tipo: 'numero' },
       { k: 'ticket', label: 'Ticket promedio', tipo: 'dinero', opcional: true } ] },
@@ -475,34 +629,34 @@
   }
   function promedio(o) { return o.den > 0 ? o.num / o.den : (o.n > 0 ? o.sum / o.n : 0); }
 
-  // Suma una lista de documentos de semana (de uno o varios locales) para una app o todas
-  function agregarVarios(docs, scope) {
+  // Suma una lista de registros (de uno o varios locales y meses) para una app o todas
+  function agregarVarios(recs, scope) {
     const ids = scope === 'todas' ? APPS.map(a => a.id) : [scope];
     const r = { ventas: 0, dias: [0,0,0,0,0,0,0], pedidos: 0, impresiones: 0, menu: 0, carrito: 0, pedido: 0, reclamos: 0 };
     const prep = { num: 0, den: 0, sum: 0, n: 0 };
     const tick = { num: 0, den: 0, sum: 0, n: 0 };
     const recom = { num: 0, den: 0, sum: 0, n: 0 };
     const conv = { ped: 0, vis: 0, sum: 0, n: 0 };
-    docs.forEach(sem => {
+    recs.forEach(reg => {
       ids.forEach(id => {
-        const a = sem.apps && sem.apps[id];
+        const a = reg.apps[id];
         if (!a) return;
-        for (let i = 0; i < 7; i++) { const v = Number(a.v && a.v[i]) || 0; r.dias[i] += v; r.ventas += v; }
-        const ped = Number(a.pedidos) || 0;
+        r.ventas += a.ventas;
+        for (let i = 0; i < 7; i++) r.dias[i] += a.sem[i];
+        const ped = a.pedidos;
         r.pedidos += ped;
-        r.impresiones += Number(a.impresiones) || 0;
-        r.menu += Number(a.menu) || 0;
-        r.carrito += Number(a.carrito) || 0;
-        r.pedido += Number(a.pedido) || 0;
-        r.reclamos += Number(a.reclamos) || 0;
-        acumular(prep, Number(a.prep) || 0, ped);
-        acumular(tick, Number(a.ticket) || 0, ped);
-        acumular(recom, Number(a.recompra) || 0, ped);
+        r.impresiones += a.impresiones;
+        r.menu += a.menu;
+        r.carrito += a.carrito;
+        r.pedido += a.pedido;
+        r.reclamos += a.reclamos;
+        acumular(prep, a.prep, ped);
+        acumular(tick, a.ticket, ped);
+        acumular(recom, a.recompra, ped);
         // Conversión = pedidos / visitas. Se reconstruyen las visitas de cada app para combinarlas bien.
-        const tasa = Number(a.conversion) || 0;
-        if (tasa > 0) {
-          conv.sum += tasa; conv.n++;
-          if (ped > 0) { conv.ped += ped; conv.vis += ped / (tasa / 100); }
+        if (a.conversion > 0) {
+          conv.sum += a.conversion; conv.n++;
+          if (ped > 0) { conv.ped += ped; conv.vis += ped / (a.conversion / 100); }
         }
       });
     });
@@ -517,7 +671,7 @@
     r.pctReclamos = r.pedidos > 0 ? r.reclamos / r.pedidos * 100 : 0;
     return r;
   }
-  function agregar(sem, scope) { return agregarVarios(sem ? [sem] : [], scope); }
+  function agregar(reg, scope) { return agregarVarios(reg ? [reg] : [], scope); }
 
   function deltaHtml(cur, prev, tipo, menos) {
     let clase = 'igual', txt;
@@ -558,118 +712,138 @@
     return html;
   }
 
-  // ── COMPARAR (un local + marca, semana contra semana) ────────────
-  document.getElementById('sel-semana').addEventListener('change', e => { compSemana = e.target.value; renderComparar(); });
+  // ── COMPARAR (un local + marca, mes contra mes) ──────────────────
+  document.getElementById('sel-mes').addEventListener('change', e => { compMes = e.target.value; renderComparar(); });
   window.setScope = function(s) { compScope = s; renderComparar(); }
 
   function renderComparar() {
     const cont = document.getElementById('comparar-contenido');
-    const sel = document.getElementById('sel-semana');
+    const sel = document.getElementById('sel-mes');
     const chipsCont = document.getElementById('comp-chips');
     destruirCharts();
 
-    if (!semanas.length) {
+    const lista = registrosDe(marcaActual, localActual);
+    if (!lista.length) {
       sel.innerHTML = '';
       chipsCont.innerHTML = '';
-      cont.innerHTML = '<div class="vacio">Todavía no hay semanas cargadas para ' + marcaActual + ' ' + localActual + '.<br>Cargá la primera en la pestaña 📥.</div>';
+      cont.innerHTML = '<div class="vacio">Todavía no hay datos de ' + marcaActual + ' ' + localActual + '.<br>Las ventas aparecen solas cuando se cargan cierres de caja. El resto se carga en la pestaña 📥.</div>';
       return;
     }
 
-    if (!compSemana || !semanas.some(s => s.semana === compSemana)) compSemana = semanas[semanas.length - 1].semana;
-    sel.innerHTML = [...semanas].reverse().map(s => `<option value="${s.semana}" ${s.semana === compSemana ? 'selected' : ''}>${rangoSemana(s.semana)}</option>`).join('');
+    if (!compMes || !lista.some(r => r.mes === compMes)) compMes = lista[lista.length - 1].mes;
+    sel.innerHTML = [...lista].reverse().map(r => `<option value="${r.mes}" ${r.mes === compMes ? 'selected' : ''}>${nombreMes(r.mes)}</option>`).join('');
 
     const scopes = [{ id: 'todas', nombre: 'Todas las apps' }, ...APPS];
     chipsCont.innerHTML = scopes.map(s => `<div class="chip ${s.id === compScope ? 'activo' : ''}" onclick="setScope('${s.id}')">${s.nombre}</div>`).join('');
 
-    const idx = semanas.findIndex(s => s.semana === compSemana);
-    const actual = semanas[idx];
-    const previa = idx > 0 ? semanas[idx - 1] : null;
+    const idx = lista.findIndex(r => r.mes === compMes);
+    const actual = lista[idx];
+    const previa = idx > 0 ? lista[idx - 1] : null;
     const cur = agregar(actual, compScope);
     const prev = previa ? agregar(previa, compScope) : null;
+    const n = diasDelMes(actual.mes);
 
     let html = '';
-    html += `<div class="vs-texto">${previa ? 'Comparado con la semana del ' + corto(previa.semana) : 'Es la primera semana cargada, todavía no hay con qué comparar.'}</div>`;
+    html += `<div class="vs-texto">${previa ? 'Comparado con ' + nombreMes(previa.mes) : 'Es el primer mes con datos, todavía no hay con qué comparar.'}</div>`;
+    if (actual.mes === mesActual()) html += `<div class="aviso">Es el mes en curso: los números están incompletos y la comparación con el mes anterior no es justa todavía.</div>`;
+    html += `<div class="aviso info">Ventas tomadas de ${actual.diasConCierre} de ${n} días con cierre de caja.${actual.sinCierre.length ? ' Sin cierre: ' + actual.sinCierre.join(', ') + '.' : ''}</div>`;
+    if (!actual.existe) html += `<div class="aviso">Este mes todavía no tiene los datos de pedidos, embudo, tiempos y reclamos. Se cargan en la pestaña 📥.</div>`;
     if (actual.nota) html += `<div class="nota-semana">📝 ${esc(actual.nota)}</div>`;
     html += kpisHtml(cur, prev);
 
-    html += `<div class="card"><h3>Ventas por día</h3><canvas id="ch-dias" height="170"></canvas></div>`;
-    html += `<div class="card"><h3>Ventas de las últimas semanas</h3><canvas id="ch-evol" height="150"></canvas></div>`;
+    html += `<div class="card"><h3>Ventas por día del mes</h3><canvas id="ch-dias-mes" height="190"></canvas></div>`;
+    html += `<div class="card"><h3>Ventas por día de la semana</h3><canvas id="ch-sem" height="170"></canvas></div>`;
+    html += `<div class="card"><h3>Ventas de los últimos meses</h3><canvas id="ch-evol" height="150"></canvas></div>`;
 
     if (compScope === 'todas') {
       let filas = '';
       APPS.forEach(a => {
         const r = agregar(actual, a.id);
-        filas += `<tr><td>${a.nombre}</td><td>${fmt(r.ventas, 'dinero')}</td><td>${fmt(r.pedidos, 'numero')}</td><td>${fmtOpc(r.ticket, 'dinero')}</td><td>${fmt(r.reclamos, 'numero')}</td></tr>`;
+        filas += `<tr><td><span class="dot" style="background:${a.color}"></span>${a.nombre}</td><td>${fmt(r.ventas, 'dinero')}</td><td>${fmt(r.pedidos, 'numero')}</td><td>${fmtOpc(r.ticket, 'dinero')}</td><td>${fmt(r.reclamos, 'numero')}</td></tr>`;
       });
       html += `<div class="card"><h3>Por aplicación</h3><div style="overflow-x:auto;"><table class="tabla">
         <thead><tr><th>App</th><th>Ventas</th><th>Pedidos</th><th>Ticket</th><th>Reclamos</th></tr></thead>
         <tbody>${filas}</tbody></table></div></div>`;
     }
 
-    html += `<div class="card"><h3>Mover esta semana a otra fecha</h3>
-      <div class="campo"><label>Elegí cualquier día de la semana correcta</label><input type="date" id="inp-mover"></div>
-      <button class="btn-primario" onclick="moverSemana('${actual.id}')">📅 Mover</button></div>`;
-    html += `<div style="padding:8px 16px 0;text-align:center;"><button class="btn-peligro" onclick="eliminarSemana('${actual.id}')">🗑 Eliminar esta semana</button></div>`;
+    if (actual.existe) {
+      html += `<div class="card"><h3>Mover estos datos a otro mes</h3>
+        <div class="campo"><label>Elegí el mes correcto</label><input type="month" id="inp-mover"></div>
+        <button class="btn-primario" onclick="moverMes('${actual.id}')">📅 Mover</button></div>`;
+      html += `<div style="padding:8px 16px 0;text-align:center;"><button class="btn-peligro" onclick="eliminarMes('${actual.id}')">🗑 Eliminar los datos cargados de este mes</button></div>`;
+    }
     cont.innerHTML = html;
 
-    const datasets = [{ label: 'Esta semana', data: cur.dias, backgroundColor: '#e8b84b' }];
-    if (prev) datasets.push({ label: 'Semana anterior', data: prev.dias, backgroundColor: '#cfd3dc' });
-    nuevoChart('ch-dias', {
+    // Gráfico: ventas por día del mes, apiladas por app
+    const appsMostrar = compScope === 'todas' ? APPS : APPS.filter(a => a.id === compScope);
+    nuevoChart('ch-dias-mes', {
+      type: 'bar',
+      data: {
+        labels: Array.from({ length: n }, (_, i) => i + 1),
+        datasets: appsMostrar.map(a => ({ label: a.nombre, backgroundColor: a.color, data: actual.apps[a.id].diasMes }))
+      },
+      options: { responsive: true, plugins: { legend: { display: appsMostrar.length > 1 } }, scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } } }
+    });
+
+    // Gráfico: ventas por día de la semana, este mes contra el anterior
+    const datasets = [{ label: nombreMes(actual.mes), data: cur.dias, backgroundColor: '#e8b84b' }];
+    if (prev) datasets.push({ label: nombreMes(previa.mes), data: prev.dias, backgroundColor: '#cfd3dc' });
+    nuevoChart('ch-sem', {
       type: 'bar',
       data: { labels: DIAS, datasets },
       options: { responsive: true, plugins: { legend: { display: !!prev } }, scales: { y: { beginAtZero: true } } }
     });
 
-    const hasta = semanas.slice(Math.max(0, idx - 7), idx + 1);
+    // Gráfico: evolución, hasta 8 meses terminando en el elegido
+    const hasta = lista.slice(Math.max(0, idx - 7), idx + 1);
     nuevoChart('ch-evol', {
       type: 'line',
       data: {
-        labels: hasta.map(s => corto(s.semana)),
-        datasets: [{ data: hasta.map(s => agregar(s, compScope).ventas), borderColor: '#e8b84b', backgroundColor: 'rgba(232,184,75,0.15)', tension: 0.3, fill: true, pointRadius: 3, pointBackgroundColor: '#1a1a2e' }]
+        labels: hasta.map(r => mesCorto(r.mes)),
+        datasets: [{ data: hasta.map(r => agregar(r, compScope).ventas), borderColor: '#e8b84b', backgroundColor: 'rgba(232,184,75,0.15)', tension: 0.3, fill: true, pointRadius: 3, pointBackgroundColor: '#1a1a2e' }]
       },
       options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
     });
   }
 
-  window.eliminarSemana = async function(id) {
-    const s = semanas.find(x => x.id === id);
+  window.eliminarMes = async function(id) {
+    const s = docs.find(x => x.id === id);
     if (!s) return;
-    if (!confirm('¿Eliminar los datos de la semana del ' + corto(s.semana) + ' (' + marcaActual + ' ' + localActual + ')?')) return;
+    if (!confirm('¿Eliminar los datos cargados de ' + nombreMes(s.mes) + ' (' + s.marca + ' ' + s.local + ')? Las ventas no se borran porque salen de los cierres de caja.')) return;
     try {
       await deleteDoc(doc(db, COLECCION, id));
       await cargarTodo();
-      compSemana = '';
+      compMes = '';
       prepararDraft();
       renderCargar();
       renderComparar();
-      toast('Semana eliminada', 'ok');
+      toast('Datos eliminados', 'ok');
     } catch(e) { toast('No se pudo eliminar: ' + e.message, 'error'); }
   }
 
-  window.moverSemana = async function(id) {
-    const s = semanas.find(x => x.id === id);
+  window.moverMes = async function(id) {
+    const s = docs.find(x => x.id === id);
     if (!s) return;
-    const f = document.getElementById('inp-mover').value;
-    if (!f) { toast('Elegí la fecha nueva', 'error'); return; }
-    const nuevo = lunesDe(f);
-    if (nuevo === s.semana) { toast('Esa ya es la semana donde está guardado', 'error'); return; }
-    const destino = semanas.find(x => x.semana === nuevo);
+    const nuevo = document.getElementById('inp-mover').value;
+    if (!nuevo) { toast('Elegí el mes nuevo', 'error'); return; }
+    if (nuevo === s.mes) { toast('Esos datos ya están en ese mes', 'error'); return; }
+    const destino = docs.find(x => x.local === s.local && x.marca === s.marca && x.mes === nuevo);
     const msg = destino
-      ? 'La semana del ' + corto(nuevo) + ' ya tiene datos y se van a reemplazar. ¿Mover igual?'
-      : '¿Mover la semana del ' + corto(s.semana) + ' a la semana del ' + corto(nuevo) + '?';
+      ? nombreMes(nuevo) + ' ya tiene datos cargados y se van a reemplazar. ¿Mover igual?'
+      : '¿Mover los datos de ' + nombreMes(s.mes) + ' a ' + nombreMes(nuevo) + '?';
     if (!confirm(msg)) return;
     try {
-      // Primero se guarda en la fecha nueva y recién después se borra la vieja
-      await setDoc(doc(db, COLECCION, slug(localActual) + '_' + slug(marcaActual) + '_' + nuevo), {
-        local: s.local, marca: s.marca, semana: nuevo, apps: s.apps, nota: s.nota || '', timestamp: Date.now()
+      // Primero se guarda en el mes nuevo y recién después se borra el viejo
+      await setDoc(doc(db, COLECCION, slug(s.local) + '_' + slug(s.marca) + '_' + nuevo), {
+        local: s.local, marca: s.marca, mes: nuevo, apps: s.apps, nota: s.nota || '', timestamp: Date.now()
       });
       await deleteDoc(doc(db, COLECCION, id));
       await cargarTodo();
-      compSemana = nuevo;
+      compMes = nuevo;
       prepararDraft();
       renderCargar();
       renderComparar();
-      toast('Semana movida', 'ok');
+      toast('Datos movidos', 'ok');
     } catch(e) { toast('No se pudo mover: ' + e.message, 'error'); }
   }
 
@@ -705,35 +879,36 @@
     document.getElementById('an-apps').innerHTML =
       [{ id: 'todas', nombre: 'Todas' }, ...APPS].map(a => `<div class="chip ${a.id === anApp ? 'activo' : ''}" onclick="setAnApp('${a.id}')">${a.nombre}</div>`).join('');
 
-    // Documentos de los locales elegidos
+    // Registros de los locales elegidos
     const elegidos = visibles.filter(l => selLocs.has(l.idx));
-    const docs = todas.filter(s => elegidos.some(l => l.marca === s.marca && l.local === s.local));
-    if (!docs.length) {
-      cont.innerHTML = '<div class="vacio">Todavía no hay semanas cargadas para los locales elegidos.</div>';
+    const lista = registros.filter(r => elegidos.some(l => l.marca === r.marca && l.local === r.local));
+    if (!lista.length) {
+      cont.innerHTML = '<div class="vacio">Todavía no hay datos para los locales elegidos.</div>';
       return;
     }
 
-    // Período: las últimas N semanas desde la más reciente cargada entre los locales elegidos
-    const ultima = docs.reduce((m, s) => s.semana > m ? s.semana : m, '');
-    let actualDocs = docs, prevDocs = [];
+    // Período: los últimos N meses desde el más reciente con datos entre los locales elegidos
+    const ultimo = lista.reduce((m, r) => r.mes > m ? r.mes : m, '');
+    let actualRecs = lista, prevRecs = [];
     if (anPeriodo > 0) {
-      const ini = sumarDias(ultima, -(anPeriodo - 1) * 7);
-      const iniPrev = sumarDias(ini, -anPeriodo * 7);
-      actualDocs = docs.filter(s => s.semana >= ini);
-      prevDocs = docs.filter(s => s.semana >= iniPrev && s.semana < ini);
+      const ini = sumarMeses(ultimo, -(anPeriodo - 1));
+      const iniPrev = sumarMeses(ini, -anPeriodo);
+      actualRecs = lista.filter(r => r.mes >= ini);
+      prevRecs = lista.filter(r => r.mes >= iniPrev && r.mes < ini);
     }
 
-    const semanasUnicas = [...new Set(actualDocs.map(s => s.semana))].sort();
-    const cur = agregarVarios(actualDocs, anApp);
-    const prev = prevDocs.length ? agregarVarios(prevDocs, anApp) : null;
+    const mesesUnicos = [...new Set(actualRecs.map(r => r.mes))].sort();
+    const cur = agregarVarios(actualRecs, anApp);
+    const prev = prevRecs.length ? agregarVarios(prevRecs, anApp) : null;
 
     let html = '';
-    html += `<div class="vs-texto">Del ${corto(semanasUnicas[0])} al ${corto(sumarDias(semanasUnicas[semanasUnicas.length - 1], 6))} · ${semanasUnicas.length} ${semanasUnicas.length === 1 ? 'semana' : 'semanas'} con datos.<br>${
-      prev ? 'Comparado con el período anterior (' + new Set(prevDocs.map(s => s.semana)).size + ' semanas con datos).' :
+    html += `<div class="vs-texto">Del ${mesCorto(mesesUnicos[0])} al ${mesCorto(mesesUnicos[mesesUnicos.length - 1])} · ${mesesUnicos.length} ${mesesUnicos.length === 1 ? 'mes' : 'meses'} con datos.<br>${
+      prev ? 'Comparado con el período anterior (' + new Set(prevRecs.map(r => r.mes)).size + ' meses con datos).' :
       (anPeriodo > 0 ? 'No hay datos del período anterior para comparar.' : '')}</div>`;
+    if (mesesUnicos.includes(mesActual())) html += `<div class="aviso">El período incluye el mes en curso, que todavía está incompleto.</div>`;
     html += kpisHtml(cur, prev);
 
-    html += `<div class="card"><h3>Ventas por semana${elegidos.length > 1 ? ' (por local)' : ''}</h3><canvas id="ch-an-sem" height="190"></canvas></div>`;
+    html += `<div class="card"><h3>Ventas por mes${elegidos.length > 1 ? ' (por local)' : ''}</h3><canvas id="ch-an-mes" height="190"></canvas></div>`;
     html += `<div class="card"><h3>Ventas por día de la semana (suma del período)</h3><canvas id="ch-an-dias" height="170"></canvas></div>`;
     if (anApp === 'todas') html += `<div class="card"><h3>Ventas por aplicación</h3><canvas id="ch-an-apps" height="150"></canvas></div>`;
     const tieneEmbudo = cur.impresiones > 0 || cur.menu > 0 || cur.carrito > 0 || cur.pedido > 0;
@@ -742,10 +917,10 @@
     if (elegidos.length > 1) {
       let filas = '';
       elegidos.forEach(l => {
-        const dl = actualDocs.filter(s => s.marca === l.marca && s.local === l.local);
-        const r = agregarVarios(dl, anApp);
-        const sem = new Set(dl.map(s => s.semana)).size;
-        filas += `<tr><td><span class="dot" style="background:${l.color}"></span>${nombreLocal(l)}<span class="peque">${sem} ${sem === 1 ? 'semana' : 'semanas'} con datos</span></td><td>${fmt(r.ventas, 'dinero')}</td><td>${fmt(r.pedidos, 'numero')}</td><td>${fmtOpc(r.ticket, 'dinero')}</td><td>${fmt(r.pctReclamos, 'porcentaje')}</td><td>${fmtOpc(r.prep, 'minutos')}</td></tr>`;
+        const rl = actualRecs.filter(r => r.marca === l.marca && r.local === l.local);
+        const r = agregarVarios(rl, anApp);
+        const m = rl.length;
+        filas += `<tr><td><span class="dot" style="background:${l.color}"></span>${nombreLocal(l)}<span class="peque">${m} ${m === 1 ? 'mes' : 'meses'} con datos</span></td><td>${fmt(r.ventas, 'dinero')}</td><td>${fmt(r.pedidos, 'numero')}</td><td>${fmtOpc(r.ticket, 'dinero')}</td><td>${fmt(r.pctReclamos, 'porcentaje')}</td><td>${fmtOpc(r.prep, 'minutos')}</td></tr>`;
       });
       html += `<div class="card"><h3>Por local</h3><div style="overflow-x:auto;"><table class="tabla">
         <thead><tr><th>Local</th><th>Ventas</th><th>Pedidos</th><th>Ticket</th><th>% recl.</th><th>Prep.</th></tr></thead>
@@ -755,7 +930,7 @@
     if (anApp === 'todas') {
       let filas = '';
       APPS.forEach(a => {
-        const r = agregarVarios(actualDocs, a.id);
+        const r = agregarVarios(actualRecs, a.id);
         filas += `<tr><td><span class="dot" style="background:${a.color}"></span>${a.nombre}</td><td>${fmt(r.ventas, 'dinero')}</td><td>${fmt(r.pedidos, 'numero')}</td><td>${fmtOpc(r.ticket, 'dinero')}</td><td>${fmt(r.pctReclamos, 'porcentaje')}</td><td>${fmtOpc(r.prep, 'minutos')}</td></tr>`;
       });
       html += `<div class="card"><h3>Por aplicación</h3><div style="overflow-x:auto;"><table class="tabla">
@@ -764,17 +939,17 @@
     }
     cont.innerHTML = html;
 
-    // Gráfico: ventas por semana, una barra apilada por local
-    nuevoChart('ch-an-sem', {
+    // Gráfico: ventas por mes, una barra apilada por local
+    nuevoChart('ch-an-mes', {
       type: 'bar',
       data: {
-        labels: semanasUnicas.map(corto),
+        labels: mesesUnicos.map(mesCorto),
         datasets: elegidos.map(l => ({
           label: nombreLocal(l),
           backgroundColor: l.color,
-          data: semanasUnicas.map(w => {
-            const d = actualDocs.find(s => s.marca === l.marca && s.local === l.local && s.semana === w);
-            return d ? agregarVarios([d], anApp).ventas : 0;
+          data: mesesUnicos.map(mes => {
+            const r = actualRecs.find(x => x.marca === l.marca && x.local === l.local && x.mes === mes);
+            return r ? agregar(r, anApp).ventas : 0;
           })
         }))
       },
@@ -794,7 +969,7 @@
         type: 'bar',
         data: {
           labels: APPS.map(a => a.nombre),
-          datasets: [{ data: APPS.map(a => agregarVarios(actualDocs, a.id).ventas), backgroundColor: APPS.map(a => a.color) }]
+          datasets: [{ data: APPS.map(a => agregarVarios(actualRecs, a.id).ventas), backgroundColor: APPS.map(a => a.color) }]
         },
         options: { indexAxis: 'y', responsive: true, plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true } } }
       });
@@ -812,8 +987,8 @@
   }
 
   // ── INICIO ───────────────────────────────────────────────────────
-  document.getElementById('inp-fecha').value = claveFecha(new Date());
-  document.getElementById('inp-fecha').addEventListener('change', () => { prepararDraft(); renderCargar(); });
+  document.getElementById('inp-mes').value = mesActual();
+  document.getElementById('inp-mes').addEventListener('change', () => { prepararDraft(); renderCargar(); });
 
   onAuthStateChanged(auth, async user => {
     if (!user) { window.location.href = 'login.html'; return; }
