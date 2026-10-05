@@ -338,7 +338,9 @@
     r.impTotal = r.impIva + r.impIbb + r.impAut;
     r.servTotal = sum(r.servLista, s => s.monto);
     r.extTotal = sum(r.extLista, s => s.monto);
-    r.egresos = r.mercTotal + r.sueldos + r.servTotal + r.tarjetas + r.regalias + r.publicidad + r.impTotal + r.extTotal;
+    r.sueldos = r.sueldo1 + r.sueldo2;
+    r.alqTotal = r.alq1 + r.alq2 + r.expensas;
+    r.egresos = r.mercTotal + r.sueldos + r.alqTotal + r.servTotal + r.tarjetas + r.regalias + r.publicidad + r.impTotal + r.extTotal;
     r.resultado = r.ingresos - r.egresos;
     return r;
   }
@@ -358,13 +360,20 @@
     const imp = (st && st.impuestos) || {};
     const deliv = deliveryVacio();
     APPS_DELIVERY.forEach(a => { deliv[a.id] = v.Subway.delivery[a.id] + v.Balcarce.delivery[a.id]; });
+    // Sueldos: dos items. Si el mes se guardó con el formato viejo (un solo total), ese total queda como Sueldo 1.
+    const sd = st ? st.sueldos : null;
+    const sdObj = sd && typeof sd === 'object';
+    const sueldo1 = sdObj ? Number(sd.s1) || 0 : Number(sd) || 0;
+    const sueldo2 = sdObj ? Number(sd.s2) || 0 : 0;
+    const alq = (st && st.alquiler) || {};
     return completar({
       local, mes, existe: !!st,
       ventasSW: v.Subway.ventas, ventasBC: v.Balcarce.ventas,
       vouchers: v.Subway.vouchers + v.Balcarce.vouchers,
       delivery: deliv, difDelivery: v.Subway.dif + v.Balcarce.dif,
       merc, mercTotal,
-      sueldos: st ? Number(st.sueldos) || 0 : 0,
+      sueldo1, sueldo2,
+      alq1: Number(alq.a1) || 0, alq2: Number(alq.a2) || 0, expensas: Number(alq.expensas) || 0,
       tarjetas: st ? Number(st.tarjetas) || 0 : 0,
       regalias: st ? obj(st.regalias) : 0,
       publicidad: st ? obj(st.publicidad) : 0,
@@ -376,10 +385,10 @@
 
   function combinar(lista) {
     const r = { local: 'Total', mes: lista[0].mes, existe: lista.some(x => x.existe),
-      ventasSW: 0, ventasBC: 0, vouchers: 0, delivery: deliveryVacio(), difDelivery: 0, merc: {}, mercTotal: 0, sueldos: 0, tarjetas: 0,
+      ventasSW: 0, ventasBC: 0, vouchers: 0, delivery: deliveryVacio(), difDelivery: 0, merc: {}, mercTotal: 0, sueldo1: 0, sueldo2: 0, alq1: 0, alq2: 0, expensas: 0, tarjetas: 0,
       regalias: 0, publicidad: 0, impIva: 0, impIbb: 0, impAut: 0, servLista: [], extLista: [] };
     lista.forEach(x => {
-      ['ventasSW','ventasBC','vouchers','mercTotal','sueldos','tarjetas','regalias','publicidad','impIva','impIbb','impAut'].forEach(k => { r[k] += x[k]; });
+      ['ventasSW','ventasBC','vouchers','mercTotal','sueldo1','sueldo2','alq1','alq2','expensas','tarjetas','regalias','publicidad','impIva','impIbb','impAut'].forEach(k => { r[k] += x[k]; });
       Object.entries(x.merc).forEach(([p, v]) => { r.merc[p] = (r.merc[p] || 0) + v; });
       APPS_DELIVERY.forEach(a => { r.delivery[a.id] += x.delivery[a.id]; });
       r.difDelivery += x.difDelivery;
@@ -458,7 +467,16 @@
     provs.forEach(p => { h += row('cf-egreso', esc(p), c => c.merc[p] || 0); });
     h += row('cf-subtotal', 'Total mercadería', c => c.mercTotal);
 
-    h += head('SUELDOS') + row('cf-egreso', 'Total sueldos', c => c.sueldos);
+    h += head('SUELDOS');
+    h += row('cf-egreso', 'Sueldo 1', c => c.sueldo1);
+    h += row('cf-egreso', 'Sueldo 2', c => c.sueldo2);
+    h += row('cf-subtotal', 'Total sueldos', c => c.sueldos);
+
+    h += head('ALQUILER');
+    h += row('cf-egreso', 'Alquiler 1', c => c.alq1);
+    h += row('cf-egreso', 'Alquiler 2', c => c.alq2);
+    h += row('cf-egreso', 'Expensas', c => c.expensas);
+    h += row('cf-subtotal', 'Total alquiler', c => c.alqTotal);
 
     if (cols.some(c => c.servTotal > 0)) {
       h += head('SERVICIOS');
@@ -538,11 +556,11 @@
   // ── COMPARAR ─────────────────────────────────────────────────────
   const LINEAS_COMP = [
     ['Total ingresos', 'ingresos'], ['Ventas', 'ventas'], ['Delivery (dentro de ventas)', 'deliveryTotal'], ['Salón / mostrador', 'salon'], ['Vouchers', 'vouchers'],
-    ['Mercadería', 'mercTotal'], ['Sueldos', 'sueldos'], ['Servicios', 'servTotal'], ['Tarjetas', 'tarjetas'],
+    ['Mercadería', 'mercTotal'], ['Sueldos', 'sueldos'], ['Alquiler', 'alqTotal'], ['Servicios', 'servTotal'], ['Tarjetas', 'tarjetas'],
     ['Regalías', 'regalias'], ['Publicidad', 'publicidad'], ['Impuestos', 'impTotal'], ['Extraordinarios', 'extTotal'],
     ['Total egresos', 'egresos'], ['RESULTADO', 'resultado']
   ];
-  const EGRESOS_CLAVES = ['mercTotal','sueldos','servTotal','tarjetas','regalias','publicidad','impTotal','extTotal','egresos'];
+  const EGRESOS_CLAVES = ['mercTotal','sueldos','alqTotal','servTotal','tarjetas','regalias','publicidad','impTotal','extTotal','egresos'];
 
   function renderComparar() {
     renderVistaBar('comp-vista');
@@ -607,7 +625,7 @@
 
   function formVacio() {
     return {
-      mercaderia: {}, sueldos: 0, tarjetas: 0,
+      mercaderia: {}, sueldos: { s1: 0, s2: 0 }, alquiler: { a1: 0, a2: 0, expensas: 0 }, tarjetas: 0,
       regalias: { s1: 0, s2: 0, s3: 0, s4: 0 }, publicidad: { s1: 0, s2: 0, s3: 0, s4: 0 },
       impuestos: { iva: 0, ibb: 0, autonomos: 0 }, servicios: [], extra: []
     };
@@ -621,7 +639,10 @@
     Object.entries(st.mercaderia || {}).forEach(([p, fs]) => {
       if (Array.isArray(fs)) form.mercaderia[p] = fs.map(f => ({ monto: Number(f.monto) || 0, fecha: f.fecha || '' }));
     });
-    form.sueldos = Number(st.sueldos) || 0;
+    // Sueldos: dos items. Un mes guardado con el formato viejo (un solo total) queda como Sueldo 1.
+    if (st.sueldos && typeof st.sueldos === 'object') { form.sueldos.s1 = Number(st.sueldos.s1) || 0; form.sueldos.s2 = Number(st.sueldos.s2) || 0; }
+    else { form.sueldos.s1 = Number(st.sueldos) || 0; }
+    ['a1','a2','expensas'].forEach(k => { form.alquiler[k] = Number((st.alquiler || {})[k]) || 0; });
     form.tarjetas = Number(st.tarjetas) || 0;
     ['s1','s2','s3','s4'].forEach(k => { form.regalias[k] = Number((st.regalias || {})[k]) || 0; form.publicidad[k] = Number((st.publicidad || {})[k]) || 0; });
     ['iva','ibb','autonomos'].forEach(k => { form.impuestos[k] = Number((st.impuestos || {})[k]) || 0; });
@@ -714,7 +735,7 @@
 
     const serv = `<div class="card"><h3>⚡ Servicios</h3>${form.servicios.map((s, i) => `
       <div class="servicio-fila">
-        <div class="servicio-top"><input type="text" placeholder="Descripción (alquiler, luz, gas...)" value="${esc(s.desc)}" oninput="setServicio(${i},'desc',this.value)"><button class="fila-del" onclick="delServicio(${i})">×</button></div>
+        <div class="servicio-top"><input type="text" placeholder="Descripción (luz, gas, internet...)" value="${esc(s.desc)}" oninput="setServicio(${i},'desc',this.value)"><button class="fila-del" onclick="delServicio(${i})">×</button></div>
         <div class="servicio-inputs">
           <div><label>Monto ($)</label>${inpNum(s.monto, `setServicio(${i},'monto',this.value)`)}</div>
           <div><label>Fecha factura</label><input type="date" value="${s.fecha || ''}" onchange="setServicio(${i},'fecha',this.value)"></div>
@@ -730,7 +751,13 @@
       <button class="btn-agregar" onclick="addExtra()">+ Agregar gasto</button></div>`;
 
     document.getElementById('carga-form').innerHTML = auto + merc + `
-      <div class="card"><h3>👥 Sueldos</h3><div class="campo" style="margin-bottom:0;"><label>Total sueldos del mes ($)</label>${inpNum(form.sueldos, `setSimple('sueldos',this.value)`)}</div></div>
+      <div class="card"><h3>👥 Sueldos</h3><div class="grid-2">
+        <div class="campo" style="margin-bottom:0;"><label>Sueldo 1 ($)</label>${inpNum(form.sueldos.s1, `setSub('sueldos','s1',this.value)`)}</div>
+        <div class="campo" style="margin-bottom:0;"><label>Sueldo 2 ($)</label>${inpNum(form.sueldos.s2, `setSub('sueldos','s2',this.value)`)}</div></div></div>
+      <div class="card"><h3>🏠 Alquiler</h3><div class="grid-2">
+        <div class="campo"><label>Alquiler 1 ($)</label>${inpNum(form.alquiler.a1, `setSub('alquiler','a1',this.value)`)}</div>
+        <div class="campo"><label>Alquiler 2 ($)</label>${inpNum(form.alquiler.a2, `setSub('alquiler','a2',this.value)`)}</div>
+        <div class="campo" style="margin-bottom:0;"><label>Expensas ($)</label>${inpNum(form.alquiler.expensas, `setSub('alquiler','expensas',this.value)`)}</div></div></div>
       ${serv}
       <div class="card"><h3>💳 Comisiones tarjetas</h3><div class="campo" style="margin-bottom:0;"><label>Total comisiones del mes ($)</label>${inpNum(form.tarjetas, `setSimple('tarjetas',this.value)`)}</div></div>
       <div class="card"><h3>📋 Regalías y Publicidad</h3><div class="grid-2">
@@ -819,7 +846,7 @@
     try {
       await setDoc(doc(db, COL_ERR, slug(localCarga) + '_' + mes), {
         local: localCarga, mes, mercaderia,
-        sueldos: form.sueldos, tarjetas: form.tarjetas,
+        sueldos: form.sueldos, alquiler: form.alquiler, tarjetas: form.tarjetas,
         regalias: form.regalias, publicidad: form.publicidad, impuestos: form.impuestos,
         servicios, extraordinarios, timestamp: Date.now()
       });
