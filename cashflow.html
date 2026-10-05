@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cashflow · Waysub</title>
+  <title>Estado de Resultados · Waysub</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: sans-serif; background: #f0f2f5; color: #1a1a1a; min-height: 100vh; }
@@ -11,252 +11,176 @@
     .btn-volver { background: rgba(255,255,255,0.15); border: none; color: white; border-radius: 8px; padding: 6px 12px; font-size: 18px; cursor: pointer; }
     header h1 { font-size: 18px; flex: 1; }
     .tabs { display: flex; background: white; border-bottom: 2px solid #f0f2f5; position: sticky; top: 57px; z-index: 99; }
-    .tab { flex: 1; padding: 12px 4px; text-align: center; font-size: 11px; font-weight: 600; color: #999; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; }
-    .tab.activo { color: #1a1a2e; border-bottom-color: #1a1a2e; }
-    .seccion { display: none; padding-bottom: 100px; }
+    .tab { flex: 1; padding: 12px 4px; text-align: center; font-size: 13px; font-weight: 600; color: #999; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; }
+    .tab.activo { color: #1a1a2e; border-bottom-color: #e8b84b; }
+    .seccion { display: none; padding-bottom: 110px; }
     .seccion.activa { display: block; }
+
+    .local-bar { display: flex; gap: 8px; padding: 12px 16px 0; }
+    .local-btn { flex: 1; background: white; border: 2px solid #e0e0e0; border-radius: 12px; padding: 11px 6px; text-align: center; cursor: pointer; font-size: 13px; font-weight: 700; color: #999; }
+    .local-btn.activo { background: #1a1a2e; border-color: #1a1a2e; color: white; }
+
     .card { background: white; margin: 12px 16px 0; border-radius: 12px; padding: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); }
-    .card h3 { font-size: 14px; font-weight: 800; color: #1a1a2e; margin-bottom: 14px; border-left: 4px solid #1a1a2e; padding-left: 10px; }
+    .card h3 { font-size: 14px; font-weight: 800; color: #1a1a2e; margin-bottom: 14px; border-left: 4px solid #e8b84b; padding-left: 10px; }
     .campo { margin-bottom: 10px; }
     .campo label { font-size: 12px; color: #666; display: block; margin-bottom: 4px; font-weight: 600; }
-    .campo input, .campo select, .campo textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; }
+    .campo input, .campo select, .campo textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; background: white; }
     .campo input:focus, .campo select:focus { outline: none; border-color: #1a1a2e; }
     .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .ventas-tabla { width: 100%; border-collapse: collapse; font-size: 12px; }
-    .ventas-tabla th { padding: 6px 4px; font-size: 10px; color: #999; font-weight: 700; text-transform: uppercase; border-bottom: 2px solid #f0f2f5; text-align: center; }
-    .ventas-tabla td { padding: 4px; border-bottom: 1px solid #f8f8f8; }
-    .ventas-tabla td:first-child { font-weight: 600; font-size: 11px; color: #666; text-align: center; }
-    .ventas-tabla input { width: 100%; padding: 5px; border: 1px solid #eee; border-radius: 4px; font-size: 12px; text-align: right; }
-    .ventas-tabla input:focus { outline: none; border-color: #1a1a2e; }
-    .ventas-tabla .total-row td { background: #1a1a2e; color: white; font-weight: 700; font-size: 12px; text-align: center; padding: 8px 4px; }
+    .nota { font-size: 12px; color: #999; margin-bottom: 8px; line-height: 1.5; }
+    .vacio { text-align: center; padding: 40px 20px; color: #bbb; font-size: 14px; line-height: 1.5; }
+    .aviso { background: #fff8ee; border: 1px solid #ffd9a0; color: #a04000; border-radius: 10px; padding: 10px 14px; margin: 12px 16px 0; font-size: 13px; line-height: 1.5; }
+    .aviso.info { background: #f0f4ff; border-color: #c5cff5; color: #3b4a9c; }
+    .estado { display: inline-block; margin-top: 6px; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
+    .estado.nueva { background: #f0f4ff; color: #3b4a9c; }
+    .estado.existente { background: #fff6e0; color: #9a6b00; }
+
+    .auto-fila { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #f5f5f5; font-size: 13px; }
+    .auto-fila:last-child { border-bottom: none; }
+    .auto-fila span { color: #666; }
+    .auto-fila strong { color: #1a1a2e; }
+    .auto-fila.total { font-weight: 800; }
+
     .btn-agregar { background: none; border: 1px dashed #ddd; border-radius: 8px; padding: 8px; width: 100%; font-size: 13px; color: #999; cursor: pointer; margin-top: 8px; }
     .btn-agregar:hover { border-color: #1a1a2e; color: #1a1a2e; }
+    .btn-primario { width: 100%; background: #1a1a2e; color: white; border: none; border-radius: 10px; padding: 13px; font-size: 14px; font-weight: 700; cursor: pointer; }
+    .btn-peligro { background: none; border: none; color: #c0392b; font-size: 12px; font-weight: 600; cursor: pointer; padding: 6px; }
+    .footer-btns { position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 1px solid #eee; padding: 12px 16px; z-index: 100; }
 
-    /* Proveedor con múltiples facturas */
+    /* Proveedores */
     .proveedor-bloque { border: 1px solid #eee; border-radius: 10px; margin-bottom: 10px; overflow: hidden; }
     .proveedor-header { background: #f8f9ff; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; }
     .proveedor-nombre { font-size: 13px; font-weight: 700; color: #1a1a2e; }
     .proveedor-total { font-size: 12px; color: #2a9d5c; font-weight: 700; }
-    .proveedor-facturas { padding: 10px 14px; }
+    .proveedor-facturas { padding: 10px 14px 4px; }
     .factura-fila { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
-    .factura-fila input[type=number] { flex: 1.5; padding: 8px; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; }
-    .factura-fila input[type=date] { flex: 1.2; padding: 8px; border: 1px solid #ddd; border-radius: 8px; font-size: 12px; }
-    .factura-fila button { background: #fff0f0; border: none; color: #e63946; border-radius: 6px; padding: 8px 10px; cursor: pointer; flex-shrink: 0; }
+    .factura-fila input[type=number] { flex: 1.5; min-width: 0; padding: 8px; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; }
+    .factura-fila input[type=date] { flex: 1.2; min-width: 0; padding: 8px; border: 1px solid #ddd; border-radius: 8px; font-size: 12px; }
+    .factura-fila button, .fila-del { background: #fff0f0; border: none; color: #e63946; border-radius: 6px; padding: 8px 10px; cursor: pointer; flex-shrink: 0; }
     .btn-add-factura { background: none; border: 1px dashed #ddd; border-radius: 6px; padding: 6px; width: 100%; font-size: 12px; color: #999; cursor: pointer; }
+    .prov-tag { background: #f0f2f5; border-radius: 20px; padding: 4px 10px; font-size: 12px; display: inline-flex; align-items: center; gap: 6px; margin: 0 6px 6px 0; }
+    .prov-tag button { background: none; border: none; color: #e63946; cursor: pointer; font-size: 14px; padding: 0; }
 
-    /* Servicios */
+    /* Servicios y extraordinarios */
     .servicio-fila { background: #f8f9ff; border-radius: 8px; padding: 10px; margin-bottom: 8px; }
-    .servicio-fila-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
-    .servicio-fila-top { display: flex; gap: 8px; align-items: center; }
-    .servicio-fila-top input { flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; }
-    .servicio-fila-top button { background: #fff0f0; border: none; color: #e63946; border-radius: 6px; padding: 8px 10px; cursor: pointer; flex-shrink: 0; }
-    .servicio-fila input[type=number], .servicio-fila input[type=date], .servicio-fila select { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 8px; font-size: 12px; }
+    .servicio-fila input { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; background: white; }
+    .servicio-top { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+    .servicio-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .servicio-inputs label { font-size: 11px; color: #999; display: block; margin-bottom: 2px; }
 
-    /* Items simples */
-    .item-fila { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
-    .item-fila input, .item-fila select { flex: 1; min-width: 80px; padding: 8px; border: 1px solid #ddd; border-radius: 8px; font-size: 12px; }
-    .item-fila button { background: #fff0f0; border: none; color: #e63946; border-radius: 6px; padding: 8px 10px; cursor: pointer; }
-
-    .footer-btns { position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 1px solid #eee; padding: 12px 16px; display: flex; gap: 8px; z-index: 100; }
-    .btn-guardar-mes { flex: 2; background: #1a1a2e; color: white; border: none; border-radius: 10px; padding: 13px; font-size: 14px; font-weight: 700; cursor: pointer; }
-    .btn-ver-cf { flex: 1; background: #f0fff4; color: #2a9d5c; border: 1px solid #c3e6cb; border-radius: 10px; padding: 13px; font-size: 12px; font-weight: 600; cursor: pointer; }
-
-    /* CASHFLOW */
-    .kpi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 12px 16px 0; }
+    /* Resultado */
+    .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 12px 16px 0; }
     .kpi-card { background: white; border-radius: 10px; padding: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); text-align: center; }
     .kpi-label { font-size: 10px; color: #999; text-transform: uppercase; font-weight: 700; margin-bottom: 4px; }
-    .kpi-valor { font-size: 15px; font-weight: 800; }
+    .kpi-valor { font-size: 16px; font-weight: 800; }
     .kpi-pos { color: #2a9d5c; }
     .kpi-neg { color: #e63946; }
     .kpi-neu { color: #1a1a2e; }
-    .cf-tabla { width: 100%; border-collapse: collapse; font-size: 13px; }
-    .cf-tabla td { padding: 8px 6px; border-bottom: 1px solid #f5f5f5; }
-    .cf-tabla td:last-child { text-align: right; font-weight: 600; }
+    .cf-tabla { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .cf-tabla td { padding: 8px 5px; border-bottom: 1px solid #f5f5f5; }
+    .cf-tabla td:not(:first-child) { text-align: right; font-weight: 600; white-space: nowrap; }
+    .cf-tabla .peq { font-size: 10px; color: #bbb; }
+    .cf-colhead td { font-size: 10px; text-transform: uppercase; color: #999; font-weight: 700; border-bottom: 2px solid #f0f2f5; }
     .cf-subtotal td { background: #f8f9ff; font-weight: 700; color: #1a1a2e; border-top: 1px solid #e0e0e0; }
-    .cf-total td { background: #1a1a2e; color: white; font-weight: 800; font-size: 14px; }
-    .cf-ingreso td:last-child { color: #2a9d5c; }
-    .cf-egreso td:last-child { color: #e63946; }
+    .cf-total td { background: #1a1a2e; color: white; font-weight: 800; font-size: 13px; }
+    .cf-ingreso td:not(:first-child) { color: #2a9d5c; }
+    .cf-egreso td:not(:first-child) { color: #e63946; }
+    .cf-sub td:first-child { padding-left: 18px; color: #777; font-weight: 500; }
+    .cf-sub td:not(:first-child) { color: #777; font-weight: 500; }
+    .cf-nota td { font-size: 10px; color: #aaa; font-style: italic; padding: 6px 5px 2px; border-bottom: none; }
     .cf-header td { background: #f0f2f5; font-weight: 700; font-size: 11px; text-transform: uppercase; color: #666; letter-spacing: 0.5px; }
 
-    /* HISTORIAL */
-    .historial-item { background: white; margin: 8px 16px 0; border-radius: 12px; padding: 14px 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
-    .hist-info h4 { font-size: 14px; font-weight: 700; }
-    .hist-info p { font-size: 12px; color: #999; margin-top: 2px; }
-    .btn-eliminar-hist { background: none; border: none; color: #ccc; cursor: pointer; font-size: 16px; }
-    .sin-historial { text-align: center; padding: 40px 20px; color: #bbb; font-size: 14px; }
+    /* Comparar */
     .comp-selector { display: flex; gap: 8px; margin: 12px 16px 0; }
-    .comp-selector select { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; }
+    .comp-selector select, .mes-selector select { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; background: white; }
+    .mes-selector { margin: 12px 16px 0; display: flex; gap: 8px; align-items: center; }
+    .mes-selector label { font-size: 12px; color: #666; font-weight: 600; white-space: nowrap; }
     .comp-tabla { width: 100%; border-collapse: collapse; font-size: 12px; }
     .comp-tabla th { padding: 8px 6px; font-size: 10px; color: #999; font-weight: 700; text-transform: uppercase; border-bottom: 2px solid #f0f2f5; text-align: right; }
-    .comp-tabla th:first-child { text-align: left; }
+    .comp-tabla th:first-child, .comp-tabla td:first-child { text-align: left; }
     .comp-tabla td { padding: 7px 6px; border-bottom: 1px solid #f8f8f8; text-align: right; }
-    .comp-tabla td:first-child { text-align: left; font-weight: 600; }
+    .comp-tabla td:first-child { font-weight: 600; }
     .comp-pos { color: #2a9d5c; font-weight: 700; }
     .comp-neg { color: #e63946; font-weight: 700; }
-    .mes-selector { margin: 12px 16px 0; display: flex; gap: 8px; align-items: center; }
-    .mes-selector select { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; }
-    .mes-selector label { font-size: 12px; color: #666; font-weight: 600; white-space: nowrap; }
-    .seccion-titulo { padding: 12px 16px 4px; font-size: 11px; font-weight: 700; color: #999; text-transform: uppercase; letter-spacing: 1px; }
+    .seccion-titulo { padding: 16px 16px 4px; font-size: 11px; font-weight: 700; color: #999; text-transform: uppercase; letter-spacing: 1px; }
+    .historial-item { background: white; margin: 8px 16px 0; border-radius: 12px; padding: 14px 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+    .hist-info h4 { font-size: 14px; font-weight: 700; }
+    .hist-info p { font-size: 12px; color: #999; margin-top: 2px; line-height: 1.5; }
+
+    .toast { position: fixed; left: 50%; bottom: 140px; transform: translateX(-50%); background: #1a1a2e; color: white; padding: 12px 18px; border-radius: 10px; font-size: 13px; max-width: 85vw; width: max-content; white-space: normal; text-align: center; z-index: 300; display: none; }
+    .toast.error { background: #c0392b; }
+    .toast.ok { background: #1f9d55; }
+    #sin-acceso { display: none; text-align: center; padding: 80px 24px; }
+    #sin-acceso h2 { font-size: 20px; margin-bottom: 8px; }
+    #sin-acceso p { color: #666; font-size: 14px; margin-bottom: 20px; }
   </style>
 </head>
 <body>
 
 <header>
   <button class="btn-volver" onclick="window.location.href='index.html'">←</button>
-  <h1>💰 Cashflow</h1>
+  <h1>💰 Estado de Resultados</h1>
 </header>
 
+<div id="sin-acceso">
+  <div style="font-size:48px;margin-bottom:12px;">🔒</div>
+  <h2>Sin acceso</h2>
+  <p>Tu usuario no tiene permiso para este módulo. Contactá al administrador.</p>
+  <button class="btn-primario" style="max-width:260px;" onclick="window.location.href='index.html'">Volver al inicio</button>
+</div>
+
+<div id="app-wrap" style="display:none;">
+
 <div class="tabs">
-  <div class="tab activo" onclick="cambiarTab('carga')">📥 Carga</div>
-  <div class="tab" onclick="cambiarTab('cashflow')">📊 Cashflow</div>
-  <div class="tab" onclick="cambiarTab('historial')">📋 Historial</div>
+  <div class="tab" id="tab-btn-resultado" onclick="cambiarTab('resultado')">📊 Resultado</div>
+  <div class="tab" id="tab-btn-comparar" onclick="cambiarTab('comparar')">📈 Comparar</div>
+  <div class="tab activo" id="tab-btn-carga" onclick="cambiarTab('carga')">📥 Carga</div>
+</div>
+
+<!-- TAB RESULTADO -->
+<div class="seccion" id="tab-resultado">
+  <div class="local-bar" id="res-vista"></div>
+  <div class="mes-selector"><label>Ver mes:</label><select id="sel-mes-res" onchange="setResMes(this.value)"></select></div>
+  <div id="res-avisos"></div>
+  <div id="res-contenido"></div>
+</div>
+
+<!-- TAB COMPARAR -->
+<div class="seccion" id="tab-comparar">
+  <div class="local-bar" id="comp-vista"></div>
+  <div class="seccion-titulo">Comparar dos meses</div>
+  <div class="comp-selector">
+    <select id="comp-mes1" onchange="renderComparacion()"></select>
+    <select id="comp-mes2" onchange="renderComparacion()"></select>
+  </div>
+  <div id="comp-contenido"></div>
+  <div class="seccion-titulo">Todos los meses</div>
+  <div id="lista-historial" style="padding-bottom:20px;"></div>
 </div>
 
 <!-- TAB CARGA -->
 <div class="seccion activa" id="tab-carga">
-
-  <div class="card" style="margin-top:12px;">
+  <div class="local-bar" id="carga-local"></div>
+  <div class="card">
     <h3>Mes</h3>
-    <div class="campo"><input type="month" id="inp-mes"></div>
+    <div class="campo" style="margin-bottom:0;"><input type="month" id="inp-mes"></div>
+    <span class="estado nueva" id="carga-estado" style="display:none;"></span>
   </div>
+  <div id="carga-form"></div>
+</div>
 
-  <!-- VENTAS DIARIAS -->
-  <div class="card">
-    <h3>📈 Ventas diarias</h3>
-    <div style="overflow-x:auto;">
-      <table class="ventas-tabla">
-        <thead>
-          <tr>
-            <th>Día</th>
-            <th style="color:#1F4E79">SW Ramos</th>
-            <th style="color:#843C0C">SW Morón</th>
-            <th style="color:#1F4E79">BC Ramos</th>
-            <th style="color:#843C0C">BC Morón</th>
-          </tr>
-        </thead>
-        <tbody id="tbody-ventas"></tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- MERCADERÍA -->
-  <div class="card">
-    <h3>📦 Mercadería por proveedor</h3>
-    <p style="font-size:12px;color:#999;margin-bottom:8px;">Podés cargar múltiples facturas por proveedor</p>
-    
-    <!-- Gestión de proveedores -->
-    <div id="config-proveedores" style="background:#f8f9ff;border-radius:10px;padding:12px;margin-bottom:14px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-        <span style="font-size:12px;font-weight:700;color:#1a1a2e;">⚙️ Proveedores</span>
-        <button onclick="toggleConfigProv()" id="btn-toggle-prov" style="background:none;border:1px solid #ddd;border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer;">✏️ Editar</button>
-      </div>
-      <div id="lista-config-prov" style="display:none;">
-        <div id="prov-tags" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;"></div>
-        <div style="display:flex;gap:8px;">
-          <input type="text" id="inp-nuevo-prov" placeholder="Nuevo proveedor..." style="flex:1;padding:8px;border:1px solid #ddd;border-radius:8px;font-size:13px;">
-          <button onclick="agregarProveedor()" style="background:#1a1a2e;color:white;border:none;border-radius:8px;padding:8px 14px;font-size:13px;cursor:pointer;">+</button>
-        </div>
-      </div>
-      <div id="prov-chips" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
-    </div>
-
-    <div id="bloques-mercaderia"></div>
-  </div>
-
-  <!-- SUELDOS -->
-  <div class="card">
-    <h3>👥 Sueldos</h3>
-    <div class="campo">
-      <label>Total sueldos del mes ($)</label>
-      <input type="number" id="sueldos-total" placeholder="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'">
-    </div>
-  </div>
-
-  <!-- SERVICIOS -->
-  <div class="card">
-    <h3>⚡ Servicios</h3>
-    <div id="lista-servicios"></div>
-    <button class="btn-agregar" onclick="agregarServicio()">+ Agregar servicio</button>
-  </div>
-
-  <!-- TARJETAS -->
-  <div class="card">
-    <h3>💳 Comisiones tarjetas</h3>
-    <div class="campo">
-      <label>Total comisiones del mes ($)</label>
-      <input type="number" id="tarj-total" placeholder="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'">
-    </div>
-  </div>
-
-  <!-- REGALÍAS -->
-  <div class="card">
-    <h3>📋 Regalías y Publicidad</h3>
-    <div class="grid-2">
-      <div>
-        <p style="font-size:11px;font-weight:700;color:#666;margin-bottom:8px;text-transform:uppercase;">Regalías</p>
-        <div class="campo"><label>Sem 1 ($)</label><input type="number" id="reg-s1" placeholder="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'"></div>
-        <div class="campo"><label>Sem 2 ($)</label><input type="number" id="reg-s2" placeholder="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'"></div>
-        <div class="campo"><label>Sem 3 ($)</label><input type="number" id="reg-s3" placeholder="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'"></div>
-        <div class="campo"><label>Sem 4 ($)</label><input type="number" id="reg-s4" placeholder="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'"></div>
-      </div>
-      <div>
-        <p style="font-size:11px;font-weight:700;color:#666;margin-bottom:8px;text-transform:uppercase;">Publicidad</p>
-        <div class="campo"><label>Sem 1 ($)</label><input type="number" id="pub-s1" placeholder="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'"></div>
-        <div class="campo"><label>Sem 2 ($)</label><input type="number" id="pub-s2" placeholder="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'"></div>
-        <div class="campo"><label>Sem 3 ($)</label><input type="number" id="pub-s3" placeholder="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'"></div>
-        <div class="campo"><label>Sem 4 ($)</label><input type="number" id="pub-s4" placeholder="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- IMPUESTOS -->
-  <div class="card">
-    <h3>🏛️ Impuestos</h3>
-    <div class="grid-2">
-      <div class="campo"><label>IVA ($)</label><input type="number" id="imp-iva" placeholder="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'"></div>
-      <div class="campo"><label>IBB ($)</label><input type="number" id="imp-ibb" placeholder="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'"></div>
-      <div class="campo"><label>Autónomos ($)</label><input type="number" id="imp-autonomos" placeholder="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'"></div>
-    </div>
-  </div>
-
-  <!-- GASTOS EXTRAORDINARIOS -->
-  <div class="card">
-    <h3>⚠️ Gastos extraordinarios</h3>
-    <div id="lista-extraordinarios"></div>
-    <button class="btn-agregar" onclick="agregarExtraordinario()">+ Agregar gasto</button>
-  </div>
+<div class="footer-btns" id="footer-guardar">
+  <button class="btn-primario" onclick="guardarMes()">💾 Guardar mes</button>
+</div>
 
 </div>
 
-<!-- TAB CASHFLOW -->
-<div class="seccion" id="tab-cashflow">
-  <div class="mes-selector">
-    <label>Ver mes:</label>
-    <select id="sel-mes-cf" onchange="cargarCashflow()"></select>
-  </div>
-  <div id="cf-contenido"><div style="text-align:center;padding:40px;color:#bbb;">Guardá datos de un mes para ver el cashflow</div></div>
-</div>
-
-<!-- TAB HISTORIAL -->
-<div class="seccion" id="tab-historial">
-  <div class="seccion-titulo">Comparar dos meses</div>
-  <div class="comp-selector">
-    <select id="comp-mes1" onchange="renderComparacion()"><option value="">— Mes 1 —</option></select>
-    <select id="comp-mes2" onchange="renderComparacion()"><option value="">— Mes 2 —</option></select>
-  </div>
-  <div id="comp-contenido"></div>
-  <div class="seccion-titulo" style="margin-top:16px;">Todos los meses</div>
-  <div id="lista-historial" style="padding-bottom:20px;"></div>
-</div>
-
-<div class="footer-btns">
-  <button class="btn-guardar-mes" onclick="guardarMes()">💾 Guardar mes</button>
-  <button class="btn-ver-cf" onclick="cambiarTab('cashflow')">📊 Ver cashflow</button>
-</div>
+<div class="toast" id="toast"></div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getFirestore, collection, getDocs, deleteDoc, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { getFirestore, collection, getDocs, getDoc, setDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyAB2-btgFqGiCe1YdZSDv4EShV601N-uQs",
@@ -269,467 +193,667 @@
 
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
+  const auth = getAuth(app);
 
-  const LOCALES = ['SW Ramos', 'SW Morón', 'BC Ramos', 'BC Morón'];
-  let PROVEEDORES = ['Axionlog', 'FEMSA', 'Verdulería', 'Café', 'Insumos', 'Descartables', 'MTM'];
-  let historial = [];
+  const COL_ERR = 'err_meses';          // lo que se carga a mano: un documento por local + mes
+  const COL_CIERRES = 'cajero_cierres'; // de acá salen las ventas y los vouchers, solos
+  const LOCALES = ['Ramos Mejía', 'Morón'];
+  const MARCAS = ['Subway', 'Balcarce'];
+  const PROV_DEFAULT = ['Axionlog', 'FEMSA', 'Verdulería', 'Café', 'Insumos', 'Descartables', 'MTM'];
 
-  // INIT
-  const hoy = new Date();
-  document.getElementById('inp-mes').value = hoy.toISOString().slice(0,7);
-  construirTablaVentas();
-  document.getElementById('inp-mes').addEventListener('change', construirTablaVentas);
-  cargarProveedoresFirebase();
-  cargarHistorialFirebase();
+  let PROVEEDORES = [...PROV_DEFAULT];
+  let docs = [];          // lo guardado a mano
+  let cierres = [];       // cierres de caja
+  let ventasIdx = {};     // ventas y vouchers por local, mes y marca
+  let tabActual = 'carga';
+  let vista = 'Ramos Mejía';        // 'Ramos Mejía' | 'Morón' | 'todo'
+  let localCarga = 'Ramos Mejía';
+  let resMes = '';
+  let form = null;
+  let editandoProv = false;
 
-  // ── VENTAS ─────────────────────────────────────────────────────
-  function construirTablaVentas() {
-    const mes = document.getElementById('inp-mes').value;
-    const [anio, mesNum] = mes.split('-').map(Number);
-    const diasEnMes = new Date(anio, mesNum, 0).getDate();
-    const tbody = document.getElementById('tbody-ventas');
-    tbody.innerHTML = '';
-    for (let d = 1; d <= diasEnMes; d++) {
-      const tr = document.createElement('tr');
-      let cells = '<td>' + d + '</td>';
-      LOCALES.forEach(loc => {
-        cells += '<td><input type="number" min="0" value="0" data-dia="' + d + '" data-local="' + loc + '" onfocus="if(this.value==\'0\')this.value=\'\'" onblur="if(this.value==\'\')this.value=\'0\'"></td>';
-      });
-      tr.innerHTML = cells;
-      tbody.appendChild(tr);
+  // ── HELPERS ──────────────────────────────────────────────────────
+  function esc(s) { return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function slug(s) { return s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9]+/g,'_').toLowerCase(); }
+  function pad(n) { return String(n).padStart(2,'0'); }
+  function mesActual() { const d = new Date(); return d.getFullYear() + '-' + pad(d.getMonth() + 1); }
+  function diasDelMes(mes) { const [y, m] = mes.split('-').map(Number); return new Date(y, m, 0).getDate(); }
+  function nombreMes(mes, corto) {
+    const [y, m] = mes.split('-').map(Number);
+    const t = new Date(y, m - 1, 1).toLocaleDateString('es-AR', corto ? { month: 'short', year: '2-digit' } : { month: 'long', year: 'numeric' });
+    return t.charAt(0).toUpperCase() + t.slice(1);
+  }
+  function fmt(n) { n = Math.round(Number(n) || 0); return (n < 0 ? '-' : '') + '$' + Math.abs(n).toLocaleString('es-AR'); }
+  function pct(a, b) { return b > 0 ? (a / b * 100).toLocaleString('es-AR', { maximumFractionDigits: 1 }) + '%' : '—'; }
+  function sum(arr, f) { return arr.reduce((a, x) => a + (f ? f(x) : x), 0); }
+  function toast(msg, tipo) {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.className = 'toast ' + (tipo || ''); t.style.display = 'block';
+    clearTimeout(window._toastTimer);
+    window._toastTimer = setTimeout(() => { t.style.display = 'none'; }, 3500);
+  }
+  function tiempoDe(d) {
+    const t = d.timestamp;
+    if (!t) return 0;
+    if (typeof t.toMillis === 'function') return t.toMillis();
+    if (t.seconds) return t.seconds * 1000;
+    return Number(t) || 0;
+  }
+
+  // ── DATOS ────────────────────────────────────────────────────────
+  async function cargarTodo() {
+    // Se trae todo y se filtra acá (sin query con varios where)
+    const [snapDocs, snapCierres] = await Promise.all([
+      getDocs(collection(db, COL_ERR)),
+      getDocs(collection(db, COL_CIERRES))
+    ]);
+    docs = [];
+    snapDocs.forEach(d => docs.push({ id: d.id, ...d.data() }));
+    cierres = [];
+    snapCierres.forEach(d => cierres.push(d.data()));
+    construirVentas();
+  }
+
+  // Apps de delivery: el id coincide con el nombre del canal en el Cierre de Caja, sin espacios ni mayúsculas
+  const APPS_DELIVERY = [
+    { id: 'rappi', nombre: 'Rappi' }, { id: 'pedidosya', nombre: 'PedidosYa' },
+    { id: 'mercadodelivery', nombre: 'Mercado Delivery' }, { id: 'ubereats', nombre: 'Uber Eats' }
+  ];
+  function deliveryVacio() { const o = {}; APPS_DELIVERY.forEach(a => { o[a.id] = 0; }); return o; }
+  function deliveryPorApp(d) {
+    const r = deliveryVacio();
+    const sumar = (nombre, monto) => {
+      const id = String(nombre || '').toLowerCase().replace(/[^a-z]/g, '');
+      if (id in r) r[id] += Number(monto) || 0;
+    };
+    if (d.deliveryBloques && d.deliveryBloques.length) {
+      d.deliveryBloques.forEach(b => (b.canales || []).forEach(c => sumar(c.canal, c.monto)));
+    } else if (d.delivery && d.delivery.length) {
+      d.delivery.forEach(c => sumar(c.canal, c.monto));
+    } else {
+      // registros muy viejos, con un campo por aplicación
+      sumar('mercadodelivery', d.mercadoDelivery); sumar('rappi', d.rappi);
+      sumar('pedidosya', d.pedidosYa); sumar('ubereats', d.uberEats);
     }
-    const trTot = document.createElement('tr');
-    trTot.className = 'total-row';
-    let totCells = '<td>TOTAL</td>';
-    LOCALES.forEach(loc => { totCells += '<td id="tot-ventas-' + loc.replace(/ /g,'_') + '">$0</td>'; });
-    trTot.innerHTML = totCells;
-    tbody.appendChild(trTot);
-    tbody.querySelectorAll('input').forEach(inp => inp.addEventListener('input', actualizarTotalesVentas));
+    return r;
   }
 
-  function actualizarTotalesVentas() {
-    LOCALES.forEach(loc => {
-      let total = 0;
-      document.querySelectorAll('input[data-local="' + loc + '"]').forEach(inp => { total += Number(inp.value) || 0; });
-      const el = document.getElementById('tot-ventas-' + loc.replace(/ /g,'_'));
-      if (el) el.textContent = '$' + total.toLocaleString('es-AR');
+  // Ventas ("Ventas IVA / Sistema") y vouchers de cada local, mes y marca, tomados de los cierres de caja.
+  // Subway y Balcarce del mismo local se suman en el estado de resultados.
+  function construirVentas() {
+    // Por cada local de caja y día se usa el cierre guardado más recientemente (si hubiera más de uno)
+    const porDia = {};
+    cierres.forEach(d => {
+      if (!d.local || !d.fecha) return;
+      const k = d.local + '|' + d.fecha;
+      const t = tiempoDe(d);
+      if (!porDia[k] || t >= porDia[k].t) porDia[k] = { d, t };
+    });
+    ventasIdx = {};
+    Object.values(porDia).forEach(x => {
+      const d = x.d;
+      const marca = MARCAS.find(m => String(d.local).startsWith(m + ' '));
+      if (!marca) return;
+      const local = String(d.local).slice(marca.length + 1);
+      if (!LOCALES.includes(local)) return;
+      const mes = String(d.fecha).slice(0, 7);
+      const dia = Number(String(d.fecha).slice(8, 10));
+      const k = local + '|' + mes;
+      if (!ventasIdx[k]) ventasIdx[k] = {};
+      if (!ventasIdx[k][marca]) ventasIdx[k][marca] = { ventas: 0, vouchers: 0, dias: new Set(), delivery: deliveryVacio(), dif: 0 };
+      const b = ventasIdx[k][marca];
+      b.ventas += Number(d.ventasIva) || 0;
+      b.vouchers += Number(d.vouchers) || 0;
+      b.dias.add(dia);
+      const dl = deliveryPorApp(d);
+      APPS_DELIVERY.forEach(a => { b.delivery[a.id] += dl[a.id]; });
+      b.dif += Number(d.difDelivery) || 0;
     });
   }
 
-  // ── PROVEEDORES CONFIGURABLES ─────────────────────────────────
-  async function cargarProveedoresFirebase() {
-    try {
-      const { getDoc: gd } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
-      const snap = await gd(doc(db, "config", "proveedores_cashflow"));
-      if (snap.exists()) PROVEEDORES = snap.data().lista;
-    } catch(e) {}
-    construirBloquesMercaderia();
-    renderProvChips();
-    renderProvTags();
+  function ventasDe(local, mes) {
+    const e = ventasIdx[local + '|' + mes] || {};
+    const r = {};
+    MARCAS.forEach(m => { r[m] = e[m] || { ventas: 0, vouchers: 0, dias: new Set(), delivery: deliveryVacio(), dif: 0 }; });
+    return r;
   }
 
-  async function guardarProveedoresFirebase() {
-    const { setDoc: sd } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
-    await sd(doc(db, "config", "proveedores_cashflow"), { lista: PROVEEDORES });
+  function diasSinCierre(mes, dias) {
+    const hoy = new Date();
+    let limite = diasDelMes(mes);
+    if (mes === mesActual()) limite = hoy.getDate() - 1;
+    else if (mes > mesActual()) limite = 0;
+    const faltan = [];
+    for (let d = 1; d <= limite; d++) { if (!dias.has(d)) faltan.push(d); }
+    return faltan;
   }
 
-  window.toggleConfigProv = function() {
-    const lista = document.getElementById('lista-config-prov');
-    const chips = document.getElementById('prov-chips');
-    const btn = document.getElementById('btn-toggle-prov');
-    const abierto = lista.style.display !== 'none';
-    lista.style.display = abierto ? 'none' : 'block';
-    chips.style.display = abierto ? 'flex' : 'none';
-    btn.textContent = abierto ? '✏️ Editar' : '✕ Cerrar';
-    if (!abierto) renderProvTags();
+  // ── CÁLCULO DEL ESTADO DE RESULTADOS ─────────────────────────────
+  function completar(r) {
+    r.ventas = r.ventasSW + r.ventasBC;
+    // El delivery está incluido en las ventas. Total delivery = lo de cada app menos la "Diferencia" del cierre, igual que en el Cierre de Caja.
+    r.deliveryTotal = sum(APPS_DELIVERY, a => r.delivery[a.id]) - r.difDelivery;
+    r.salon = r.ventas - r.deliveryTotal;
+    r.ingresos = r.ventas + r.vouchers;
+    r.impTotal = r.impIva + r.impIbb + r.impAut;
+    r.servTotal = sum(r.servLista, s => s.monto);
+    r.extTotal = sum(r.extLista, s => s.monto);
+    r.egresos = r.mercTotal + r.sueldos + r.servTotal + r.tarjetas + r.regalias + r.publicidad + r.impTotal + r.extTotal;
+    r.resultado = r.ingresos - r.egresos;
+    return r;
   }
 
-  function renderProvChips() {
-    const cont = document.getElementById('prov-chips');
-    if (!cont) return;
-    cont.innerHTML = PROVEEDORES.map(p =>
-      '<span style="background:#E6F1FB;color:#185FA5;border-radius:20px;padding:3px 10px;font-size:12px;font-weight:600;">' + p + '</span>'
-    ).join('');
-  }
-
-  function renderProvTags() {
-    const cont = document.getElementById('prov-tags');
-    if (!cont) return;
-    cont.innerHTML = PROVEEDORES.map((p, i) =>
-      '<div style="background:#f0f2f5;border-radius:20px;padding:4px 10px;font-size:12px;display:flex;align-items:center;gap:6px;">' +
-      p + '<button onclick="window.eliminarProveedor(' + i + ')" style="background:none;border:none;color:#e63946;cursor:pointer;font-size:14px;padding:0;">×</button></div>'
-    ).join('');
-  }
-
-  window.agregarProveedor = async function() {
-    const inp = document.getElementById('inp-nuevo-prov');
-    const nombre = inp.value.trim();
-    if (!nombre || PROVEEDORES.includes(nombre)) return;
-    PROVEEDORES.push(nombre);
-    await guardarProveedoresFirebase();
-    inp.value = '';
-    renderProvTags();
-    renderProvChips();
-    construirBloquesMercaderia();
-  }
-
-  window.eliminarProveedor = async function(i) {
-    if (!confirm('¿Eliminar ' + PROVEEDORES[i] + '?')) return;
-    PROVEEDORES.splice(i, 1);
-    await guardarProveedoresFirebase();
-    renderProvTags();
-    renderProvChips();
-    construirBloquesMercaderia();
-  }
-
-  // ── MERCADERÍA ─────────────────────────────────────────────────
-  function construirBloquesMercaderia() {
-    const cont = document.getElementById('bloques-mercaderia');
-    cont.innerHTML = '';
-    PROVEEDORES.forEach(prov => {
-      const bloque = document.createElement('div');
-      bloque.className = 'proveedor-bloque';
-      bloque.dataset.prov = prov;
-      bloque.innerHTML = `
-        <div class="proveedor-header">
-          <span class="proveedor-nombre">📦 ${prov}</span>
-          <span class="proveedor-total" id="tot-prov-${prov}">$0</span>
-        </div>
-        <div class="proveedor-facturas" id="facturas-${prov}"></div>
-        <div style="padding:0 14px 10px;">
-          <button class="btn-add-factura" onclick="agregarFactura('${prov}')">+ Agregar factura</button>
-        </div>`;
-      cont.appendChild(bloque);
-      agregarFactura(prov); // empezar con una factura vacía
-    });
-  }
-
-  window.agregarFactura = function(prov) {
-    const cont = document.getElementById('facturas-' + prov);
-    const fila = document.createElement('div');
-    fila.className = 'factura-fila';
-    fila.innerHTML = `
-      <input type="number" placeholder="Monto $" min="0" 
-        onfocus="if(this.value=='0')this.value=''" 
-        onblur="if(this.value=='')this.value='0'"
-        oninput="actualizarTotalProv('${prov}')">
-      <input type="date">
-      <button onclick="this.parentElement.remove();actualizarTotalProv('${prov}')">×</button>`;
-    cont.appendChild(fila);
-  }
-
-  window.actualizarTotalProv = function(prov) {
-    let total = 0;
-    document.querySelectorAll('#facturas-' + prov + ' input[type=number]').forEach(inp => { total += Number(inp.value) || 0; });
-    const el = document.getElementById('tot-prov-' + prov);
-    if (el) el.textContent = '$' + total.toLocaleString('es-AR');
-  }
-
-  function getMercaderia() {
-    const result = {};
-    PROVEEDORES.forEach(prov => {
-      const facturas = [];
-      document.querySelectorAll('#facturas-' + prov + ' .factura-fila').forEach(fila => {
-        const [inpMonto, inpFecha] = fila.querySelectorAll('input');
-        const monto = Number(inpMonto.value) || 0;
-        if (monto > 0) facturas.push({ monto, fecha: inpFecha.value });
+  function calcular(local, mes) {
+    const st = docs.find(d => d.local === local && d.mes === mes) || null;
+    const v = ventasDe(local, mes);
+    const merc = {};
+    let mercTotal = 0;
+    if (st && st.mercaderia) {
+      Object.entries(st.mercaderia).forEach(([prov, fs]) => {
+        const t = Array.isArray(fs) ? sum(fs, f => Number(f.monto) || 0) : 0;
+        if (t > 0) { merc[prov] = t; mercTotal += t; }
       });
-      result[prov] = facturas;
+    }
+    const obj = o => sum(Object.values(o || {}), x => Number(x) || 0);
+    const imp = (st && st.impuestos) || {};
+    const deliv = deliveryVacio();
+    APPS_DELIVERY.forEach(a => { deliv[a.id] = v.Subway.delivery[a.id] + v.Balcarce.delivery[a.id]; });
+    return completar({
+      local, mes, existe: !!st,
+      ventasSW: v.Subway.ventas, ventasBC: v.Balcarce.ventas,
+      vouchers: v.Subway.vouchers + v.Balcarce.vouchers,
+      delivery: deliv, difDelivery: v.Subway.dif + v.Balcarce.dif,
+      merc, mercTotal,
+      sueldos: st ? Number(st.sueldos) || 0 : 0,
+      tarjetas: st ? Number(st.tarjetas) || 0 : 0,
+      regalias: st ? obj(st.regalias) : 0,
+      publicidad: st ? obj(st.publicidad) : 0,
+      impIva: Number(imp.iva) || 0, impIbb: Number(imp.ibb) || 0, impAut: Number(imp.autonomos) || 0,
+      servLista: ((st && st.servicios) || []).map(s => ({ desc: s.desc || '', monto: Number(s.monto) || 0, fecha: s.fecha || '', local })),
+      extLista: ((st && st.extraordinarios) || []).map(s => ({ desc: s.desc || '', monto: Number(s.monto) || 0, local }))
     });
-    return result;
   }
 
-  // ── SERVICIOS ──────────────────────────────────────────────────
-  window.agregarServicio = function() {
-    const div = document.createElement('div');
-    div.className = 'servicio-fila';
-    div.innerHTML = `
-      <div class="servicio-fila-top">
-        <input type="text" placeholder="Descripción del servicio">
-        <button onclick="this.closest('.servicio-fila').remove()">×</button>
+  function combinar(lista) {
+    const r = { local: 'Total', mes: lista[0].mes, existe: lista.some(x => x.existe),
+      ventasSW: 0, ventasBC: 0, vouchers: 0, delivery: deliveryVacio(), difDelivery: 0, merc: {}, mercTotal: 0, sueldos: 0, tarjetas: 0,
+      regalias: 0, publicidad: 0, impIva: 0, impIbb: 0, impAut: 0, servLista: [], extLista: [] };
+    lista.forEach(x => {
+      ['ventasSW','ventasBC','vouchers','mercTotal','sueldos','tarjetas','regalias','publicidad','impIva','impIbb','impAut'].forEach(k => { r[k] += x[k]; });
+      Object.entries(x.merc).forEach(([p, v]) => { r.merc[p] = (r.merc[p] || 0) + v; });
+      APPS_DELIVERY.forEach(a => { r.delivery[a.id] += x.delivery[a.id]; });
+      r.difDelivery += x.difDelivery;
+      r.servLista.push(...x.servLista);
+      r.extLista.push(...x.extLista);
+    });
+    return completar(r);
+  }
+
+  // Columnas de la vista elegida: un local, o los dos más el total
+  function columnas(v, mes) {
+    if (v === 'todo') {
+      const a = calcular('Ramos Mejía', mes), b = calcular('Morón', mes);
+      return { cols: [a, b, combinar([a, b])], labels: ['Ramos Mejía', 'Morón', 'Total'] };
+    }
+    return { cols: [calcular(v, mes)], labels: [v] };
+  }
+
+  // Meses que tienen algo (cargado a mano o con cierres) en la vista elegida
+  function mesesDe(v) {
+    const locs = v === 'todo' ? LOCALES : [v];
+    const set = new Set();
+    docs.forEach(d => { if (locs.includes(d.local)) set.add(d.mes); });
+    Object.keys(ventasIdx).forEach(k => { const [l, m] = k.split('|'); if (locs.includes(l)) set.add(m); });
+    return [...set].sort().reverse();
+  }
+
+  // ── TABS Y VISTA ─────────────────────────────────────────────────
+  window.cambiarTab = function(tab) {
+    tabActual = tab;
+    ['resultado','comparar','carga'].forEach(t => {
+      document.getElementById('tab-' + t).classList.toggle('activa', t === tab);
+      document.getElementById('tab-btn-' + t).classList.toggle('activo', t === tab);
+    });
+    document.getElementById('footer-guardar').style.display = tab === 'carga' ? 'block' : 'none';
+    if (tab === 'resultado') renderResultado();
+    if (tab === 'comparar') renderComparar();
+  }
+
+  function renderVistaBar(id) {
+    const opciones = [['Ramos Mejía', 'Ramos Mejía'], ['Morón', 'Morón'], ['todo', 'Todo junto']];
+    document.getElementById(id).innerHTML = opciones.map(([v, t]) =>
+      `<div class="local-btn ${vista === v ? 'activo' : ''}" onclick="setVista('${v}')">${t}</div>`).join('');
+  }
+  window.setVista = function(v) {
+    vista = v;
+    if (tabActual === 'resultado') renderResultado();
+    if (tabActual === 'comparar') renderComparar();
+  }
+  window.setResMes = function(m) { resMes = m; renderResultado(); }
+
+  // ── RESULTADO ────────────────────────────────────────────────────
+  function tablaERR(cols, labels) {
+    const n = cols.length, detalle = n === 1;
+    const head = t => `<tr class="cf-header"><td colspan="${n + 1}">${t}</td></tr>`;
+    const row = (cls, label, fn) => `<tr class="${cls}"><td>${label}</td>${cols.map(c => `<td>${fmt(fn(c))}</td>`).join('')}</tr>`;
+    let h = n > 1 ? `<tr class="cf-colhead"><td></td>${labels.map(l => `<td>${esc(l)}</td>`).join('')}</tr>` : '';
+
+    h += head('INGRESOS');
+    h += row('cf-ingreso', 'Ventas Subway', c => c.ventasSW);
+    h += row('cf-ingreso', 'Ventas Balcarce', c => c.ventasBC);
+    h += row('cf-subtotal', 'Total ventas (IVA / sistema)', c => c.ventas);
+    h += `<tr class="cf-nota"><td colspan="${n + 1}">De esas ventas, esto es delivery (ya está incluido arriba):</td></tr>`;
+    APPS_DELIVERY.forEach(a => {
+      if (cols.some(c => c.delivery[a.id] > 0)) h += row('cf-sub', '↳ ' + a.nombre, c => c.delivery[a.id]);
+    });
+    if (cols.some(c => c.difDelivery !== 0)) h += row('cf-sub', '↳ Diferencia delivery (resta)', c => -c.difDelivery);
+    h += row('cf-sub', '↳ Total delivery', c => c.deliveryTotal);
+    h += row('cf-sub', '↳ Salón / mostrador', c => c.salon);
+    h += `<tr class="cf-nota"><td colspan="${n + 1}">Los vouchers no forman parte de las ventas: se suman aparte.</td></tr>`;
+    h += row('cf-ingreso', 'Vouchers (aparte de las ventas)', c => c.vouchers);
+    h += row('cf-subtotal', 'TOTAL INGRESOS', c => c.ingresos);
+
+    const provs = [...new Set(cols.flatMap(c => Object.keys(c.merc)))];
+    h += head('MERCADERÍA');
+    provs.forEach(p => { h += row('cf-egreso', esc(p), c => c.merc[p] || 0); });
+    h += row('cf-subtotal', 'Total mercadería', c => c.mercTotal);
+
+    h += head('SUELDOS') + row('cf-egreso', 'Total sueldos', c => c.sueldos);
+
+    if (cols.some(c => c.servTotal > 0)) {
+      h += head('SERVICIOS');
+      if (detalle) cols[0].servLista.forEach(s => {
+        h += `<tr class="cf-egreso"><td>${esc(s.desc)}${s.fecha ? ` <span class="peq">${s.fecha}</span>` : ''}</td><td>${fmt(s.monto)}</td></tr>`;
+      });
+      h += row('cf-subtotal', 'Total servicios', c => c.servTotal);
+    }
+
+    h += head('TARJETAS') + row('cf-egreso', 'Comisiones tarjetas', c => c.tarjetas);
+    h += head('REGALÍAS Y PUBLICIDAD') + row('cf-egreso', 'Regalías', c => c.regalias) + row('cf-egreso', 'Publicidad', c => c.publicidad);
+
+    if (cols.some(c => c.impTotal > 0)) {
+      h += head('IMPUESTOS');
+      if (cols.some(c => c.impIva > 0)) h += row('cf-egreso', 'IVA', c => c.impIva);
+      if (cols.some(c => c.impIbb > 0)) h += row('cf-egreso', 'IBB', c => c.impIbb);
+      if (cols.some(c => c.impAut > 0)) h += row('cf-egreso', 'Autónomos', c => c.impAut);
+      h += row('cf-subtotal', 'Total impuestos', c => c.impTotal);
+    }
+
+    if (cols.some(c => c.extTotal > 0)) {
+      h += head('GASTOS EXTRAORDINARIOS');
+      if (detalle) cols[0].extLista.forEach(s => { h += `<tr class="cf-egreso"><td>${esc(s.desc)}</td><td>${fmt(s.monto)}</td></tr>`; });
+      h += row('cf-subtotal', 'Total extraordinarios', c => c.extTotal);
+    }
+
+    h += row('cf-subtotal', 'Total egresos', c => c.egresos);
+    h += `<tr class="cf-total"><td>RESULTADO NETO</td>${cols.map(c => `<td style="color:${c.resultado >= 0 ? '#4ade80' : '#f87171'}">${fmt(c.resultado)}</td>`).join('')}</tr>`;
+    return `<table class="cf-tabla">${h}</table>`;
+  }
+
+  function renderResultado() {
+    renderVistaBar('res-vista');
+    const sel = document.getElementById('sel-mes-res');
+    const cont = document.getElementById('res-contenido');
+    const avisos = document.getElementById('res-avisos');
+    const meses = mesesDe(vista);
+    if (!meses.length) {
+      sel.innerHTML = ''; avisos.innerHTML = '';
+      cont.innerHTML = '<div class="vacio">Todavía no hay datos.<br>Las ventas y los vouchers aparecen solos cuando se cargan cierres de caja. Los gastos se cargan en la pestaña 📥.</div>';
+      return;
+    }
+    if (!resMes || !meses.includes(resMes)) resMes = meses[0];
+    sel.innerHTML = meses.map(m => `<option value="${m}" ${m === resMes ? 'selected' : ''}>${nombreMes(m)}</option>`).join('');
+
+    const { cols, labels } = columnas(vista, resMes);
+    const tot = cols[cols.length - 1];
+
+    // Avisos sobre los cierres de caja que alimentan las ventas
+    let av = '';
+    if (resMes === mesActual()) av += `<div class="aviso">Es el mes en curso: los números están incompletos.</div>`;
+    (vista === 'todo' ? LOCALES : [vista]).forEach(l => {
+      const v = ventasDe(l, resMes);
+      MARCAS.forEach(m => {
+        const faltan = diasSinCierre(resMes, v[m].dias);
+        av += `<div class="aviso info">${m} ${l}: ${v[m].dias.size} de ${diasDelMes(resMes)} días con cierre de caja.${faltan.length ? ' Sin cierre: ' + faltan.join(', ') + '.' : ''}</div>`;
+      });
+    });
+    if (!cols.some(c => c.existe)) av += `<div class="aviso">Todavía no se cargaron los gastos de este mes. Se cargan en la pestaña 📥.</div>`;
+    avisos.innerHTML = av;
+
+    cont.innerHTML = `
+      <div class="kpi-grid">
+        <div class="kpi-card"><div class="kpi-label">% Mercadería</div><div class="kpi-valor kpi-neu">${pct(tot.mercTotal, tot.ingresos)}</div></div>
+        <div class="kpi-card"><div class="kpi-label">% Laboral</div><div class="kpi-valor kpi-neu">${pct(tot.sueldos, tot.ingresos)}</div></div>
+        <div class="kpi-card"><div class="kpi-label">% Delivery (sobre ventas)</div><div class="kpi-valor kpi-neu">${pct(tot.deliveryTotal, tot.ventas)}</div></div>
+        <div class="kpi-card"><div class="kpi-label">Ventas delivery</div><div class="kpi-valor kpi-neu">${fmt(tot.deliveryTotal)}</div></div>
+        <div class="kpi-card"><div class="kpi-label">Resultado</div><div class="kpi-valor ${tot.resultado >= 0 ? 'kpi-pos' : 'kpi-neg'}">${fmt(tot.resultado)}</div></div>
+        <div class="kpi-card"><div class="kpi-label">Margen</div><div class="kpi-valor ${tot.resultado >= 0 ? 'kpi-pos' : 'kpi-neg'}">${pct(tot.resultado, tot.ingresos)}</div></div>
       </div>
-      <div class="servicio-fila-inputs">
-        <div><label style="font-size:11px;color:#999;">Monto ($)</label>
-          <input type="number" placeholder="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'">
-        </div>
-        <div><label style="font-size:11px;color:#999;">Fecha factura</label>
-          <input type="date">
-        </div>
-        <div><label style="font-size:11px;color:#999;">Local</label>
-          <select>
-            <option>Subway Ramos</option><option>Subway Morón</option>
-            <option>Balcarce Ramos</option><option>Balcarce Morón</option>
-            <option>General</option>
-          </select>
-        </div>
-        <div><label style="font-size:11px;color:#999;">Nro. factura (opcional)</label>
-          <input type="text" placeholder="0001-00012345">
-        </div>
+      <div class="card"><h3>Estado de resultados — ${nombreMes(resMes)}</h3>
+        <div style="overflow-x:auto;">${tablaERR(cols, labels)}</div>
+        <p class="nota" style="margin:12px 0 0;">Los porcentajes son sobre el total de ingresos (ventas más vouchers). Todo con IVA incluido.</p>
       </div>`;
-    document.getElementById('lista-servicios').appendChild(div);
   }
 
-  // ── EXTRAORDINARIOS ────────────────────────────────────────────
-  window.agregarExtraordinario = function() {
-    const div = document.createElement('div');
-    div.className = 'item-fila';
-    div.innerHTML = `
-      <input type="text" placeholder="Descripción" style="flex:2">
-      <input type="number" placeholder="Monto $" style="max-width:110px" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'">
-      <select style="max-width:130px">
-        <option>Subway Ramos</option><option>Subway Morón</option>
-        <option>Balcarce Ramos</option><option>Balcarce Morón</option><option>General</option>
-      </select>
-      <button onclick="this.parentElement.remove()">×</button>`;
-    document.getElementById('lista-extraordinarios').appendChild(div);
-  }
+  // ── COMPARAR ─────────────────────────────────────────────────────
+  const LINEAS_COMP = [
+    ['Total ingresos', 'ingresos'], ['Ventas', 'ventas'], ['Delivery (dentro de ventas)', 'deliveryTotal'], ['Salón / mostrador', 'salon'], ['Vouchers', 'vouchers'],
+    ['Mercadería', 'mercTotal'], ['Sueldos', 'sueldos'], ['Servicios', 'servTotal'], ['Tarjetas', 'tarjetas'],
+    ['Regalías', 'regalias'], ['Publicidad', 'publicidad'], ['Impuestos', 'impTotal'], ['Extraordinarios', 'extTotal'],
+    ['Total egresos', 'egresos'], ['RESULTADO', 'resultado']
+  ];
+  const EGRESOS_CLAVES = ['mercTotal','sueldos','servTotal','tarjetas','regalias','publicidad','impTotal','extTotal','egresos'];
 
-  // ── RECOLECTAR DATOS ───────────────────────────────────────────
-  function recolectarDatos() {
-    const mes = document.getElementById('inp-mes').value;
+  function renderComparar() {
+    renderVistaBar('comp-vista');
+    const meses = mesesDe(vista);
+    const opts = '<option value="">— Elegí un mes —</option>' + meses.map(m => `<option value="${m}">${nombreMes(m)}</option>`).join('');
+    const s1 = document.getElementById('comp-mes1'), s2 = document.getElementById('comp-mes2');
+    const v1 = s1.value, v2 = s2.value;
+    s1.innerHTML = opts; s2.innerHTML = opts;
+    if (meses.includes(v1)) s1.value = v1;
+    if (meses.includes(v2)) s2.value = v2;
+    renderComparacion();
 
-    const ventasDiarias = {};
-    LOCALES.forEach(loc => ventasDiarias[loc] = {});
-    document.querySelectorAll('#tbody-ventas input').forEach(inp => {
-      if (inp.dataset.dia) ventasDiarias[inp.dataset.local][inp.dataset.dia] = Number(inp.value) || 0;
-    });
-    const ventasTotales = {};
-    LOCALES.forEach(loc => { ventasTotales[loc] = Object.values(ventasDiarias[loc]).reduce((a,b) => a+b, 0); });
-
-    const mercaderia = getMercaderia();
-    const sueldos = Number(document.getElementById('sueldos-total').value) || 0;
-    const tarjetas = Number(document.getElementById('tarj-total').value) || 0;
-
-    const n = id => Number(document.getElementById(id)?.value) || 0;
-    const regalias = { s1: n('reg-s1'), s2: n('reg-s2'), s3: n('reg-s3'), s4: n('reg-s4') };
-    const publicidad = { s1: n('pub-s1'), s2: n('pub-s2'), s3: n('pub-s3'), s4: n('pub-s4') };
-    const impuestos = { iva: n('imp-iva'), ibb: n('imp-ibb'), autonomos: n('imp-autonomos') };
-
-    const servicios = [];
-    document.querySelectorAll('#lista-servicios .servicio-fila').forEach(fila => {
-      const desc = fila.querySelector('input[type=text]').value;
-      const inputs = fila.querySelectorAll('input');
-      const monto = Number(inputs[1]?.value) || 0;
-      const fecha = inputs[2]?.value || '';
-      const selects = fila.querySelectorAll('select, input[type=text]');
-      const local = fila.querySelector('select')?.value || '';
-      const nroFact = inputs[3]?.value || '';
-      if (desc) servicios.push({ desc, monto, fecha, local, nroFact });
-    });
-
-    const extraordinarios = [];
-    document.querySelectorAll('#lista-extraordinarios .item-fila').forEach(fila => {
-      const [desc, monto, local] = fila.querySelectorAll('input, select');
-      if (desc.value) extraordinarios.push({ desc: desc.value, monto: Number(monto.value)||0, local: local.value });
-    });
-
-    return { mes, ventasDiarias, ventasTotales, mercaderia, sueldos, tarjetas, regalias, publicidad, impuestos, servicios, extraordinarios };
-  }
-
-  // ── GUARDAR ────────────────────────────────────────────────────
-  window.guardarMes = async function() {
-    const datos = recolectarDatos();
-    const btn = document.querySelector('.btn-guardar-mes');
-    btn.disabled = true; btn.textContent = 'Guardando...';
-    try {
-      await setDoc(doc(db, "cashflow_meses", datos.mes), { ...datos, timestamp: Date.now() });
-      btn.textContent = '✅ Guardado';
-      setTimeout(() => { btn.textContent = '💾 Guardar mes'; btn.disabled = false; }, 2000);
-      cargarHistorialFirebase();
-    } catch(e) {
-      btn.textContent = '💾 Guardar mes'; btn.disabled = false;
-      alert('Error: ' + e.message);
-    }
-  }
-
-  // ── HISTORIAL ──────────────────────────────────────────────────
-  async function cargarHistorialFirebase() {
-    try {
-      const snap = await getDocs(collection(db, "cashflow_meses"));
-      historial = [];
-      snap.forEach(d => historial.push({ id: d.id, ...d.data() }));
-      historial.sort((a,b) => b.mes.localeCompare(a.mes));
-      actualizarSelectores();
-      renderHistorial();
-    } catch(e) {}
-  }
-
-  function actualizarSelectores() {
-    const opciones = historial.map(h => {
-      const [anio, mes] = h.mes.split('-');
-      const nombre = new Date(anio, mes-1, 1).toLocaleString('es-AR', { month:'long', year:'numeric' });
-      return '<option value="' + h.mes + '">' + nombre.charAt(0).toUpperCase() + nombre.slice(1) + '</option>';
-    }).join('');
-    document.getElementById('sel-mes-cf').innerHTML = '<option value="">— Seleccioná un mes —</option>' + opciones;
-    document.getElementById('comp-mes1').innerHTML = '<option value="">— Mes 1 —</option>' + opciones;
-    document.getElementById('comp-mes2').innerHTML = '<option value="">— Mes 2 —</option>' + opciones;
-  }
-
-  // ── CASHFLOW ───────────────────────────────────────────────────
-  window.cargarCashflow = function() {
-    const mes = document.getElementById('sel-mes-cf').value;
-    if (!mes) return;
-    const datos = historial.find(h => h.mes === mes);
-    if (datos) renderCashflow(datos);
-  }
-
-  function calcularTotales(datos) {
-    const totalVentas = Object.values(datos.ventasTotales || {}).reduce((a,b) => a+b, 0);
-
-    // Mercadería: suma de todas las facturas por proveedor
-    let totalMerc = 0;
-    const detalleMerc = {};
-    Object.entries(datos.mercaderia || {}).forEach(([prov, facturas]) => {
-      const subtotal = Array.isArray(facturas)
-        ? facturas.reduce((a, f) => a + (f.monto || 0), 0)
-        : (typeof facturas === 'number' ? facturas : 0); // compatibilidad con formato viejo
-      if (subtotal > 0) detalleMerc[prov] = subtotal;
-      totalMerc += subtotal;
-    });
-
-    const totalTarj = datos.tarjetas || 0;
-    const totalReg = Object.values(datos.regalias || {}).reduce((a,b) => a+b, 0);
-    const totalPub = Object.values(datos.publicidad || {}).reduce((a,b) => a+b, 0);
-    const totalImp = Object.values(datos.impuestos || {}).reduce((a,b) => a+b, 0);
-    const totalServ = (datos.servicios || []).reduce((a,s) => a + (s.monto||0), 0);
-    const totalExt = (datos.extraordinarios || []).reduce((a,s) => a + (s.monto||0), 0);
-    const totalEgresos = totalMerc + (datos.sueldos||0) + totalTarj + totalReg + totalPub + totalImp + totalServ + totalExt;
-    const resultado = totalVentas - totalEgresos;
-    return { totalVentas, totalMerc, detalleMerc, totalTarj, totalReg, totalPub, totalImp, totalServ, totalExt, totalEgresos, resultado };
-  }
-
-  function fmt(n) { return '$' + Math.round(n).toLocaleString('es-AR'); }
-  function pct(a, b) { return b > 0 ? (a/b*100).toFixed(1) + '%' : '—'; }
-
-  function renderCashflow(datos) {
-    const t = calcularTotales(datos);
-    const [anio, mes] = datos.mes.split('-');
-    const nombreMes = new Date(anio, mes-1, 1).toLocaleString('es-AR', { month:'long', year:'numeric' });
-
-    let html = `
-    <div class="kpi-grid">
-      <div class="kpi-card"><div class="kpi-label">% Mercadería</div><div class="kpi-valor kpi-neu">${pct(t.totalMerc, t.totalVentas)}</div></div>
-      <div class="kpi-card"><div class="kpi-label">% Laboral</div><div class="kpi-valor kpi-neu">${pct(datos.sueldos||0, t.totalVentas)}</div></div>
-      <div class="kpi-card"><div class="kpi-label">Resultado</div><div class="kpi-valor ${t.resultado >= 0 ? 'kpi-pos' : 'kpi-neg'}">${fmt(t.resultado)}</div></div>
-    </div>
-    <div class="card" style="margin-top:12px;">
-      <h3>Cashflow — ${nombreMes.charAt(0).toUpperCase() + nombreMes.slice(1)}</h3>
-      <table class="cf-tabla">
-        <tr class="cf-header"><td colspan="2">INGRESOS</td></tr>
-        ${LOCALES.map(loc => (datos.ventasTotales?.[loc]||0) > 0 ? `<tr class="cf-ingreso"><td>${loc}</td><td>${fmt(datos.ventasTotales[loc])}</td></tr>` : '').join('')}
-        <tr class="cf-subtotal"><td>Total Ventas</td><td>${fmt(t.totalVentas)}</td></tr>
-
-        <tr class="cf-header"><td colspan="2">MERCADERÍA</td></tr>
-        ${Object.entries(t.detalleMerc).map(([prov, v]) => `<tr class="cf-egreso"><td>${prov}</td><td>${fmt(v)}</td></tr>`).join('')}
-        <tr class="cf-subtotal"><td>Total Mercadería</td><td>${fmt(t.totalMerc)}</td></tr>
-
-        <tr class="cf-header"><td colspan="2">SUELDOS</td></tr>
-        <tr class="cf-egreso"><td>Total sueldos</td><td>${fmt(datos.sueldos||0)}</td></tr>
-
-        ${(datos.servicios||[]).length > 0 ? `
-        <tr class="cf-header"><td colspan="2">SERVICIOS</td></tr>
-        ${(datos.servicios||[]).map(s => `<tr class="cf-egreso"><td>${s.desc}${s.local ? ' <span style="font-size:10px;color:#999;">('+s.local+')</span>' : ''}${s.fecha ? ' <span style="font-size:10px;color:#bbb;">'+s.fecha+'</span>' : ''}</td><td>${fmt(s.monto)}</td></tr>`).join('')}
-        <tr class="cf-subtotal"><td>Total Servicios</td><td>${fmt(t.totalServ)}</td></tr>
-        ` : ''}
-
-        <tr class="cf-header"><td colspan="2">TARJETAS</td></tr>
-        <tr class="cf-egreso"><td>Comisiones tarjetas</td><td>${fmt(t.totalTarj)}</td></tr>
-
-        <tr class="cf-header"><td colspan="2">REGALÍAS Y PUBLICIDAD</td></tr>
-        <tr class="cf-egreso"><td>Regalías</td><td>${fmt(t.totalReg)}</td></tr>
-        <tr class="cf-egreso"><td>Publicidad</td><td>${fmt(t.totalPub)}</td></tr>
-
-        ${t.totalImp > 0 ? `
-        <tr class="cf-header"><td colspan="2">IMPUESTOS</td></tr>
-        ${(datos.impuestos?.iva||0) > 0 ? `<tr class="cf-egreso"><td>IVA</td><td>${fmt(datos.impuestos.iva)}</td></tr>` : ''}
-        ${(datos.impuestos?.ibb||0) > 0 ? `<tr class="cf-egreso"><td>IBB</td><td>${fmt(datos.impuestos.ibb)}</td></tr>` : ''}
-        ${(datos.impuestos?.autonomos||0) > 0 ? `<tr class="cf-egreso"><td>Autónomos</td><td>${fmt(datos.impuestos.autonomos)}</td></tr>` : ''}
-        <tr class="cf-subtotal"><td>Total Impuestos</td><td>${fmt(t.totalImp)}</td></tr>
-        ` : ''}
-
-        ${(datos.extraordinarios||[]).length > 0 ? `
-        <tr class="cf-header"><td colspan="2">GASTOS EXTRAORDINARIOS</td></tr>
-        ${(datos.extraordinarios||[]).map(s => `<tr class="cf-egreso"><td>${s.desc}</td><td>${fmt(s.monto)}</td></tr>`).join('')}
-        <tr class="cf-subtotal"><td>Total Extraordinarios</td><td>${fmt(t.totalExt)}</td></tr>
-        ` : ''}
-
-        <tr class="cf-subtotal"><td>Total Egresos</td><td>${fmt(t.totalEgresos)}</td></tr>
-        <tr class="cf-total"><td>RESULTADO NETO</td><td style="color:${t.resultado>=0?'#4ade80':'#f87171'}">${fmt(t.resultado)}</td></tr>
-      </table>
-    </div>`;
-
-    document.getElementById('cf-contenido').innerHTML = html;
-  }
-
-  // ── HISTORIAL ──────────────────────────────────────────────────
-  function renderHistorial() {
     const lista = document.getElementById('lista-historial');
-    if (!historial.length) { lista.innerHTML = '<div class="sin-historial">Sin meses guardados aún</div>'; return; }
-    lista.innerHTML = '';
-    historial.forEach(h => {
-      const t = calcularTotales(h);
-      const [anio, mes] = h.mes.split('-');
-      const nombreMes = new Date(anio, mes-1, 1).toLocaleString('es-AR', { month:'long', year:'numeric' });
-      const div = document.createElement('div');
-      div.className = 'historial-item';
-      div.innerHTML = '<div class="hist-info"><h4>📅 ' + nombreMes.charAt(0).toUpperCase() + nombreMes.slice(1) + '</h4>' +
-        '<p>Ventas: ' + fmt(t.totalVentas) + ' · Resultado: <span style="color:' + (t.resultado>=0?'#2a9d5c':'#e63946') + '">' + fmt(t.resultado) + '</span></p></div>' +
-        '<button class="btn-eliminar-hist" onclick="event.stopPropagation();window.eliminarMes(\'' + h.mes + '\')">🗑</button>';
-      div.onclick = () => { document.getElementById('sel-mes-cf').value = h.mes; renderCashflow(h); cambiarTab('cashflow'); };
-      lista.appendChild(div);
-    });
+    if (!meses.length) { lista.innerHTML = '<div class="vacio">Todavía no hay meses con datos</div>'; return; }
+    lista.innerHTML = meses.map(m => {
+      const { cols } = columnas(vista, m);
+      const t = cols[cols.length - 1];
+      const borrar = vista !== 'todo' && t.existe
+        ? `<button class="btn-peligro" onclick="event.stopPropagation();eliminarMes('${slug(vista)}_${m}')">🗑</button>` : '';
+      return `<div class="historial-item" onclick="abrirMes('${m}')">
+        <div class="hist-info"><h4>📅 ${nombreMes(m)}</h4>
+        <p>Ingresos: ${fmt(t.ingresos)}<br>Resultado: <span style="color:${t.resultado >= 0 ? '#2a9d5c' : '#e63946'}">${fmt(t.resultado)}</span></p></div>${borrar}</div>`;
+    }).join('');
   }
 
-  // ── COMPARACIÓN ────────────────────────────────────────────────
+  window.abrirMes = function(m) { resMes = m; cambiarTab('resultado'); }
+
   window.renderComparacion = function() {
     const m1 = document.getElementById('comp-mes1').value;
     const m2 = document.getElementById('comp-mes2').value;
-    if (!m1 || !m2) return;
-    const d1 = historial.find(h => h.mes === m1);
-    const d2 = historial.find(h => h.mes === m2);
-    if (!d1 || !d2) return;
-    const t1 = calcularTotales(d1), t2 = calcularTotales(d2);
-    const nombre = mes => {
-      const [a,m] = mes.split('-');
-      const n = new Date(a,m-1,1).toLocaleString('es-AR',{month:'short',year:'2-digit'});
-      return n.charAt(0).toUpperCase()+n.slice(1);
-    };
-    const filas = [
-      ['Total Ventas', t1.totalVentas, t2.totalVentas],
-      ['Mercadería', t1.totalMerc, t2.totalMerc],
-      ['Sueldos', d1.sueldos||0, d2.sueldos||0],
-      ['Servicios', t1.totalServ, t2.totalServ],
-      ['Tarjetas', t1.totalTarj, t2.totalTarj],
-      ['Regalías', t1.totalReg, t2.totalReg],
-      ['Publicidad', t1.totalPub, t2.totalPub],
-      ['Impuestos', t1.totalImp, t2.totalImp],
-      ['Extraordinarios', t1.totalExt, t2.totalExt],
-      ['Total Egresos', t1.totalEgresos, t2.totalEgresos],
-      ['RESULTADO', t1.resultado, t2.resultado],
-    ];
-    let html = '<div class="card" style="margin-top:8px;"><table class="comp-tabla"><thead><tr><th>Concepto</th><th>' + nombre(m1) + '</th><th>' + nombre(m2) + '</th><th>Δ</th></tr></thead><tbody>';
-    filas.forEach(([label, v1, v2]) => {
-      const diff = v1 - v2;
-      html += '<tr><td>' + label + '</td><td>' + fmt(v1) + '</td><td>' + fmt(v2) + '</td><td class="' + (diff>=0?'comp-pos':'comp-neg') + '">' + (diff>=0?'+':'') + fmt(diff) + '</td></tr>';
+    const cont = document.getElementById('comp-contenido');
+    if (!m1 || !m2) { cont.innerHTML = ''; return; }
+    const a = columnas(vista, m1).cols.slice(-1)[0];
+    const b = columnas(vista, m2).cols.slice(-1)[0];
+    let filas = '';
+    LINEAS_COMP.forEach(([label, k]) => {
+      const diff = a[k] - b[k];
+      const bueno = EGRESOS_CLAVES.includes(k) ? diff <= 0 : diff >= 0; // en los gastos, que baje es bueno
+      filas += `<tr><td>${label}</td><td>${fmt(a[k])}</td><td>${fmt(b[k])}</td><td class="${bueno ? 'comp-pos' : 'comp-neg'}">${diff >= 0 ? '+' : ''}${fmt(diff)}</td></tr>`;
     });
-    html += '</tbody></table></div>';
-    document.getElementById('comp-contenido').innerHTML = html;
+    cont.innerHTML = `<div class="card" style="margin-top:8px;"><div style="overflow-x:auto;"><table class="comp-tabla">
+      <thead><tr><th>Concepto</th><th>${nombreMes(m1, true)}</th><th>${nombreMes(m2, true)}</th><th>Δ</th></tr></thead>
+      <tbody>${filas}</tbody></table></div></div>`;
   }
 
-  window.eliminarMes = async function(mes) {
-    if (!confirm('¿Eliminar los datos de este mes?')) return;
-    await deleteDoc(doc(db, "cashflow_meses", mes));
-    cargarHistorialFirebase();
+  window.eliminarMes = async function(id) {
+    const s = docs.find(d => d.id === id);
+    if (!s) return;
+    if (!confirm('¿Eliminar los gastos cargados de ' + nombreMes(s.mes) + ' (' + s.local + ')? Las ventas no se borran porque salen de los cierres de caja.')) return;
+    try {
+      await deleteDoc(doc(db, COL_ERR, id));
+      await cargarTodo();
+      prepararForm();
+      renderComparar();
+      renderCarga();
+      toast('Datos eliminados', 'ok');
+    } catch(e) { toast('No se pudo eliminar: ' + e.message, 'error'); }
   }
 
-  // ── TABS ───────────────────────────────────────────────────────
-  window.cambiarTab = function(tab) {
-    document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('activo', ['carga','cashflow','historial'][i] === tab));
-    document.querySelectorAll('.seccion').forEach(s => s.classList.remove('activa'));
-    document.getElementById('tab-' + tab).classList.add('activa');
-    document.querySelector('.footer-btns').style.display = tab === 'carga' ? 'flex' : 'none';
-    if (tab === 'cashflow') cargarCashflow();
+  // ── CARGA ────────────────────────────────────────────────────────
+  function mesCarga() { return document.getElementById('inp-mes').value || ''; }
+
+  function formVacio() {
+    return {
+      mercaderia: {}, sueldos: 0, tarjetas: 0,
+      regalias: { s1: 0, s2: 0, s3: 0, s4: 0 }, publicidad: { s1: 0, s2: 0, s3: 0, s4: 0 },
+      impuestos: { iva: 0, ibb: 0, autonomos: 0 }, servicios: [], extra: []
+    };
   }
+
+  function prepararForm() {
+    const mes = mesCarga();
+    const st = mes ? docs.find(d => d.local === localCarga && d.mes === mes) : null;
+    form = formVacio();
+    if (!st) return;
+    Object.entries(st.mercaderia || {}).forEach(([p, fs]) => {
+      if (Array.isArray(fs)) form.mercaderia[p] = fs.map(f => ({ monto: Number(f.monto) || 0, fecha: f.fecha || '' }));
+    });
+    form.sueldos = Number(st.sueldos) || 0;
+    form.tarjetas = Number(st.tarjetas) || 0;
+    ['s1','s2','s3','s4'].forEach(k => { form.regalias[k] = Number((st.regalias || {})[k]) || 0; form.publicidad[k] = Number((st.publicidad || {})[k]) || 0; });
+    ['iva','ibb','autonomos'].forEach(k => { form.impuestos[k] = Number((st.impuestos || {})[k]) || 0; });
+    form.servicios = (st.servicios || []).map(s => ({ desc: s.desc || '', monto: Number(s.monto) || 0, fecha: s.fecha || '', nroFact: s.nroFact || '' }));
+    form.extra = (st.extraordinarios || []).map(s => ({ desc: s.desc || '', monto: Number(s.monto) || 0 }));
+  }
+
+  // Proveedores de la lista, más los que tengan facturas cargadas aunque se hayan sacado de la lista
+  function provsForm() {
+    const extra = Object.keys(form.mercaderia).filter(p => !PROVEEDORES.includes(p) && sum(form.mercaderia[p], f => f.monto) > 0);
+    return [...PROVEEDORES, ...extra];
+  }
+
+  function inpNum(v, onin) {
+    return `<input type="number" inputmode="decimal" min="0" value="${Number(v) || 0}" onfocus="if(this.value==='0')this.value=''" onblur="if(this.value==='')this.value='0'" oninput="${onin}">`;
+  }
+
+  function renderCarga() {
+    document.getElementById('carga-local').innerHTML = LOCALES.map(l =>
+      `<div class="local-btn ${l === localCarga ? 'activo' : ''}" onclick="setLocalCarga('${l}')">${l}</div>`).join('');
+    const mes = mesCarga();
+    const estado = document.getElementById('carga-estado');
+    if (!mes) { estado.style.display = 'none'; document.getElementById('carga-form').innerHTML = ''; return; }
+    const existe = docs.some(d => d.local === localCarga && d.mes === mes);
+    estado.style.display = 'inline-block';
+    estado.className = 'estado ' + (existe ? 'existente' : 'nueva');
+    estado.textContent = existe ? 'Ya tiene gastos cargados: al guardar se reemplazan' : 'Mes nuevo';
+    renderForm();
+  }
+
+  function renderForm() {
+    const mes = mesCarga();
+    const v = ventasDe(localCarga, mes);
+    const totVentas = v.Subway.ventas + v.Balcarce.ventas;
+    const totVouchers = v.Subway.vouchers + v.Balcarce.vouchers;
+
+    // Ingresos automáticos
+    let auto = `<div class="card"><h3>Ingresos de ${esc(localCarga)} (automático)</h3>
+      <p class="nota">Salen solos de los cierres de caja. Si un número está mal, se corrige en el cierre de ese día.</p>`;
+    MARCAS.forEach(m => {
+      const faltan = diasSinCierre(mes, v[m].dias);
+      auto += `<div class="auto-fila"><span>${m} · ventas</span><strong>${fmt(v[m].ventas)}</strong></div>
+               <div class="auto-fila"><span>${m} · vouchers</span><strong>${fmt(v[m].vouchers)}</strong></div>
+               <div class="auto-fila"><span>${m} · días con cierre</span><strong>${v[m].dias.size} de ${diasDelMes(mes)}</strong></div>`;
+      if (faltan.length) auto += `<p class="nota" style="margin:2px 0 6px;">Sin cierre: ${faltan.join(', ')}</p>`;
+    });
+    const dl = deliveryVacio();
+    APPS_DELIVERY.forEach(a => { dl[a.id] = v.Subway.delivery[a.id] + v.Balcarce.delivery[a.id]; });
+    const dif = v.Subway.dif + v.Balcarce.dif;
+    const totDel = sum(APPS_DELIVERY, a => dl[a.id]) - dif;
+    auto += `<p class="nota" style="margin:10px 0 4px;">Dentro de las ventas, el delivery fue:</p>`;
+    APPS_DELIVERY.forEach(a => { auto += `<div class="auto-fila"><span>${a.nombre}</span><strong>${fmt(dl[a.id])}</strong></div>`; });
+    if (dif !== 0) auto += `<div class="auto-fila"><span>Diferencia delivery (resta)</span><strong>${fmt(-dif)}</strong></div>`;
+    auto += `<div class="auto-fila"><span>Total delivery</span><strong>${fmt(totDel)}</strong></div>
+             <div class="auto-fila"><span>Salón / mostrador</span><strong>${fmt(totVentas - totDel)}</strong></div>
+             <p class="nota" style="margin:10px 0 4px;">Los vouchers no están dentro de las ventas: se suman aparte.</p>`;
+    auto += `<div class="auto-fila total"><span>Total ingresos (ventas + vouchers)</span><strong>${fmt(totVentas + totVouchers)}</strong></div></div>`;
+
+    // Mercadería
+    const provs = provsForm();
+    let merc = `<div class="card"><h3>📦 Mercadería por proveedor</h3>
+      <p class="nota">Podés cargar varias facturas por proveedor.</p>
+      <div style="background:#f8f9ff;border-radius:10px;padding:10px 12px;margin-bottom:12px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:12px;font-weight:700;color:#1a1a2e;">⚙️ Proveedores</span>
+          <button onclick="toggleProv()" style="background:none;border:1px solid #ddd;border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer;">${editandoProv ? '✕ Cerrar' : '✏️ Editar'}</button>
+        </div>`;
+    if (editandoProv) {
+      merc += `<div style="margin-top:10px;">${PROVEEDORES.map((p, i) => `<span class="prov-tag">${esc(p)}<button onclick="quitarProv(${i})">×</button></span>`).join('')}</div>
+        <div style="display:flex;gap:8px;margin-top:6px;">
+          <input type="text" id="inp-nuevo-prov" placeholder="Nuevo proveedor..." style="flex:1;padding:8px;border:1px solid #ddd;border-radius:8px;font-size:13px;">
+          <button onclick="agregarProv()" style="background:#1a1a2e;color:white;border:none;border-radius:8px;padding:8px 14px;font-size:13px;cursor:pointer;">+</button>
+        </div>`;
+    }
+    merc += `</div>`;
+    provs.forEach((p, pi) => {
+      if (!form.mercaderia[p] || !form.mercaderia[p].length) form.mercaderia[p] = [{ monto: 0, fecha: '' }];
+      const fs = form.mercaderia[p];
+      merc += `<div class="proveedor-bloque">
+        <div class="proveedor-header"><span class="proveedor-nombre">📦 ${esc(p)}</span><span class="proveedor-total" id="tot-prov-${pi}">${fmt(sum(fs, f => f.monto))}</span></div>
+        <div class="proveedor-facturas">${fs.map((f, i) => `<div class="factura-fila">
+          ${inpNum(f.monto, `setFactura(${pi},${i},'monto',this.value)`)}
+          <input type="date" value="${f.fecha || ''}" onchange="setFactura(${pi},${i},'fecha',this.value)">
+          <button onclick="delFactura(${pi},${i})">×</button></div>`).join('')}</div>
+        <div style="padding:0 14px 10px;"><button class="btn-add-factura" onclick="addFactura(${pi})">+ Agregar factura</button></div></div>`;
+    });
+    merc += `</div>`;
+
+    const semanas = k => ['s1','s2','s3','s4'].map((s, i) => `<div class="campo"><label>Sem ${i + 1} ($)</label>${inpNum(form[k][s], `setSub('${k}','${s}',this.value)`)}</div>`).join('');
+
+    const serv = `<div class="card"><h3>⚡ Servicios</h3>${form.servicios.map((s, i) => `
+      <div class="servicio-fila">
+        <div class="servicio-top"><input type="text" placeholder="Descripción (alquiler, luz, gas...)" value="${esc(s.desc)}" oninput="setServicio(${i},'desc',this.value)"><button class="fila-del" onclick="delServicio(${i})">×</button></div>
+        <div class="servicio-inputs">
+          <div><label>Monto ($)</label>${inpNum(s.monto, `setServicio(${i},'monto',this.value)`)}</div>
+          <div><label>Fecha factura</label><input type="date" value="${s.fecha || ''}" onchange="setServicio(${i},'fecha',this.value)"></div>
+          <div style="grid-column:1/-1;"><label>Nro. factura (opcional)</label><input type="text" placeholder="0001-00012345" value="${esc(s.nroFact)}" oninput="setServicio(${i},'nroFact',this.value)"></div>
+        </div></div>`).join('')}
+      <button class="btn-agregar" onclick="addServicio()">+ Agregar servicio</button></div>`;
+
+    const ext = `<div class="card"><h3>⚠️ Gastos extraordinarios</h3>${form.extra.map((s, i) => `
+      <div class="servicio-fila"><div class="servicio-top">
+        <input type="text" placeholder="Descripción" value="${esc(s.desc)}" oninput="setExtra(${i},'desc',this.value)">
+        <div style="width:120px;flex-shrink:0;">${inpNum(s.monto, `setExtra(${i},'monto',this.value)`)}</div>
+        <button class="fila-del" onclick="delExtra(${i})">×</button></div></div>`).join('')}
+      <button class="btn-agregar" onclick="addExtra()">+ Agregar gasto</button></div>`;
+
+    document.getElementById('carga-form').innerHTML = auto + merc + `
+      <div class="card"><h3>👥 Sueldos</h3><div class="campo" style="margin-bottom:0;"><label>Total sueldos del mes ($)</label>${inpNum(form.sueldos, `setSimple('sueldos',this.value)`)}</div></div>
+      ${serv}
+      <div class="card"><h3>💳 Comisiones tarjetas</h3><div class="campo" style="margin-bottom:0;"><label>Total comisiones del mes ($)</label>${inpNum(form.tarjetas, `setSimple('tarjetas',this.value)`)}</div></div>
+      <div class="card"><h3>📋 Regalías y Publicidad</h3><div class="grid-2">
+        <div><p style="font-size:11px;font-weight:700;color:#666;margin-bottom:8px;text-transform:uppercase;">Regalías</p>${semanas('regalias')}</div>
+        <div><p style="font-size:11px;font-weight:700;color:#666;margin-bottom:8px;text-transform:uppercase;">Publicidad</p>${semanas('publicidad')}</div></div></div>
+      <div class="card"><h3>🏛️ Impuestos</h3><div class="grid-2">
+        <div class="campo"><label>IVA ($)</label>${inpNum(form.impuestos.iva, `setSub('impuestos','iva',this.value)`)}</div>
+        <div class="campo"><label>IBB ($)</label>${inpNum(form.impuestos.ibb, `setSub('impuestos','ibb',this.value)`)}</div>
+        <div class="campo"><label>Autónomos ($)</label>${inpNum(form.impuestos.autonomos, `setSub('impuestos','autonomos',this.value)`)}</div></div></div>
+      ${ext}`;
+  }
+
+  window.setLocalCarga = function(l) { localCarga = l; prepararForm(); renderCarga(); }
+
+  window.setSimple = function(campo, v) { form[campo] = Number(v) || 0; }
+  window.setSub = function(grupo, k, v) { form[grupo][k] = Number(v) || 0; }
+
+  window.setFactura = function(pi, i, campo, v) {
+    const p = provsForm()[pi];
+    form.mercaderia[p][i][campo] = campo === 'monto' ? (Number(v) || 0) : v;
+    const el = document.getElementById('tot-prov-' + pi);
+    if (el) el.textContent = fmt(sum(form.mercaderia[p], f => f.monto));
+  }
+  window.addFactura = function(pi) { form.mercaderia[provsForm()[pi]].push({ monto: 0, fecha: '' }); renderForm(); }
+  window.delFactura = function(pi, i) {
+    const arr = form.mercaderia[provsForm()[pi]];
+    arr.splice(i, 1);
+    renderForm();
+  }
+
+  window.addServicio = function() { form.servicios.push({ desc: '', monto: 0, fecha: '', nroFact: '' }); renderForm(); }
+  window.setServicio = function(i, campo, v) { form.servicios[i][campo] = campo === 'monto' ? (Number(v) || 0) : v; }
+  window.delServicio = function(i) { form.servicios.splice(i, 1); renderForm(); }
+
+  window.addExtra = function() { form.extra.push({ desc: '', monto: 0 }); renderForm(); }
+  window.setExtra = function(i, campo, v) { form.extra[i][campo] = campo === 'monto' ? (Number(v) || 0) : v; }
+  window.delExtra = function(i) { form.extra.splice(i, 1); renderForm(); }
+
+  // ── PROVEEDORES (lista compartida, se guarda en Firebase) ────────
+  async function cargarProveedores() {
+    try {
+      const snap = await getDoc(doc(db, 'config', 'proveedores_cashflow'));
+      if (snap.exists() && Array.isArray(snap.data().lista)) PROVEEDORES = snap.data().lista;
+    } catch(e) {}
+  }
+  async function guardarProveedores() {
+    try { await setDoc(doc(db, 'config', 'proveedores_cashflow'), { lista: PROVEEDORES }); }
+    catch(e) { toast('No se pudo guardar la lista de proveedores: ' + e.message, 'error'); }
+  }
+  window.toggleProv = function() { editandoProv = !editandoProv; renderForm(); }
+  window.agregarProv = async function() {
+    const inp = document.getElementById('inp-nuevo-prov');
+    const nombre = (inp.value || '').trim();
+    if (!nombre || PROVEEDORES.includes(nombre)) return;
+    PROVEEDORES.push(nombre);
+    await guardarProveedores();
+    renderForm();
+  }
+  window.quitarProv = async function(i) {
+    if (!confirm('¿Sacar a ' + PROVEEDORES[i] + ' de la lista? Las facturas que ya cargaste de ese proveedor no se pierden.')) return;
+    PROVEEDORES.splice(i, 1);
+    await guardarProveedores();
+    renderForm();
+  }
+
+  // ── GUARDAR ──────────────────────────────────────────────────────
+  window.guardarMes = async function() {
+    const mes = mesCarga();
+    if (!mes) { toast('Elegí el mes', 'error'); return; }
+
+    const mercaderia = {};
+    Object.entries(form.mercaderia).forEach(([p, fs]) => {
+      const ok = fs.filter(f => f.monto > 0).map(f => ({ monto: f.monto, fecha: f.fecha || '' }));
+      if (ok.length) mercaderia[p] = ok;
+    });
+    const servicios = form.servicios.filter(s => (s.desc && s.desc.trim()) || s.monto > 0)
+      .map(s => ({ desc: s.desc.trim(), monto: s.monto, fecha: s.fecha || '', nroFact: s.nroFact || '' }));
+    const extraordinarios = form.extra.filter(s => (s.desc && s.desc.trim()) || s.monto > 0)
+      .map(s => ({ desc: s.desc.trim(), monto: s.monto }));
+
+    if (servicios.some(s => s.monto > 0 && !s.desc) || extraordinarios.some(s => s.monto > 0 && !s.desc)) {
+      toast('Hay un gasto con monto pero sin descripción', 'error');
+      return;
+    }
+
+    try {
+      await setDoc(doc(db, COL_ERR, slug(localCarga) + '_' + mes), {
+        local: localCarga, mes, mercaderia,
+        sueldos: form.sueldos, tarjetas: form.tarjetas,
+        regalias: form.regalias, publicidad: form.publicidad, impuestos: form.impuestos,
+        servicios, extraordinarios, timestamp: Date.now()
+      });
+      await cargarTodo();
+      prepararForm();
+      renderCarga();
+      toast('Mes guardado', 'ok');
+    } catch(e) { toast('No se pudo guardar: ' + e.message, 'error'); }
+  }
+
+  // ── INICIO ───────────────────────────────────────────────────────
+  document.getElementById('inp-mes').value = mesActual();
+  document.getElementById('inp-mes').addEventListener('change', () => { prepararForm(); renderCarga(); });
+
+  function sinAcceso() {
+    document.getElementById('app-wrap').style.display = 'none';
+    document.getElementById('sin-acceso').style.display = 'block';
+  }
+
+  onAuthStateChanged(auth, async user => {
+    if (!user) { window.location.href = 'login.html'; return; }
+    try {
+      const snap = await getDoc(doc(db, 'usuarios', user.uid));
+      const u = snap.exists() ? snap.data() : null;
+      const permitido = u && u.aprobado && (u.rol === 'admin' || (u.accesos && u.accesos.ver_cashflow));
+      if (!permitido) { sinAcceso(); return; }
+    } catch(e) { sinAcceso(); return; }
+
+    document.getElementById('app-wrap').style.display = 'block';
+    await cargarProveedores();
+    try { await cargarTodo(); } catch(e) { toast('No se pudieron cargar los datos: ' + e.message, 'error'); }
+    prepararForm();
+    renderCarga();
+  });
 </script>
 </body>
 </html>
