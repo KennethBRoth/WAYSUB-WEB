@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Resolver cierres · Waysub</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: sans-serif; background: #f0f2f5; color: #1a1a1a; min-height: 100vh; }
+    header { background: #8a1c1c; color: white; padding: 16px 20px; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 100; }
+    .btn-volver { background: rgba(255,255,255,0.15); border: none; color: white; border-radius: 8px; padding: 6px 12px; font-size: 18px; cursor: pointer; }
+    header h1 { font-size: 18px; flex: 1; }
+    .card { background: white; margin: 12px 16px 0; border-radius: 12px; padding: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); }
+    .aviso { border-radius: 10px; padding: 10px 14px; margin: 12px 16px 0; font-size: 13px; line-height: 1.5; background: #fff0f0; border: 1px solid #f3b4b4; color: #8a1c1c; }
+    .aviso.info { background: #f0f4ff; border-color: #c5cff5; color: #3b4a9c; }
+    .aviso.ok { background: #e6f8ee; border-color: #b6e6c9; color: #1f7a45; }
+    .filtros { display: flex; gap: 8px; margin: 12px 16px 0; }
+    .filtros select, .filtros input { flex: 1; min-width: 0; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; background: white; }
+    .dia-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .dia-head b { font-size: 14px; }
+    .badge { background: #fdeaea; color: #d63031; font-size: 11px; font-weight: 800; padding: 3px 10px; border-radius: 20px; white-space: nowrap; }
+    .doc { border: 1px solid #eee; border-radius: 10px; padding: 10px 12px; margin-top: 8px; }
+    .doc-titulo { font-size: 12px; font-weight: 800; color: #1a1a2e; margin-bottom: 6px; }
+    .id { font-family: monospace; font-size: 11px; color: #777; word-break: break-all; }
+    .fila { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; padding: 3px 0; border-bottom: 1px solid #f7f7f7; }
+    .fila span { color: #777; }
+    .fila strong { color: #1a1a2e; text-align: right; }
+    .vacio-tag { display: inline-block; background: #fdeaea; color: #d63031; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 20px; margin-left: 6px; }
+    .firmas { margin-top: 8px; font-size: 11px; color: #666; line-height: 1.6; }
+    .firmas .rep { color: #d63031; font-weight: 700; }
+    .btn-oficial { width: 100%; margin-top: 10px; background: #1f7a45; color: white; border: none; border-radius: 8px; padding: 11px; font-size: 13px; font-weight: 700; cursor: pointer; }
+    .btn-todos { width: 100%; margin-top: 12px; background: white; color: #c0392b; border: 1.5px solid #c0392b; border-radius: 8px; padding: 11px; font-size: 13px; font-weight: 700; cursor: pointer; }
+    .nada { text-align: center; padding: 30px 20px; color: #999; font-size: 14px; line-height: 1.5; }
+    #sin-acceso { display: none; text-align: center; padding: 80px 24px; }
+    #sin-acceso h2 { font-size: 20px; margin-bottom: 8px; }
+    #sin-acceso p { color: #666; font-size: 14px; margin-bottom: 20px; }
+    .btn { background: #1a1a2e; color: white; border: none; border-radius: 10px; padding: 12px 24px; font-size: 14px; font-weight: 700; cursor: pointer; }
+  </style>
+</head>
+<body>
+
+<header>
+  <button class="btn-volver" onclick="window.location.href='index.html'">←</button>
+  <h1>🛠 Resolver cierres duplicados</h1>
+</header>
+
+<div id="sin-acceso">
+  <div style="font-size:48px;margin-bottom:12px;">🔒</div>
+  <h2>Sin acceso</h2>
+  <p>Esta pantalla es solo para administradores.</p>
+  <button class="btn" onclick="window.location.href='index.html'">Volver al inicio</button>
+</div>
+
+<div id="app" style="display:none;">
+  <div class="aviso"><b>Esta pantalla SÍ modifica datos.</b> Pero <b>no borra nada</b>: lo que se saca de un día se mueve a un archivo (colección <code>cajero_cierres_archivo</code>) y se puede recuperar. Usala solo con días que ya cerraron.</div>
+  <div class="aviso info">Acá aparecen solo los días con <b>más de un cierre</b> guardado. Podés dejar uno como el oficial (los demás se archivan) o archivarlos todos para que el día quede en blanco.</div>
+
+  <div id="resultado"></div>
+
+  <div class="filtros">
+    <select id="f-local" onchange="render()">
+      <option value="">Todos los locales</option>
+      <option>Subway Ramos Mejía</option>
+      <option>Balcarce Ramos Mejía</option>
+      <option>Subway Morón</option>
+      <option>Balcarce Morón</option>
+    </select>
+    <input type="date" id="f-fecha" onchange="render()">
+  </div>
+
+  <div id="contenido"><div class="nada">Cargando cierres...</div></div>
+  <div style="height:40px;"></div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { getFirestore, collection, getDocs, getDoc, doc, writeBatch, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAB2-btgFqGiCe1YdZSDv4EShV601N-uQs",
+    authDomain: "waysub-web.firebaseapp.com",
+    projectId: "waysub-web",
+    storageBucket: "waysub-web.firebasestorage.app",
+    messagingSenderId: "219825581217",
+    appId: "1:219825581217:web:6f752ee27a5446400114e0"
+  };
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const auth = getAuth(app);
+
+  const COL = 'cajero_cierres';
+  const COL_ARCHIVO = 'cajero_cierres_archivo';
+  let cierres = [];
+  let grupos = [];       // los días con más de un cierre, tal como se ven en pantalla
+  let adminNombre = '';
+  let ocupado = false;
+
+  function esc(s) { return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function num(x) { return Number(x) || 0; }
+  function peso(n) { n = Math.round(num(n)); return (n < 0 ? '-' : '') + '$' + Math.abs(n).toLocaleString('es-AR'); }
+  function tiempoDe(d) {
+    const t = d.timestamp;
+    if (!t) return 0;
+    if (typeof t.toMillis === 'function') return t.toMillis();
+    if (t.seconds) return t.seconds * 1000;
+    return Number(t) || 0;
+  }
+  function cuando(d) {
+    const t = tiempoDe(d);
+    return t ? new Date(t).toLocaleString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'sin dato';
+  }
+  function fechaLinda(f) { const [y, m, d] = String(f).split('-'); return d + '/' + m + '/' + y; }
+
+  // Mismo nombre fijo que usa el Cierre de Caja: un cierre por local y día
+  function slugLocal(s) { return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9]+/g, '_').toLowerCase(); }
+  function idCierre(local, fecha) { return slugLocal(local) + '_' + fecha; }
+
+  function esVacio(d) {
+    return !num(d.cierreContado) && !num(d.apertura) && !num(d.ventasIva) && !num(d.importeTarjetas) && !num(d.totalGastos) && !num(d.totalDelivery);
+  }
+  function difCaja(d) {
+    return num(d.cierreContado) + num(d.importeTarjetas) + num(d.totalGastos) + num(d.totalDelivery)
+         - num(d.apertura) - num(d.ventasIva) - num(d.posnetBalcarce);
+  }
+  // Una sola firma por persona: se queda la primera que aparece
+  function dedupFirmas(lista) {
+    const vistos = new Set();
+    return (lista || []).filter(f => { if (vistos.has(f.cajero)) return false; vistos.add(f.cajero); return true; });
+  }
+  function resumenFirmas(d) {
+    const lista = Array.isArray(d.firmas) ? d.firmas : [];
+    const g = {};
+    lista.forEach(f => { const k = [f.cajero, f.hora, f.fechaGuardado, f.difCaja].join('|'); if (!g[k]) g[k] = { f, n: 0 }; g[k].n++; });
+    return { total: lista.length, grupos: Object.values(g) };
+  }
+
+  function bloqueDoc(d, idx, gi) {
+    const fr = resumenFirmas(d);
+    const firmasHtml = fr.grupos.map(g => {
+      const rep = g.n > 1 ? ` <span class="rep">(repetida ${g.n} veces)</span>` : '';
+      return `${esc(g.f.cajero || '—')} · ${esc(g.f.hora || '')} · dif. ${peso(g.f.difCaja)}${rep}`;
+    }).join('<br>');
+    return `<div class="doc">
+      <div class="doc-titulo">Cierre ${idx + 1}${idx === 0 ? ' (el más reciente)' : ''}${esVacio(d) ? '<span class="vacio-tag">VACÍO</span>' : ''}</div>
+      <div class="id">ID: ${esc(d.id)}</div>
+      <div class="fila"><span>Guardado</span><strong>${cuando(d)}</strong></div>
+      <div class="fila"><span>Último en guardar</span><strong>${esc(d.cajero || '—')}</strong></div>
+      <div class="fila"><span>Apertura</span><strong>${peso(d.apertura)}</strong></div>
+      <div class="fila"><span>Cierre contado</span><strong>${peso(d.cierreContado)}</strong></div>
+      <div class="fila"><span>Ventas IVA</span><strong>${peso(d.ventasIva)}</strong></div>
+      <div class="fila"><span>Tarjetas</span><strong>${peso(d.importeTarjetas)}</strong></div>
+      <div class="fila"><span>Delivery</span><strong>${peso(d.totalDelivery)}</strong></div>
+      <div class="fila"><span>Gastos</span><strong>${peso(d.totalGastos)} (${(d.gastos || []).length} filas)</strong></div>
+      <div class="fila"><span>Egresos</span><strong>${(d.egresos || []).length} filas</strong></div>
+      <div class="fila"><span>Diferencia de caja (recalculada)</span><strong>${peso(difCaja(d))}</strong></div>
+      <div class="firmas"><b>Firmas: ${fr.total} entradas${fr.total !== fr.grupos.length ? ', ' + fr.grupos.length + ' distintas' : ''}</b><br>${firmasHtml || 'ninguna'}</div>
+      <button class="btn-oficial" onclick="dejarOficial(${gi}, ${idx})">✔ Dejar ESTE como el cierre oficial</button>
+    </div>`;
+  }
+
+  window.render = function() {
+    const local = document.getElementById('f-local').value;
+    const fecha = document.getElementById('f-fecha').value;
+    const mapa = {};
+    cierres.forEach(d => {
+      if (!d.local || !d.fecha) return;
+      if (local && d.local !== local) return;
+      if (fecha && d.fecha !== fecha) return;
+      (mapa[d.local + '|' + d.fecha] = mapa[d.local + '|' + d.fecha] || []).push(d);
+    });
+    Object.values(mapa).forEach(l => l.sort((a, b) => tiempoDe(b) - tiempoDe(a)));
+    grupos = Object.values(mapa).filter(l => l.length > 1).sort((a, b) => b[0].fecha.localeCompare(a[0].fecha));
+
+    if (!grupos.length) {
+      document.getElementById('contenido').innerHTML = '<div class="nada">No hay días con más de un cierre con estos filtros. 👍</div>';
+      return;
+    }
+    document.getElementById('contenido').innerHTML = grupos.map((l, gi) => `
+      <div class="card">
+        <div class="dia-head"><b>${esc(l[0].local)} · ${fechaLinda(l[0].fecha)}</b><span class="badge">${l.length} cierres</span></div>
+        ${l.map((d, i) => bloqueDoc(d, i, gi)).join('')}
+        <button class="btn-todos" onclick="archivarTodos(${gi})">🗄 Archivar TODOS y dejar el día en blanco</button>
+      </div>`).join('');
+  };
+
+  function mensaje(txt, clase) {
+    document.getElementById('resultado').innerHTML = `<div class="aviso ${clase || 'ok'}">${txt}</div>`;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  async function recargar() {
+    const snap = await getDocs(collection(db, COL));
+    cierres = [];
+    snap.forEach(d => cierres.push({ id: d.id, ...d.data() }));
+    render();
+  }
+
+  // Mueve un cierre al archivo (copia y después borra el original, todo junto en una sola operación)
+  function archivar(batch, c, motivo) {
+    const { id, ...datos } = c;
+    batch.set(doc(db, COL_ARCHIVO, id), { ...datos, idOriginal: id, motivoArchivo: motivo, archivadoEn: serverTimestamp(), archivadoPor: adminNombre });
+  }
+
+  // Deja UN cierre como el oficial del día (con el nombre fijo) y archiva todos los originales
+  window.dejarOficial = async function(gi, di) {
+    if (ocupado) return;
+    const grupo = grupos[gi];
+    const elegido = grupo && grupo[di];
+    if (!elegido) return;
+    const otros = grupo.length - 1;
+    const texto = `Vas a dejar como OFICIAL el cierre de ${elegido.local} del ${fechaLinda(elegido.fecha)} guardado por ${elegido.cajero || '—'} (${cuando(elegido)}).\n\n` +
+      `• Cierre contado: ${peso(elegido.cierreContado)}\n• Ventas IVA: ${peso(elegido.ventasIva)}\n• Diferencia de caja: ${peso(difCaja(elegido))}\n\n` +
+      `Los otros ${otros} cierre${otros === 1 ? '' : 's'} de ese día se MUEVEN AL ARCHIVO (no se borran).\n\n¿Confirmás?`;
+    if (!confirm(texto)) return;
+    ocupado = true;
+    try {
+      const idOficial = idCierre(elegido.local, elegido.fecha);
+      const { id, ...datos } = elegido;
+      const batch = writeBatch(db);
+      batch.set(doc(db, COL, idOficial), { ...datos, firmas: dedupFirmas(datos.firmas), version: 1, resueltoPor: adminNombre, resueltoEn: serverTimestamp() });
+      grupo.forEach(c => {
+        archivar(batch, c, 'duplicado');
+        if (c.id !== idOficial) batch.delete(doc(db, COL, c.id));
+      });
+      await batch.commit();
+      await recargar();
+      mensaje(`✅ Listo. El cierre de ${esc(elegido.local)} del ${fechaLinda(elegido.fecha)} quedó como oficial (ID: <code>${esc(idOficial)}</code>). Los demás están en el archivo.`);
+    } catch (e) {
+      console.error(e);
+      mensaje('❌ No se pudo completar y no se cambió nada: ' + esc(e.message), '');
+    }
+    ocupado = false;
+  };
+
+  // Archiva todos los cierres del día: el día queda sin cierre y se puede cargar de cero
+  window.archivarTodos = async function(gi) {
+    if (ocupado) return;
+    const grupo = grupos[gi];
+    if (!grupo) return;
+    const texto = `Vas a archivar los ${grupo.length} cierres de ${grupo[0].local} del ${fechaLinda(grupo[0].fecha)}.\n\n` +
+      `El día va a quedar SIN cierre y los cajeros podrán cargarlo de cero.\nNo se borran: quedan en el archivo y se pueden recuperar.\n\n¿Confirmás?`;
+    if (!confirm(texto)) return;
+    ocupado = true;
+    try {
+      const batch = writeBatch(db);
+      grupo.forEach(c => { archivar(batch, c, 'dia archivado completo'); batch.delete(doc(db, COL, c.id)); });
+      await batch.commit();
+      await recargar();
+      mensaje(`✅ Listo. Se archivaron los ${grupo.length} cierres de ${esc(grupo[0].local)} del ${fechaLinda(grupo[0].fecha)}. El día quedó en blanco.`);
+    } catch (e) {
+      console.error(e);
+      mensaje('❌ No se pudo completar y no se cambió nada: ' + esc(e.message), '');
+    }
+    ocupado = false;
+  };
+
+  function sinAcceso() {
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('sin-acceso').style.display = 'block';
+  }
+
+  onAuthStateChanged(auth, async user => {
+    if (!user) { window.location.href = 'login.html'; return; }
+    try {
+      const snap = await getDoc(doc(db, 'usuarios', user.uid));
+      const u = snap.exists() ? snap.data() : null;
+      if (!u || !u.aprobado || u.rol !== 'admin') { sinAcceso(); return; }
+      adminNombre = u.nombre || user.email || 'admin';
+    } catch(e) { sinAcceso(); return; }
+    document.getElementById('app').style.display = 'block';
+    try { await recargar(); }
+    catch(e) { document.getElementById('contenido').innerHTML = '<div class="nada">No se pudieron cargar los cierres: ' + esc(e.message) + '</div>'; }
+  });
+</script>
+</body>
+</html>
