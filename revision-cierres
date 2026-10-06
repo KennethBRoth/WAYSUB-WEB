@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Revisión de cierres · Waysub</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: sans-serif; background: #f0f2f5; color: #1a1a1a; min-height: 100vh; }
+    header { background: #1a1a2e; color: white; padding: 16px 20px; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 100; }
+    .btn-volver { background: rgba(255,255,255,0.15); border: none; color: white; border-radius: 8px; padding: 6px 12px; font-size: 18px; cursor: pointer; }
+    header h1 { font-size: 18px; flex: 1; }
+    .card { background: white; margin: 12px 16px 0; border-radius: 12px; padding: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); }
+    .card h3 { font-size: 14px; font-weight: 800; color: #1a1a2e; margin-bottom: 10px; border-left: 4px solid #e8b84b; padding-left: 10px; }
+    .aviso { background: #f0f4ff; border: 1px solid #c5cff5; color: #3b4a9c; border-radius: 10px; padding: 10px 14px; margin: 12px 16px 0; font-size: 13px; line-height: 1.5; }
+    .aviso.alerta { background: #fff8ee; border-color: #ffd9a0; color: #a04000; }
+    .filtros { display: flex; gap: 8px; margin: 12px 16px 0; }
+    .filtros select { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; background: white; }
+    .kpis { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 12px 16px 0; }
+    .kpi { background: white; border-radius: 10px; padding: 12px 8px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+    .kpi .n { font-size: 20px; font-weight: 800; color: #1a1a2e; }
+    .kpi .n.mal { color: #e63946; }
+    .kpi .t { font-size: 10px; color: #999; text-transform: uppercase; font-weight: 700; margin-top: 4px; }
+    .seccion-titulo { padding: 18px 16px 0; font-size: 12px; font-weight: 800; color: #1a1a2e; text-transform: uppercase; letter-spacing: 0.5px; }
+    .dia-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .dia-head b { font-size: 14px; }
+    .badge { background: #fdeaea; color: #d63031; font-size: 11px; font-weight: 800; padding: 3px 10px; border-radius: 20px; white-space: nowrap; }
+    .badge.amarillo { background: #fff6e0; color: #9a6b00; }
+    .doc { border: 1px solid #eee; border-radius: 10px; padding: 10px 12px; margin-top: 8px; }
+    .doc.usado { border-color: #e8b84b; background: #fffdf5; }
+    .doc-titulo { font-size: 12px; font-weight: 800; color: #1a1a2e; margin-bottom: 6px; }
+    .doc-usado { font-size: 11px; color: #9a6b00; font-weight: 700; margin-bottom: 6px; }
+    .id { font-family: monospace; font-size: 11px; color: #777; word-break: break-all; }
+    .fila { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; padding: 3px 0; border-bottom: 1px solid #f7f7f7; }
+    .fila span { color: #777; }
+    .fila strong { color: #1a1a2e; text-align: right; }
+    .fila.dif strong { color: #1a1a2e; }
+    .vacio-tag { display: inline-block; background: #fdeaea; color: #d63031; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 20px; margin-left: 6px; }
+    .firmas { margin-top: 8px; font-size: 11px; color: #666; line-height: 1.6; }
+    .firmas .rep { color: #d63031; font-weight: 700; }
+    .nada { text-align: center; padding: 30px 20px; color: #999; font-size: 14px; line-height: 1.5; }
+    #sin-acceso { display: none; text-align: center; padding: 80px 24px; }
+    #sin-acceso h2 { font-size: 20px; margin-bottom: 8px; }
+    #sin-acceso p { color: #666; font-size: 14px; margin-bottom: 20px; }
+    .btn { background: #1a1a2e; color: white; border: none; border-radius: 10px; padding: 12px 24px; font-size: 14px; font-weight: 700; cursor: pointer; }
+  </style>
+</head>
+<body>
+
+<header>
+  <button class="btn-volver" onclick="window.location.href='index.html'">←</button>
+  <h1>🔎 Revisión de cierres</h1>
+</header>
+
+<div id="sin-acceso">
+  <div style="font-size:48px;margin-bottom:12px;">🔒</div>
+  <h2>Sin acceso</h2>
+  <p>Esta pantalla es solo para administradores.</p>
+  <button class="btn" onclick="window.location.href='index.html'">Volver al inicio</button>
+</div>
+
+<div id="app" style="display:none;">
+  <div class="aviso">Esta pantalla <b>solo lee</b>. No cambia ni borra nada. Busca días con más de un cierre guardado y días cuyo cierre quedó vacío.</div>
+
+  <div class="filtros">
+    <select id="f-local" onchange="render()">
+      <option value="">Todos los locales</option>
+      <option>Subway Ramos Mejía</option>
+      <option>Balcarce Ramos Mejía</option>
+      <option>Subway Morón</option>
+      <option>Balcarce Morón</option>
+    </select>
+    <select id="f-periodo" onchange="render()">
+      <option value="30">Últimos 30 días</option>
+      <option value="60">Últimos 60 días</option>
+      <option value="90">Últimos 90 días</option>
+      <option value="0">Todo</option>
+    </select>
+  </div>
+
+  <div id="contenido"><div class="nada">Cargando cierres...</div></div>
+  <div style="height:40px;"></div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { getFirestore, collection, getDocs, getDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAB2-btgFqGiCe1YdZSDv4EShV601N-uQs",
+    authDomain: "waysub-web.firebaseapp.com",
+    projectId: "waysub-web",
+    storageBucket: "waysub-web.firebasestorage.app",
+    messagingSenderId: "219825581217",
+    appId: "1:219825581217:web:6f752ee27a5446400114e0"
+  };
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const auth = getAuth(app);
+
+  let cierres = [];
+
+  function esc(s) { return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function num(x) { return Number(x) || 0; }
+  function peso(n) { n = Math.round(num(n)); return (n < 0 ? '-' : '') + '$' + Math.abs(n).toLocaleString('es-AR'); }
+  function tiempoDe(d) {
+    const t = d.timestamp;
+    if (!t) return 0;
+    if (typeof t.toMillis === 'function') return t.toMillis();
+    if (t.seconds) return t.seconds * 1000;
+    return Number(t) || 0;
+  }
+  function cuando(d) {
+    const t = tiempoDe(d);
+    return t ? new Date(t).toLocaleString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'sin dato';
+  }
+  function fechaLinda(f) { const [y, m, d] = String(f).split('-'); return d + '/' + m + '/' + y; }
+
+  // Cuántos días después del día del cierre se guardó por última vez (corrección tardía)
+  function diasDespues(d) {
+    const t = tiempoDe(d);
+    if (!t || !d.fecha) return 0;
+    const [y, m, dd] = String(d.fecha).split('-').map(Number);
+    const dia = new Date(y, m - 1, dd);
+    const g = new Date(t); g.setHours(0, 0, 0, 0);
+    return Math.round((g - dia) / 86400000);
+  }
+
+  // Un cierre está "vacío" si no tiene ningún número cargado
+  function esVacio(d) {
+    return !num(d.cierreContado) && !num(d.apertura) && !num(d.ventasIva) && !num(d.importeTarjetas) && !num(d.totalGastos) && !num(d.totalDelivery);
+  }
+  // Diferencia de caja recalculada con la fórmula del cierre (no se usa el campo guardado resultadoCaja, que tiene un error conocido)
+  function difCaja(d) {
+    return num(d.cierreContado) + num(d.importeTarjetas) + num(d.totalGastos) + num(d.totalDelivery)
+         - num(d.apertura) - num(d.ventasIva) - num(d.posnetBalcarce);
+  }
+
+  // Firmas: se agrupan las que son idénticas para ver cuántas están repetidas
+  function resumenFirmas(d) {
+    const lista = Array.isArray(d.firmas) ? d.firmas : [];
+    const grupos = {};
+    lista.forEach(f => {
+      const k = [f.cajero, f.hora, f.fechaGuardado, f.difCaja].join('|');
+      if (!grupos[k]) grupos[k] = { f, n: 0 };
+      grupos[k].n++;
+    });
+    return { total: lista.length, grupos: Object.values(grupos) };
+  }
+
+  function bloqueDoc(d, idx, esElUsado) {
+    const fr = resumenFirmas(d);
+    const firmasHtml = fr.grupos.map(g => {
+      const rep = g.n > 1 ? ` <span class="rep">(repetida ${g.n} veces)</span>` : '';
+      return `${esc(g.f.cajero || '—')} · ${esc(g.f.hora || '')} ${g.f.fechaGuardado ? '· ' + fechaLinda(g.f.fechaGuardado) : ''} · dif. ${peso(g.f.difCaja)}${rep}`;
+    }).join('<br>');
+    return `<div class="doc ${esElUsado ? 'usado' : ''}">
+      <div class="doc-titulo">Cierre ${idx + 1}${idx === 0 ? ' (el más reciente)' : ''}${esVacio(d) ? '<span class="vacio-tag">VACÍO</span>' : ''}</div>
+      ${esElUsado ? '<div class="doc-usado">★ Es el que leen Reportes y el Estado de Resultados</div>' : ''}
+      <div class="id">ID: ${esc(d.id)}</div>
+      <div class="fila"><span>Guardado</span><strong>${cuando(d)}</strong></div>
+      <div class="fila"><span>Último en guardar</span><strong>${esc(d.cajero || '—')}</strong></div>
+      <div class="fila"><span>Apertura</span><strong>${peso(d.apertura)}</strong></div>
+      <div class="fila"><span>Cierre contado</span><strong>${peso(d.cierreContado)}</strong></div>
+      <div class="fila"><span>Ventas IVA</span><strong>${peso(d.ventasIva)}</strong></div>
+      <div class="fila"><span>Tarjetas</span><strong>${peso(d.importeTarjetas)}</strong></div>
+      <div class="fila"><span>Delivery</span><strong>${peso(d.totalDelivery)}</strong></div>
+      <div class="fila"><span>Gastos</span><strong>${peso(d.totalGastos)} (${(d.gastos || []).length} filas)</strong></div>
+      <div class="fila"><span>Egresos cargados</span><strong>${(d.egresos || []).length} filas</strong></div>
+      <div class="fila dif"><span>Diferencia de caja (recalculada)</span><strong>${peso(difCaja(d))}</strong></div>
+      <div class="firmas"><b>Firmas: ${fr.total} entradas${fr.total !== fr.grupos.length ? ', ' + fr.grupos.length + ' distintas' : ''}</b><br>${firmasHtml || 'ninguna'}</div>
+    </div>`;
+  }
+
+  window.render = function() {
+    const local = document.getElementById('f-local').value;
+    const dias = Number(document.getElementById('f-periodo').value);
+    let minFecha = '';
+    if (dias > 0) {
+      const d = new Date(); d.setDate(d.getDate() - dias);
+      minFecha = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    }
+
+    // Se agrupa por local y fecha
+    const grupos = {};
+    cierres.forEach(d => {
+      if (!d.local || !d.fecha) return;
+      if (local && d.local !== local) return;
+      if (minFecha && d.fecha < minFecha) return;
+      const k = d.local + '|' + d.fecha;
+      (grupos[k] = grupos[k] || []).push(d);
+    });
+    Object.values(grupos).forEach(l => l.sort((a, b) => tiempoDe(b) - tiempoDe(a)));
+
+    const todos = Object.values(grupos);
+    const duplicados = todos.filter(l => l.length > 1).sort((a, b) => b[0].fecha.localeCompare(a[0].fecha));
+    const vaciosUnicos = todos.filter(l => l.length === 1 && esVacio(l[0])).sort((a, b) => b[0].fecha.localeCompare(a[0].fecha));
+    const vaciosEntreDup = duplicados.filter(l => esVacio(l[0]));
+    const firmasRep = todos.filter(l => l.some(d => { const r = resumenFirmas(d); return r.total !== r.grupos.length; }));
+
+    const tardios = [];
+    todos.forEach(l => l.forEach(d => { if (diasDespues(d) >= 2) tardios.push(d); }));
+    tardios.sort((a, b) => b.fecha.localeCompare(a.fecha));
+
+    let html = `<div class="kpis">
+      <div class="kpi"><div class="n">${todos.length}</div><div class="t">Días con cierre</div></div>
+      <div class="kpi"><div class="n ${duplicados.length ? 'mal' : ''}">${duplicados.length}</div><div class="t">Días con más de un cierre</div></div>
+      <div class="kpi"><div class="n ${(vaciosUnicos.length + vaciosEntreDup.length) ? 'mal' : ''}">${vaciosUnicos.length + vaciosEntreDup.length}</div><div class="t">Días con el último cierre vacío</div></div>
+      <div class="kpi"><div class="n ${tardios.length ? 'mal' : ''}">${tardios.length}</div><div class="t">Cierres guardados 2 o más días después</div></div>
+    </div>`;
+
+    html += `<div class="seccion-titulo">Días con más de un cierre guardado</div>`;
+    if (!duplicados.length) {
+      html += `<div class="nada">No hay días con más de un cierre en este período. 👍</div>`;
+    } else {
+      duplicados.forEach(l => {
+        html += `<div class="card"><div class="dia-head"><b>${esc(l[0].local)} · ${fechaLinda(l[0].fecha)}</b><span class="badge">${l.length} cierres</span></div>
+          ${l.map((d, i) => bloqueDoc(d, i, i === 0)).join('')}</div>`;
+      });
+    }
+
+    html += `<div class="seccion-titulo">Días cuyo único cierre está vacío</div>`;
+    if (!vaciosUnicos.length) {
+      html += `<div class="nada">No hay.</div>`;
+    } else {
+      vaciosUnicos.forEach(l => {
+        html += `<div class="card"><div class="dia-head"><b>${esc(l[0].local)} · ${fechaLinda(l[0].fecha)}</b><span class="badge amarillo">1 cierre vacío</span></div>
+          ${bloqueDoc(l[0], 0, true)}</div>`;
+      });
+    }
+
+    html += `<div class="seccion-titulo">Cierres guardados por última vez 2 o más días después del día del cierre</div>`;
+    html += `<div class="aviso">Sirve para encontrar días que se corrigieron o se volvieron a cargar mucho después. Un día que se vuelve a cargar pisa lo que había.</div>`;
+    if (!tardios.length) {
+      html += `<div class="nada">No hay.</div>`;
+    } else {
+      tardios.forEach(d => {
+        html += `<div class="card"><div class="dia-head"><b>${esc(d.local)} · ${fechaLinda(d.fecha)}</b><span class="badge amarillo">guardado ${diasDespues(d)} días después</span></div>
+          ${bloqueDoc(d, 0, false)}</div>`;
+      });
+    }
+
+    if (firmasRep.length) {
+      html += `<div class="aviso alerta">Además, ${firmasRep.length} ${firmasRep.length === 1 ? 'día tiene' : 'días tienen'} firmas repetidas dentro de un cierre. Es la consecuencia de que la pantalla junte varios cierres del mismo día.</div>`;
+    }
+    document.getElementById('contenido').innerHTML = html;
+  };
+
+  function sinAcceso() {
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('sin-acceso').style.display = 'block';
+  }
+
+  onAuthStateChanged(auth, async user => {
+    if (!user) { window.location.href = 'login.html'; return; }
+    try {
+      const snap = await getDoc(doc(db, 'usuarios', user.uid));
+      const u = snap.exists() ? snap.data() : null;
+      if (!u || !u.aprobado || u.rol !== 'admin') { sinAcceso(); return; }
+    } catch(e) { sinAcceso(); return; }
+    document.getElementById('app').style.display = 'block';
+    try {
+      const snap = await getDocs(collection(db, 'cajero_cierres'));
+      cierres = [];
+      snap.forEach(d => cierres.push({ id: d.id, ...d.data() }));
+      render();
+    } catch(e) {
+      document.getElementById('contenido').innerHTML = '<div class="nada">No se pudieron cargar los cierres: ' + esc(e.message) + '</div>';
+    }
+  });
+</script>
+</body>
+</html>
