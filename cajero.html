@@ -424,7 +424,7 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, collection, getDocs, doc, getDoc, query, where, runTransaction, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, initializeFirestore, collection, getDocs, doc, getDoc, query, where, runTransaction, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAB2-btgFqGiCe1YdZSDv4EShV601N-uQs",
@@ -437,7 +437,7 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-const db = getFirestore(app);
+const db = initializeFirestore(app, { ignoreUndefinedProperties: true });
 
 const CAJERO_LOCALES = {
   cajero_subway_ramos:   { nombre: 'Subway Ramos Mejía',   subway: true },
@@ -1340,7 +1340,9 @@ window.guardarCierre = async function() {
         cargarDia();
       }
     } else {
-      mostrarToast('❌ Error al guardar', 'error');
+      const motivo = (err && (err.code || err.message)) ? String(err.code || err.message).slice(0, 140) : 'desconocido';
+      mostrarToast('❌ Error al guardar: ' + motivo, 'error');
+      alert('No se pudo guardar.\n\nMotivo técnico (mandáselo a Claude):\n' + (err && err.code ? err.code + ' — ' : '') + (err && err.message ? err.message : err));
     }
   }
 };
