@@ -107,6 +107,23 @@
     .hist-info h4 { font-size: 14px; font-weight: 700; }
     .hist-info p { font-size: 12px; color: #999; margin-top: 2px; line-height: 1.5; }
 
+
+    /* Comprobantes */
+    .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .chip { padding: 8px 12px; border: 1px solid #ddd; border-radius: 20px; font-size: 13px; color: #555; background: white; cursor: pointer; }
+    .chip.on { background: #1a1a2e; color: white; border-color: #1a1a2e; }
+    .atajo { background: #f0f4ff; border: 1px solid #c5cff5; color: #3b4a9c; border-radius: 10px; padding: 10px 12px; font-size: 12px; line-height: 1.5; margin-bottom: 12px; }
+    .msg-ok { background: #f0fff4; border: 1px solid #c3e6cb; color: #2a9d5c; border-radius: 10px; padding: 10px 12px; font-size: 13px; }
+    .msg-av { background: #fff8ee; border: 1px solid #ffd9a0; color: #a04000; border-radius: 10px; padding: 10px 12px; font-size: 13px; line-height: 1.5; display: none; }
+    .tot-box { background: #1a1a2e; color: white; border-radius: 10px; padding: 12px; display: flex; justify-content: space-between; font-weight: 800; margin: 4px 0 12px; }
+    .tot-box span:last-child { color: #e8b84b; }
+    .comp-fila { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 10px 0; border-bottom: 1px solid #f3f3f3; font-size: 13px; cursor: pointer; }
+    .comp-fila:last-child { border-bottom: 0; }
+    .comp-fila small { display: block; color: #999; font-size: 11px; margin-top: 2px; line-height: 1.4; }
+    .comp-fila .monto { white-space: nowrap; font-weight: 700; }
+    .comp-fila .del { background: #fff0f0; border: none; color: #e63946; border-radius: 6px; padding: 6px 9px; cursor: pointer; flex-shrink: 0; }
+    .neg { color: #e63946; }
+
     .toast { position: fixed; left: 50%; bottom: 140px; transform: translateX(-50%); background: #1a1a2e; color: white; padding: 12px 18px; border-radius: 10px; font-size: 13px; max-width: 85vw; width: max-content; white-space: normal; text-align: center; z-index: 300; display: none; }
     .toast.error { background: #c0392b; }
     .toast.ok { background: #1f9d55; }
@@ -134,6 +151,7 @@
 <div class="tabs">
   <div class="tab" id="tab-btn-resultado" onclick="cambiarTab('resultado')">📊 Resultado</div>
   <div class="tab" id="tab-btn-comparar" onclick="cambiarTab('comparar')">📈 Comparar</div>
+  <div class="tab" id="tab-btn-comprobantes" onclick="cambiarTab('comprobantes')">🧾 Facturas</div>
   <div class="tab activo" id="tab-btn-carga" onclick="cambiarTab('carga')">📥 Carga</div>
 </div>
 
@@ -158,6 +176,12 @@
   <div id="lista-historial" style="padding-bottom:20px;"></div>
 </div>
 
+<!-- TAB COMPROBANTES -->
+<div class="seccion" id="tab-comprobantes">
+  <div id="comp-form-wrap"></div>
+  <div id="comp-lista-wrap"></div>
+</div>
+
 <!-- TAB CARGA -->
 <div class="seccion activa" id="tab-carga">
   <div class="local-bar" id="carga-local"></div>
@@ -177,10 +201,11 @@
 
 <div class="toast" id="toast"></div>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-  import { getFirestore, collection, getDocs, getDoc, setDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getFirestore, collection, getDocs, getDoc, setDoc, deleteDoc, doc, query, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyAB2-btgFqGiCe1YdZSDv4EShV601N-uQs",
@@ -203,7 +228,6 @@
 
   let PROVEEDORES = [...PROV_DEFAULT];
   let docs = [];          // lo guardado a mano
-  let cierres = [];       // cierres de caja
   let ventasIdx = {};     // ventas y vouchers por local, mes y marca
   let tabActual = 'carga';
   let vista = 'Ramos Mejía';        // 'Ramos Mejía' | 'Morón' | 'todo'
@@ -241,16 +265,12 @@
   }
 
   // ── DATOS ────────────────────────────────────────────────────────
-  async function cargarTodo() {
-    // Se trae todo y se filtra acá (sin query con varios where)
-    const [snapDocs, snapCierres] = await Promise.all([
-      getDocs(collection(db, COL_ERR)),
-      getDocs(collection(db, COL_CIERRES))
-    ]);
+  async function cargarTodo(soloDocs) {
+    // Lo cargado a mano (pocos documentos) + el resumen mensual de ventas (ver más abajo)
+    const snapDocs = await getDocs(collection(db, COL_ERR));
     docs = [];
     snapDocs.forEach(d => docs.push({ id: d.id, ...d.data() }));
-    cierres = [];
-    snapCierres.forEach(d => cierres.push(d.data()));
+    if (!soloDocs || !Object.keys(resumenes).length) await cargarResumenes();
     construirVentas();
   }
 
@@ -281,33 +301,25 @@
   // Ventas ("Ventas IVA / Sistema") y vouchers de cada local, mes y marca, tomados de los cierres de caja.
   // Subway y Balcarce del mismo local se suman en el estado de resultados.
   function construirVentas() {
-    // Por cada local de caja y día se usa el cierre guardado más recientemente (si hubiera más de uno)
-    const porDia = {};
-    cierres.forEach(d => {
-      if (!d.local || !d.fecha) return;
-      const k = d.local + '|' + d.fecha;
-      const t = tiempoDe(d);
-      if (!porDia[k] || t >= porDia[k].t) porDia[k] = { d, t };
-    });
     ventasIdx = {};
-    Object.values(porDia).forEach(x => {
-      const d = x.d;
-      const marca = MARCAS.find(m => String(d.local).startsWith(m + ' '));
-      if (!marca) return;
-      const local = String(d.local).slice(marca.length + 1);
-      if (!LOCALES.includes(local)) return;
-      const mes = String(d.fecha).slice(0, 7);
-      const dia = Number(String(d.fecha).slice(8, 10));
-      const k = local + '|' + mes;
-      if (!ventasIdx[k]) ventasIdx[k] = {};
-      if (!ventasIdx[k][marca]) ventasIdx[k][marca] = { ventas: 0, vouchers: 0, dias: new Set(), delivery: deliveryVacio(), dif: 0 };
-      const b = ventasIdx[k][marca];
-      b.ventas += Number(d.ventasIva) || 0;
-      b.vouchers += Number(d.vouchers) || 0;
-      b.dias.add(dia);
-      const dl = deliveryPorApp(d);
-      APPS_DELIVERY.forEach(a => { b.delivery[a.id] += dl[a.id]; });
-      b.dif += Number(d.difDelivery) || 0;
+    Object.values(resumenes).forEach(rs => {
+      Object.entries(rs.locales || {}).forEach(([localCaja, info]) => {
+        const marca = MARCAS.find(m => String(localCaja).startsWith(m + ' '));
+        if (!marca) return;
+        const local = String(localCaja).slice(marca.length + 1);
+        if (!LOCALES.includes(local)) return;
+        const k = local + '|' + rs.mes;
+        if (!ventasIdx[k]) ventasIdx[k] = {};
+        if (!ventasIdx[k][marca]) ventasIdx[k][marca] = { ventas: 0, vouchers: 0, dias: new Set(), delivery: deliveryVacio(), dif: 0 };
+        const b = ventasIdx[k][marca];
+        Object.entries(info.dias || {}).forEach(([dia, r]) => {
+          b.ventas += Number(r.v) || 0;
+          b.vouchers += Number(r.vo) || 0;
+          b.dias.add(Number(dia));
+          APPS_DELIVERY.forEach(a => { b.delivery[a.id] += Number(r.dl && r.dl[a.id]) || 0; });
+          b.dif += Number(r.dd) || 0;
+        });
+      });
     });
   }
 
@@ -326,6 +338,108 @@
     const faltan = [];
     for (let d = 1; d <= limite; d++) { if (!dias.has(d)) faltan.push(d); }
     return faltan;
+  }
+
+
+  // ── RESUMEN MENSUAL DE VENTAS ────────────────────────────────────
+  // Para no releer todos los cierres de caja cada vez, cada mes viejo se guarda ya calculado
+  // (colección ventas_resumen, un documento por mes). Solo el mes en curso y el anterior se calculan en vivo.
+  const COL_RESUMEN = 'ventas_resumen';
+  let resumenes = {};   // mes -> { mes, locales: { 'Subway Ramos Mejía': { dias: {1: {...}}, dup } }, vivo?, actualizado? }
+
+  function mesMas(mes, n) { const [y, m] = mes.split('-').map(Number); const d = new Date(y, m - 1 + n, 1); return d.getFullYear() + '-' + pad(d.getMonth() + 1); }
+  function ultimoMesCongelado() { return mesMas(mesActual(), -2); }
+
+  // Lo que se guarda de cada día: ventas, vouchers, diferencia de delivery y delivery por app
+  function registroDia(d) {
+    return { v: Number(d.ventasIva) || 0, vo: Number(d.vouchers) || 0, dd: Number(d.difDelivery) || 0, dl: deliveryPorApp(d) };
+  }
+
+  // Por cada local y día se usa el cierre guardado más recientemente (si hubiera más de uno)
+  function resumirCierres(lista) {
+    const porDia = {};
+    lista.forEach(d => {
+      if (!d.local || !d.fecha) return;
+      const k = d.local + '|' + d.fecha;
+      const t = tiempoDe(d);
+      if (!porDia[k]) porDia[k] = { d, t, n: 1 };
+      else { porDia[k].n++; if (t >= porDia[k].t) { porDia[k].d = d; porDia[k].t = t; } }
+    });
+    const out = {};
+    Object.values(porDia).forEach(x => {
+      const d = x.d;
+      const mes = String(d.fecha).slice(0, 7);
+      const dia = String(Number(String(d.fecha).slice(8, 10)));
+      if (!out[mes]) out[mes] = {};
+      if (!out[mes][d.local]) out[mes][d.local] = { dias: {}, dup: 0 };
+      out[mes][d.local].dias[dia] = registroDia(d);
+      if (x.n > 1) out[mes][d.local].dup++;
+    });
+    return out;
+  }
+
+  // Lee SOLO los cierres de un mes (una sola condición sobre el campo fecha: no necesita índices)
+  async function cierresDelMes(mes) {
+    const snap = await getDocs(query(collection(db, COL_CIERRES), where('fecha', '>=', mes + '-01'), where('fecha', '<=', mes + '-31')));
+    const lista = [];
+    snap.forEach(d => lista.push(d.data()));
+    return lista;
+  }
+
+  async function guardarResumen(mes, locales) {
+    const r = { mes, locales, congelado: true, actualizado: Date.now() };
+    await setDoc(doc(db, COL_RESUMEN, mes), r);
+    resumenes[mes] = r;
+  }
+
+  async function cargarResumenes() {
+    const hoyMes = mesActual(), prev = mesMas(hoyMes, -1), ante = ultimoMesCongelado();
+    const snap = await getDocs(collection(db, COL_RESUMEN));
+    resumenes = {};
+    snap.forEach(d => { resumenes[d.id] = d.data(); });
+    const guardados = Object.keys(resumenes).sort();
+    let yaLeidos = null;
+
+    if (!guardados.length) {
+      // Primera vez: se leen todos los cierres UNA sola vez y se arma el historial
+      const snapC = await getDocs(collection(db, COL_CIERRES));
+      const todos = [];
+      snapC.forEach(d => todos.push(d.data()));
+      yaLeidos = resumirCierres(todos);
+      for (const m of Object.keys(yaLeidos).sort()) {
+        if (m <= ante) await guardarResumen(m, yaLeidos[m]);
+      }
+    } else {
+      // Meses viejos que todavía no se armaron
+      for (let m = guardados[0]; m <= ante; m = mesMas(m, 1)) {
+        if (resumenes[m]) continue;
+        await guardarResumen(m, resumirCierres(await cierresDelMes(m))[m] || {});
+      }
+    }
+
+    // Mes anterior y mes en curso: siempre en vivo (solo se leen los cierres de esos dos meses)
+    for (const m of [prev, hoyMes]) {
+      const locales = yaLeidos ? (yaLeidos[m] || {}) : (resumirCierres(await cierresDelMes(m))[m] || {});
+      resumenes[m] = { mes: m, locales, vivo: true };
+    }
+  }
+
+  window.recalcularMes = async function(mes) {
+    if (mes > ultimoMesCongelado()) { toast('Ese mes se calcula en vivo, no hace falta', 'ok'); return; }
+    if (!confirm('¿Volver a calcular ' + nombreMes(mes) + ' leyendo sus cierres de caja? Hacelo solo si corregiste un cierre de ese mes.')) return;
+    try {
+      await guardarResumen(mes, resumirCierres(await cierresDelMes(mes))[mes] || {});
+      construirVentas(); renderResultado(); renderComparar();
+      toast('Mes recalculado', 'ok');
+    } catch(e) { toast('No se pudo recalcular: ' + e.message, 'error'); }
+  }
+
+  function avisoResumen(mes) {
+    const r = resumenes[mes];
+    if (!r) return '';
+    if (r.vivo) return '<div class="aviso info">🟢 Mes calculado en vivo desde los cierres de caja.</div>';
+    const cuando = r.actualizado ? new Date(r.actualizado).toLocaleDateString('es-AR') : '';
+    return '<div class="aviso info">📦 Mes ya armado' + (cuando ? ' (guardado el ' + cuando + ')' : '') + ': no vuelve a leer los cierres de caja. Si corregiste un cierre de ese mes, <a href="#" onclick="recalcularMes(\'' + mes + '\');return false;" style="color:inherit;font-weight:700;">volver a calcularlo</a>.</div>';
   }
 
   // ── CÁLCULO DEL ESTADO DE RESULTADOS ─────────────────────────────
@@ -416,16 +530,332 @@
     return [...set].sort().reverse();
   }
 
+
+  // ── COMPROBANTES (facturas de compra y gastos, cargados a mano) ──
+  // Se guardan en comprobantes/{mes}/items/{id}: abrir un mes lee solo los comprobantes de ese mes.
+  const COL_COMP = 'comprobantes';
+  const CATS_COMP = ['Costo de mercadería', 'Alquiler', 'Servicios', 'Sueldos y cargas sociales', 'Otros gastos'];
+  const DETALLES_COMP = ['AySA', 'Telecom', 'Edenor', 'Gas', 'Regalías', 'Publicidad', 'Linisco', 'Payway', 'Telefonía', 'Mantenimiento'];
+  const TIPOS_COMP = [['A', 'A'], ['B', 'B'], ['C', 'C'], ['NC', 'Nota de crédito'], ['SF', 'Sin factura']];
+  const LOCALES_COMP = ['Ramos Mejía', 'Morón', 'Sociedad'];
+  const MARCAS_COMP = ['Subway', 'Balcarce', 'Ambas'];
+  let comp = null;                 // lo que se está tipeando
+  let compEditId = null, compEditMes = null;
+  let compCache = {};              // mes -> comprobantes ya leídos (no se vuelven a leer)
+  let compMesVer = '';
+  let provsComp = [];
+  let compIniciado = false, compGuardando = false;
+
+  const r2 = v => Math.round((Number(v) || 0) * 100) / 100;
+  function fmt2(n) { n = Number(n) || 0; return (n < 0 ? '-' : '') + '$' + Math.abs(n).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+  function hoyLocal() { const d = new Date(); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+  // Solo las facturas A y las notas de crédito dan crédito de IVA. B, C y "sin factura": todo el total es gasto.
+  function esComputable(tipo) { return tipo === 'A' || tipo === 'NC'; }
+
+  function compNuevo(prev) {
+    const hoy = hoyLocal();
+    const local = prev ? prev.local : 'Ramos Mejía';
+    return {
+      fecha: prev ? prev.fecha : hoy, mes: prev ? prev.mes : hoy.slice(0, 7), mesTocado: prev ? prev.mesTocado : false,
+      proveedor: '', tipo: prev ? prev.tipo : 'A', local, marca: prev ? prev.marca : 'Subway',
+      categoria: prev ? prev.categoria : CATS_COMP[0], detalle: '', reparto: local === 'Sociedad',
+      alic: 0.21, ivaManual: false, totalManual: false,
+      neto: 0, noGrav: 0, iva: 0, percIva: 0, percIibb: 0, otros: 0, total: 0
+    };
+  }
+
+  function compAutoIva() { if (esComputable(comp.tipo) && !comp.ivaManual && comp.alic > 0) comp.iva = r2(comp.neto * comp.alic); }
+  function compAutoTotal() {
+    if (esComputable(comp.tipo) && !comp.totalManual) comp.total = r2(comp.neto + comp.noGrav + comp.iva + comp.percIva + comp.percIibb + comp.otros);
+  }
+
+  // Qué entra al gasto, qué es crédito de IVA y qué son percepciones (las percepciones nunca son gasto)
+  function compCalcular(c) {
+    const computable = esComputable(c.tipo);
+    const signo = c.tipo === 'NC' ? -1 : 1;
+    const suma = computable ? c.neto + c.noGrav + c.iva + c.percIva + c.percIibb + c.otros : c.total;
+    return {
+      computable, signo, suma: r2(suma),
+      gasto: signo * (computable ? c.neto + c.noGrav + c.otros : c.total),
+      credito: computable ? signo * c.iva : 0,
+      percIva: computable ? signo * c.percIva : 0,
+      percIibb: computable ? signo * c.percIibb : 0
+    };
+  }
+
+  async function abrirComprobantes() {
+    if (!compIniciado) {
+      compIniciado = true;
+      comp = compNuevo(null);
+      compMesVer = mesActual();
+      const set = new Set(PROVEEDORES);
+      try {
+        const snap = await getDoc(doc(db, 'config', 'proveedores_comprobantes'));
+        if (snap.exists()) (snap.data().lista || []).forEach(p => set.add(p));
+      } catch(e) { /* si falla, queda la lista base */ }
+      provsComp = [...set].sort((a, b) => a.localeCompare(b));
+      compRenderForm();
+      await compRenderLista();
+    }
+  }
+
+  function compFormHtml() {
+    const c = comp, k = compCalcular(c), edit = !!compEditId;
+    const chips = (campo, opciones) => '<div class="chips">' + opciones.map(([v, t]) =>
+      `<div class="chip ${c[campo] === v ? 'on' : ''}" onclick="compChip('${campo}','${v}')">${esc(t)}</div>`).join('') + '</div>';
+    const num = (campo, id, label) =>
+      `<div class="campo"><label>${label}</label><input type="number" id="${id}" inputmode="decimal" step="0.01" min="0" value="${c[campo] ? c[campo] : 0}" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value==='')this.value='0'" oninput="compInput('${campo}', this)"></div>`;
+    const alic = v => `<option value="${v}" ${c.alic === Number(v) ? 'selected' : ''}>`;
+
+    let importes;
+    if (k.computable) {
+      importes = `
+        <div class="atajo">💡 Tipeá solo el <b>neto</b>: el IVA y el total se calculan solos y los podés corregir.</div>
+        <div class="campo"><label>Alícuota de IVA</label>
+          <select id="c-alic" onchange="compAlic(this)">
+            ${alic('0.21')}21%</option>${alic('0.105')}10,5%</option>${alic('0.27')}27%</option>${alic('0')}Otro (lo tipeo yo)</option>
+          </select></div>
+        <div class="grid-2">${num('neto', 'c-neto', 'Neto gravado ($)')}${num('noGrav', 'c-nograv', 'No gravado / exento ($)')}</div>
+        <div class="grid-2">${num('iva', 'c-iva', 'IVA ($)')}${num('otros', 'c-otros', 'Otros impuestos ($)')}</div>
+        <div class="grid-2">${num('percIva', 'c-perciva', 'Percepción IVA ($)')}${num('percIibb', 'c-perciibb', 'Percepción IIBB ($)')}</div>
+        <div class="tot-box"><span>Suma de los importes</span><span id="c-calc">${fmt2(k.suma)}</span></div>
+        ${num('total', 'c-total', 'Total de la factura (para controlar)')}
+        <div class="msg-ok" id="c-ok">✅ Los importes cierran con el total.</div>
+        <div class="msg-av" id="c-aviso"></div>
+        <p class="nota" style="margin-top:6px;">Si no cierra te avisa, pero te deja guardar igual.</p>`;
+    } else {
+      importes = `
+        <p class="nota">Este tipo no da crédito de IVA: se carga solo el total y todo es gasto.</p>
+        ${num('total', 'c-total', 'Total ($)')}`;
+    }
+
+    const repartoHtml = c.local === 'Sociedad'
+      ? '<p class="nota" style="margin-top:6px;">Sociedad se reparte solo, mitad y mitad entre Ramos Mejía y Morón.</p>'
+      : `<label style="display:flex;gap:8px;align-items:center;margin-top:8px;font-weight:500;"><input type="checkbox" style="width:auto;" ${c.reparto ? 'checked' : ''} onchange="compReparto(this)"> Repartir mitad y mitad entre Ramos y Morón</label>`;
+
+    return `
+      <div class="card"><h3>${edit ? 'Editar comprobante' : 'Cargar comprobante'}</h3>
+        <div class="grid-2">
+          <div class="campo"><label>Fecha</label><input type="date" id="c-fecha" value="${c.fecha}" oninput="compInput('fecha', this)"></div>
+          <div class="campo"><label>Mes de imputación</label><input type="month" id="c-mes" value="${c.mes}" oninput="compInput('mes', this)"></div>
+        </div>
+        <div class="campo"><label>Proveedor</label>
+          <input type="text" id="c-prov" list="dl-prov" value="${esc(c.proveedor)}" placeholder="Ej: Axionlog" autocomplete="off" oninput="compInput('proveedor', this)">
+          <datalist id="dl-prov">${provsComp.map(p => `<option value="${esc(p)}">`).join('')}</datalist></div>
+        <div class="campo"><label>Tipo de comprobante</label>${chips('tipo', TIPOS_COMP)}</div>
+        <div class="campo"><label>Local</label>${chips('local', LOCALES_COMP.map(x => [x, x]))}${repartoHtml}</div>
+        <div class="campo"><label>Marca</label>${chips('marca', MARCAS_COMP.map(x => [x, x]))}</div>
+        <div class="grid-2">
+          <div class="campo"><label>Categoría</label>
+            <select id="c-cat" onchange="compInput('categoria', this)">${CATS_COMP.map(x => `<option ${c.categoria === x ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select></div>
+          <div class="campo"><label>Detalle</label>
+            <input type="text" id="c-det" list="dl-det" value="${esc(c.detalle)}" placeholder="Ej: AySA" autocomplete="off" oninput="compInput('detalle', this)">
+            <datalist id="dl-det">${DETALLES_COMP.map(x => `<option value="${esc(x)}">`).join('')}</datalist></div>
+        </div>
+      </div>
+      <div class="card"><h3>Importes</h3>${importes}</div>
+      <div class="card"><h3>Qué va a pasar con esta factura</h3>
+        <div class="auto-fila"><span>Gasto del estado de resultados</span><strong id="c-gasto">${fmt2(k.gasto)}</strong></div>
+        <div class="auto-fila"><span>Crédito de IVA</span><strong id="c-cred">${fmt2(k.credito)}</strong></div>
+        <div class="auto-fila"><span>Percepciones (no son gasto)</span><strong id="c-perc">${fmt2(k.percIva + k.percIibb)}</strong></div>
+        <button class="btn-primario" id="c-btn-guardar" style="margin-top:14px;" onclick="compGuardar()">${edit ? '💾 Guardar cambios' : '💾 Guardar comprobante'}</button>
+        ${edit ? '<button class="btn-agregar" onclick="compCancelar()">Cancelar edición</button>' : ''}
+      </div>`;
+  }
+
+  function compRenderForm() {
+    document.getElementById('comp-form-wrap').innerHTML = compFormHtml();
+    compRefrescar();
+  }
+
+  // Actualiza los números sin volver a dibujar el formulario (así no se pierde el cursor al tipear)
+  function compRefrescar() {
+    const k = compCalcular(comp);
+    const txt = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+    const inp = (id, v) => { const el = document.getElementById(id); if (el && document.activeElement !== el) el.value = v ? v : 0; };
+    inp('c-iva', comp.iva); inp('c-total', comp.total);
+    txt('c-calc', fmt2(k.suma)); txt('c-gasto', fmt2(k.gasto)); txt('c-cred', fmt2(k.credito)); txt('c-perc', fmt2(k.percIva + k.percIibb));
+    const av = document.getElementById('c-aviso'), ok = document.getElementById('c-ok');
+    if (av && ok) {
+      const dif = r2(k.suma - comp.total);
+      const mal = Math.abs(dif) > 1;
+      av.style.display = mal ? 'block' : 'none';
+      ok.style.display = mal ? 'none' : 'block';
+      if (mal) av.textContent = '⚠️ No cierra: los importes suman ' + fmt2(k.suma) + ' y el total dice ' + fmt2(comp.total) + ' (diferencia ' + fmt2(dif) + '). Revisá los números.';
+    }
+  }
+
+  window.compInput = function(campo, el) {
+    const numeros = ['neto', 'noGrav', 'iva', 'percIva', 'percIibb', 'otros', 'total'];
+    comp[campo] = numeros.includes(campo) ? r2(el.value) : el.value;
+    if (campo === 'fecha' && !comp.mesTocado && el.value) { comp.mes = el.value.slice(0, 7); const m = document.getElementById('c-mes'); if (m) m.value = comp.mes; }
+    if (campo === 'mes') comp.mesTocado = true;
+    if (campo === 'iva') { comp.ivaManual = true; comp.alic = 0; const a = document.getElementById('c-alic'); if (a) a.value = '0'; }
+    if (campo === 'total') comp.totalManual = true;
+    if (campo === 'neto') compAutoIva();
+    if (['neto', 'noGrav', 'iva', 'percIva', 'percIibb', 'otros'].includes(campo)) compAutoTotal();
+    compRefrescar();
+  }
+
+  window.compAlic = function(el) {
+    comp.alic = Number(el.value);
+    comp.ivaManual = comp.alic === 0;
+    compAutoIva(); compAutoTotal(); compRefrescar();
+  }
+
+  window.compChip = function(campo, v) {
+    comp[campo] = v;
+    if (campo === 'local' && v === 'Sociedad') comp.reparto = true;
+    if (campo === 'tipo' && esComputable(v)) { compAutoIva(); compAutoTotal(); }
+    compRenderForm();
+  }
+
+  window.compReparto = function(el) { comp.reparto = el.checked; }
+
+  window.compCancelar = function() {
+    comp = compNuevo(comp); compEditId = null; compEditMes = null; compRenderForm();
+  }
+
+  async function compGuardarProveedor(nombre) {
+    if (provsComp.some(p => p.toLowerCase() === nombre.toLowerCase())) return;
+    provsComp.push(nombre);
+    provsComp.sort((a, b) => a.localeCompare(b));
+    try { await setDoc(doc(db, 'config', 'proveedores_comprobantes'), { lista: provsComp }); } catch(e) { /* no es grave */ }
+  }
+
+  function compOrdenar(lista) {
+    lista.sort((a, b) => String(b.fecha).localeCompare(String(a.fecha)) || (b.timestamp || 0) - (a.timestamp || 0));
+  }
+
+  window.compGuardar = async function() {
+    if (compGuardando) return;
+    const c = comp;
+    if (!c.proveedor.trim()) { toast('Poné el proveedor', 'error'); return; }
+    if (!c.fecha || !c.mes) { toast('Poné la fecha y el mes de imputación', 'error'); return; }
+    compAutoTotal();
+    if (!(c.total > 0)) { toast('Poné el importe', 'error'); return; }
+    const k = compCalcular(c);
+    const data = {
+      fecha: c.fecha, mes: c.mes, proveedor: c.proveedor.trim(), tipo: c.tipo, signo: k.signo,
+      local: c.local, marca: c.marca, categoria: c.categoria, detalle: (c.detalle || '').trim(),
+      neto: k.computable ? c.neto : 0, noGravado: k.computable ? c.noGrav : 0, iva: k.computable ? c.iva : 0,
+      percIva: k.computable ? c.percIva : 0, percIibb: k.computable ? c.percIibb : 0, otros: k.computable ? c.otros : 0,
+      total: c.total, reparto: (c.local === 'Sociedad' || c.reparto) ? 'mitad' : 'local',
+      ivaComputable: k.computable,
+      calc: { gasto: r2(k.gasto), creditoIva: r2(k.credito), percIva: r2(k.percIva), percIibb: r2(k.percIibb) },
+      timestamp: Date.now()
+    };
+    compGuardando = true;
+    const btn = document.getElementById('c-btn-guardar');
+    if (btn) { btn.disabled = true; btn.textContent = 'Guardando...'; }
+    try {
+      const esEdicion = !!compEditId;
+      const id = esEdicion ? compEditId : doc(collection(db, COL_COMP, c.mes, 'items')).id;
+      await setDoc(doc(db, COL_COMP, c.mes, 'items', id), data);
+      if (esEdicion && compEditMes && compEditMes !== c.mes) {
+        // Cambió el mes de imputación: se borra del mes viejo recién después de guardar en el nuevo
+        await deleteDoc(doc(db, COL_COMP, compEditMes, 'items', compEditId));
+        if (compCache[compEditMes]) compCache[compEditMes] = compCache[compEditMes].filter(x => x.id !== compEditId);
+      }
+      const lista = compCache[c.mes];
+      if (lista) {
+        const i = lista.findIndex(x => x.id === id);
+        if (i >= 0) lista[i] = { id, ...data }; else lista.push({ id, ...data });
+        compOrdenar(lista);
+      }
+      await compGuardarProveedor(data.proveedor);
+      compMesVer = c.mes;
+      comp = compNuevo(c); compEditId = null; compEditMes = null;
+      compRenderForm();
+      await compRenderLista();
+      toast(esEdicion ? 'Cambios guardados' : 'Comprobante guardado', 'ok');
+    } catch(e) {
+      toast('No se pudo guardar: ' + e.message, 'error');
+      const b = document.getElementById('c-btn-guardar');
+      if (b) { b.disabled = false; b.textContent = compEditId ? '💾 Guardar cambios' : '💾 Guardar comprobante'; }
+    } finally { compGuardando = false; }
+  }
+
+  async function compCargarMes(mes) {
+    if (!compCache[mes]) {
+      const snap = await getDocs(collection(db, COL_COMP, mes, 'items'));
+      const lista = [];
+      snap.forEach(d => lista.push({ id: d.id, ...d.data() }));
+      compOrdenar(lista);
+      compCache[mes] = lista;
+    }
+    return compCache[mes];
+  }
+
+  async function compRenderLista() {
+    const wrap = document.getElementById('comp-lista-wrap');
+    const mes = compMesVer || mesActual();
+    wrap.innerHTML = `<div class="card"><h3>Comprobantes cargados</h3>
+      <div class="campo"><label>Mes de imputación</label><input type="month" id="c-mes-ver" value="${mes}" onchange="compCambiarMesVer(this.value)"></div>
+      <div id="c-lista-cont"><div class="vacio" style="padding:20px;">Cargando...</div></div></div>`;
+    const cont = document.getElementById('c-lista-cont');
+    try {
+      const lista = await compCargarMes(mes);
+      if (!lista.length) { cont.innerHTML = '<div class="vacio" style="padding:20px;">Todavía no hay comprobantes en ' + nombreMes(mes) + '.</div>'; return; }
+      const totalGasto = sum(lista, x => (x.calc && x.calc.gasto) || 0);
+      cont.innerHTML = `<p class="nota">${lista.length} comprobante${lista.length === 1 ? '' : 's'} · gasto cargado: <b>${fmt2(totalGasto)}</b></p>` + lista.map(x => {
+        const donde = x.local === 'Sociedad' ? 'Sociedad (½ y ½)' : (x.reparto === 'mitad' ? x.local + ' (½ y ½)' : x.local);
+        const tipo = (TIPOS_COMP.find(t => t[0] === x.tipo) || [0, x.tipo])[1];
+        const dd = String(x.fecha || '').slice(8, 10) + '/' + String(x.fecha || '').slice(5, 7);
+        const monto = (x.signo || 1) * (x.total || 0);
+        return `<div class="comp-fila" onclick="compEditar('${mes}','${x.id}')">
+          <span>${esc(x.proveedor)} · ${esc(tipo)}<small>${dd} · ${esc(x.categoria)}${x.detalle ? ' – ' + esc(x.detalle) : ''} · ${esc(x.marca)} · ${esc(donde)}</small></span>
+          <span class="monto ${monto < 0 ? 'neg' : ''}">${fmt2(monto)}</span>
+          <button class="del" onclick="event.stopPropagation();compBorrar('${mes}','${x.id}')">🗑</button></div>`;
+      }).join('') + '<p class="nota" style="margin-top:8px;">Tocá una fila para editarla.</p>';
+    } catch(e) {
+      cont.innerHTML = '<div class="vacio" style="padding:20px;">No se pudieron cargar: ' + esc(e.message) + '</div>';
+    }
+  }
+
+  window.compCambiarMesVer = async function(mes) {
+    if (!mes) return;
+    compMesVer = mes;
+    await compRenderLista();
+  }
+
+  window.compEditar = function(mes, id) {
+    const it = (compCache[mes] || []).find(x => x.id === id);
+    if (!it) return;
+    comp = {
+      fecha: it.fecha, mes: it.mes, mesTocado: true, proveedor: it.proveedor, tipo: it.tipo, local: it.local, marca: it.marca,
+      categoria: it.categoria, detalle: it.detalle || '', reparto: it.reparto === 'mitad',
+      alic: 0, ivaManual: true, totalManual: true,
+      neto: it.neto || 0, noGrav: it.noGravado || 0, iva: it.iva || 0, percIva: it.percIva || 0, percIibb: it.percIibb || 0, otros: it.otros || 0, total: it.total || 0
+    };
+    compEditId = id; compEditMes = mes;
+    compRenderForm();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  window.compBorrar = async function(mes, id) {
+    const it = (compCache[mes] || []).find(x => x.id === id);
+    if (!it || !confirm('¿Borrar el comprobante de ' + it.proveedor + ' por ' + fmt2((it.signo || 1) * (it.total || 0)) + '?')) return;
+    try {
+      await deleteDoc(doc(db, COL_COMP, mes, 'items', id));
+      compCache[mes] = compCache[mes].filter(x => x.id !== id);
+      if (compEditId === id) { comp = compNuevo(comp); compEditId = null; compEditMes = null; compRenderForm(); }
+      await compRenderLista();
+      toast('Comprobante borrado', 'ok');
+    } catch(e) { toast('No se pudo borrar: ' + e.message, 'error'); }
+  }
+
   // ── TABS Y VISTA ─────────────────────────────────────────────────
   window.cambiarTab = function(tab) {
     tabActual = tab;
-    ['resultado','comparar','carga'].forEach(t => {
+    ['resultado','comparar','comprobantes','carga'].forEach(t => {
       document.getElementById('tab-' + t).classList.toggle('activa', t === tab);
       document.getElementById('tab-btn-' + t).classList.toggle('activo', t === tab);
     });
     document.getElementById('footer-guardar').style.display = tab === 'carga' ? 'block' : 'none';
     if (tab === 'resultado') renderResultado();
     if (tab === 'comparar') renderComparar();
+    if (tab === 'comprobantes') abrirComprobantes();
   }
 
   function renderVistaBar(id) {
@@ -535,6 +965,7 @@
         av += `<div class="aviso info">${m} ${l}: ${v[m].dias.size} de ${diasDelMes(resMes)} días con cierre de caja.${faltan.length ? ' Sin cierre: ' + faltan.join(', ') + '.' : ''}</div>`;
       });
     });
+    av += avisoResumen(resMes);
     if (!cols.some(c => c.existe)) av += `<div class="aviso">Todavía no se cargaron los gastos de este mes. Se cargan en la pestaña 📥.</div>`;
     avisos.innerHTML = av;
 
@@ -548,9 +979,25 @@
         <div class="kpi-card"><div class="kpi-label">Margen</div><div class="kpi-valor ${tot.resultado >= 0 ? 'kpi-pos' : 'kpi-neg'}">${pct(tot.resultado, tot.ingresos)}</div></div>
       </div>
       <div class="card"><h3>Estado de resultados — ${nombreMes(resMes)}</h3>
+        <div style="margin:-4px 0 12px;"><button onclick="descargarERR()" style="background:#f0fff4;color:#2a9d5c;border:1px solid #c3e6cb;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;">📥 Descargar Excel</button></div>
         <div style="overflow-x:auto;">${tablaERR(cols, labels)}</div>
         <p class="nota" style="margin:12px 0 0;">Los porcentajes son sobre el total de ingresos (ventas más vouchers). Todo con IVA incluido.</p>
       </div>`;
+  }
+
+  window.descargarERR = function() {
+    const tabla = document.querySelector('#res-contenido table.cf-tabla');
+    if (!tabla || typeof XLSX === 'undefined') { toast('No se pudo armar el Excel', 'error'); return; }
+    const filas = [...tabla.rows].map(tr => [...tr.cells].map(td => {
+      const t = td.textContent.trim();
+      const m = t.match(/^(-?)\$([\d.]+)$/);
+      return m ? Number(m[1] + m[2].replace(/\./g, '')) : t;
+    }));
+    const ws = XLSX.utils.aoa_to_sheet(filas);
+    ws['!cols'] = [{ wch: 40 }, { wch: 16 }, { wch: 16 }, { wch: 16 }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Estado de resultados');
+    XLSX.writeFile(wb, 'estado-de-resultados_' + (vista === 'todo' ? 'ambos-locales' : slug(vista)) + '_' + resMes + '.xlsx');
   }
 
   // ── COMPARAR ─────────────────────────────────────────────────────
@@ -612,7 +1059,7 @@
     if (!confirm('¿Eliminar los gastos cargados de ' + nombreMes(s.mes) + ' (' + s.local + ')? Las ventas no se borran porque salen de los cierres de caja.')) return;
     try {
       await deleteDoc(doc(db, COL_ERR, id));
-      await cargarTodo();
+      await cargarTodo(true);
       prepararForm();
       renderComparar();
       renderCarga();
@@ -850,7 +1297,7 @@
         regalias: form.regalias, publicidad: form.publicidad, impuestos: form.impuestos,
         servicios, extraordinarios, timestamp: Date.now()
       });
-      await cargarTodo();
+      await cargarTodo(true);
       prepararForm();
       renderCarga();
       toast('Mes guardado', 'ok');
