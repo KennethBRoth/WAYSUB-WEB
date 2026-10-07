@@ -100,7 +100,7 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, getDocs, doc, getDoc, query, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAB2-btgFqGiCe1YdZSDv4EShV601N-uQs",
@@ -145,8 +145,17 @@ window.buscar = async function() {
   const div = document.getElementById('resultados');
   div.innerHTML = '<div class="loading"><div class="spinner"></div><p>Cargando...</p></div>';
 
+  const desde = document.getElementById('filtro-desde').value;
+  const hasta = document.getElementById('filtro-hasta').value;
+  if (!desde || !hasta) {
+    div.innerHTML = '<div class="sin-datos"><div class="icon">📅</div><p>Elegí las fechas desde y hasta</p></div>';
+    return;
+  }
+
   try {
-    const snap = await getDocs(collection(db, 'cajero_cierres'));
+    // Se leen SOLO los cierres del rango elegido (antes se leía toda la colección en cada búsqueda).
+    // Una sola condición sobre el campo fecha: no necesita índices.
+    const snap = await getDocs(query(collection(db, 'cajero_cierres'), where('fecha', '>=', desde), where('fecha', '<=', hasta)));
     todosLosCierres = [];
     snap.forEach(d => todosLosCierres.push({ id: d.id, ...d.data() }));
     renderCierres();
