@@ -87,8 +87,8 @@
 
   <div class="container">
     <div class="filtro-fecha">
-      <input type="date" id="filtro-desde" onchange="renderReporte()">
-      <input type="date" id="filtro-hasta" onchange="renderReporte()">
+      <input type="date" id="filtro-desde" onchange="cambioRango()">
+      <input type="date" id="filtro-hasta" onchange="cambioRango()">
     </div>
 
     <div class="total-periodo">
@@ -105,7 +105,7 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, getDocs, doc, getDoc, query, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAB2-btgFqGiCe1YdZSDv4EShV601N-uQs",
@@ -153,17 +153,34 @@ onAuthStateChanged(auth, async (user) => {
   await cargarCierres();
 });
 
+// Se leen SOLO los cierres del rango de fechas elegido (antes se leía toda la colección en cada apertura).
+// Una sola condición sobre el campo fecha: no necesita índices.
+let rangoCargado = null;
+
 async function cargarCierres() {
+  const desde = document.getElementById('filtro-desde').value;
+  const hasta = document.getElementById('filtro-hasta').value;
+  if (!desde || !hasta) return;
   try {
-    const snap = await getDocs(collection(db, 'cajero_cierres'));
+    const snap = await getDocs(query(collection(db, 'cajero_cierres'), where('fecha', '>=', desde), where('fecha', '<=', hasta)));
     cierres = [];
     snap.forEach(d => cierres.push(d.data()));
+    rangoCargado = { desde, hasta };
     renderReporte();
   } catch (e) {
     console.error(e);
     document.getElementById('reporte-contenido').innerHTML = '<div class="sin-datos-rango"><div class="icon">⚠️</div><p>Error al cargar los datos</p></div>';
   }
 }
+
+// Al cambiar las fechas: si el rango nuevo ya está dentro de lo que se leyó, no se vuelve a leer nada
+window.cambioRango = async function() {
+  const desde = document.getElementById('filtro-desde').value;
+  const hasta = document.getElementById('filtro-hasta').value;
+  if (!desde || !hasta) return;
+  if (rangoCargado && desde >= rangoCargado.desde && hasta <= rangoCargado.hasta) { renderReporte(); return; }
+  await cargarCierres();
+};
 
 // La "Diferencia" se calcula igual que el cartel "Resultado de caja" que ve
 // el cajero en pantalla al cerrar (cierre + tarjetas + gastos + delivery
