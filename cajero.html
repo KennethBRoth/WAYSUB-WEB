@@ -205,6 +205,9 @@
 
   <div class="container">
 
+    <!-- AVISO CUANDO NO SE PUEDE GUARDAR UN DÍA -->
+    <div id="banner-bloqueo" style="display:none;background:#fff0f0;border:2px solid #e63946;color:#c0392b;border-radius:12px;padding:14px 16px;margin-bottom:16px;font-size:14px;font-weight:600;line-height:1.5;"></div>
+
     <!-- RESUMEN ARRIBA DE TODO -->
     <div class="resumen-top">
       <div class="resumen-top-label">Resumen del día</div>
@@ -421,7 +424,7 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, getDocs, doc, getDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, getDocs, doc, getDoc, query, where, runTransaction, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAB2-btgFqGiCe1YdZSDv4EShV601N-uQs",
@@ -504,7 +507,7 @@ function entrarALocal(key) {
   document.getElementById('header-local').textContent = localUsuario;
   document.getElementById('header-user').textContent = nombreUsuario;
   document.getElementById('campo-cajero').textContent = nombreUsuario;
-  document.getElementById('campo-fecha').value = new Date().toISOString().split('T')[0];
+  document.getElementById('campo-fecha').value = hoyLocal();
   document.getElementById('seccion-panes').style.display = esSubway ? 'block' : 'none';
   document.getElementById('seccion-egresos').style.display = 'block';
   document.getElementById('btn-cambiar').style.display = esMultiLocal ? 'block' : 'none';
@@ -812,23 +815,12 @@ window.verificarApertura = async function() {
   if (aperturaHoy === 0) { el.style.display = 'none'; return; } // todavía no cargó nada
 
   // Fecha de ayer (respetando mes/año)
-  const d = new Date(fecha + 'T00:00:00');
-  d.setDate(d.getDate() - 1);
-  const ayer = d.toISOString().split('T')[0];
+  const ayer = fechaAnterior(fecha);
 
   try {
-    const snap = await getDocs(collection(db, 'cajero_cierres'));
-    let cierreAyer = 0;
-    let encontrado = false;
-    snap.forEach(doc => {
-      const data = doc.data();
-      if (data.local === localUsuario && data.fecha === ayer) {
-        cierreAyer += data.cierreContado || 0;
-        encontrado = true;
-      }
-    });
-
-    if (!encontrado) { el.style.display = 'none'; return; }
+    const cAyer = elegirCierre(await cierresDelDia(ayer), ayer);
+    if (!cAyer) { el.style.display = 'none'; return; }
+    const cierreAyer = cAyer.cierreContado || 0;
 
     const diferencia = aperturaHoy - cierreAyer;
     if (Math.abs(diferencia) < 1) {
@@ -863,23 +855,12 @@ window.verificarSobrantePanes = async function() {
   const sobranteAnteriorHoy = getNum('sobrantes-anterior');
   if (sobranteAnteriorHoy === 0) { el.style.display = 'none'; marcarCampo(false); return; }
 
-  const d = new Date(fecha + 'T00:00:00');
-  d.setDate(d.getDate() - 1);
-  const ayer = d.toISOString().split('T')[0];
+  const ayer = fechaAnterior(fecha);
 
   try {
-    const snap = await getDocs(collection(db, 'cajero_cierres'));
-    let sobranteDiaAyer = 0;
-    let encontrado = false;
-    snap.forEach(doc => {
-      const data = doc.data();
-      if (data.local === localUsuario && data.fecha === ayer && data.panes) {
-        sobranteDiaAyer += data.panes.sobrantesDia || 0;
-        encontrado = true;
-      }
-    });
-
-    if (!encontrado) { el.style.display = 'none'; marcarCampo(false); return; }
+    const cAyer = elegirCierre(await cierresDelDia(ayer), ayer);
+    if (!cAyer || !cAyer.panes) { el.style.display = 'none'; marcarCampo(false); return; }
+    const sobranteDiaAyer = cAyer.panes.sobrantesDia || 0;
 
     const diferencia = sobranteAnteriorHoy - sobranteDiaAyer;
     if (Math.abs(diferencia) < 1) {
@@ -960,75 +941,122 @@ window.calcPanes = function() {
 };
 
 // ── CARGAR DÍA ──────────────────────────────────────────
+// Regla: hay UN solo cierre por local y día, con un nombre fijo (por ejemplo subway_ramos_mejia_2026-10-05).
+// Se guarda siempre sobre ese mismo cierre, así no se pueden crear duplicados ni hay nada que "juntar".
 let firmasDelDia = []; // Log de "quién pasó por acá y cómo le quedó", dentro del mismo cierre del día
+let versionCargada = 0;    // versión del cierre tal como se abrió (sirve para detectar si otra persona guardó mientras tanto)
+let fechaCargada = null;   // día para el que terminó de cargarse la pantalla
+let cargaSeq = 0;          // número de la última carga pedida (se descartan las respuestas viejas)
+let cargando = false;
+let guardando = false;
+let bloqueadoMotivo = '';  // si tiene texto, este día no se puede guardar
+
+function pad2(n) { return String(n).padStart(2, '0'); }
+function hoyLocal() { const d = new Date(); return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`; }
+function fechaAnterior(fecha) {
+  const [y, m, d] = fecha.split('-').map(Number);
+  const x = new Date(y, m - 1, d - 1);
+  return `${x.getFullYear()}-${pad2(x.getMonth() + 1)}-${pad2(x.getDate())}`;
+}
+function slugLocal(s) { return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9]+/g, '_').toLowerCase(); }
+function idCierre(local, fecha) { return slugLocal(local) + '_' + fecha; }
+function tiempoDoc(d) {
+  const t = d.timestamp;
+  if (!t) return 0;
+  if (typeof t.toMillis === 'function') return t.toMillis();
+  if (t.seconds) return t.seconds * 1000;
+  return Number(t) || 0;
+}
+// De la lista de firmas queda una sola por persona
+function dedupFirmas(lista) {
+  const vistos = new Set();
+  return (lista || []).filter(f => { if (vistos.has(f.cajero)) return false; vistos.add(f.cajero); return true; });
+}
+
+// Trae los cierres de UN día (una sola condición, no hace falta índice) y se queda con los de este local
+async function cierresDelDia(fecha) {
+  const snap = await getDocs(query(collection(db, 'cajero_cierres'), where('fecha', '==', fecha)));
+  const lista = [];
+  snap.forEach(d => { const data = d.data(); if (data.local === localUsuario) lista.push({ id: d.id, ...data }); });
+  return lista;
+}
+// Si hubiera más de uno: el de nombre fijo, o el guardado más recientemente
+function elegirCierre(lista, fecha) {
+  if (!lista.length) return null;
+  const oficial = lista.find(r => r.id === idCierre(localUsuario, fecha));
+  if (oficial) return oficial;
+  return [...lista].sort((a, b) => tiempoDoc(b) - tiempoDoc(a))[0];
+}
+
+function actualizarBotonGuardar() {
+  const btn = document.getElementById('btn-guardar');
+  if (!btn) return;
+  btn.disabled = cargando || guardando || !!bloqueadoMotivo;
+  if (!guardando) btn.textContent = cargando ? 'Cargando el día...' : (bloqueadoMotivo ? 'No se puede guardar este día' : 'Guardar cierre del día');
+}
+function actualizarBloqueo() {
+  const b = document.getElementById('banner-bloqueo');
+  if (b) { b.style.display = bloqueadoMotivo ? 'block' : 'none'; b.textContent = bloqueadoMotivo; }
+  actualizarBotonGuardar();
+}
 
 window.cargarDia = async function() {
   const fecha = document.getElementById('campo-fecha').value;
   if (!fecha) return;
 
+  const miCarga = ++cargaSeq;
+  cargando = true; fechaCargada = null; bloqueadoMotivo = '';
+  actualizarBloqueo();
   limpiarFormulario();
-  docIdActual = null;
+  docIdActual = null; versionCargada = 0; firmasDelDia = [];
+  renderResumenDelDia();
 
   try {
-    const snap = await getDocs(collection(db, 'cajero_cierres'));
-    const registros = [];
-    snap.forEach(d => {
-      const data = d.data();
-      if (data.local === localUsuario && data.fecha === fecha) {
-        registros.push({ id: d.id, ...data });
-      }
-    });
+    const lista = await cierresDelDia(fecha);
+    if (miCarga !== cargaSeq) return; // mientras cargaba se pidió otro día: esta respuesta se descarta
 
-    if (registros.length === 0) {
-      mostrarToast('Día nuevo — formulario en blanco', '');
-      firmasDelDia = [];
-      renderResumenDelDia();
-      return;
-    }
+    const idOficial = idCierre(localUsuario, fecha);
+    const oficial = lista.find(r => r.id === idOficial);
+    const otros = lista.filter(r => r.id !== idOficial);
 
-    // Si hay múltiples turnos del mismo día, unificarlos (como siempre)
-    if (registros.length === 1) {
-      docIdActual = registros[0].id;
-      cargarDatos(registros[0]);
+    if (oficial) {
+      docIdActual = oficial.id; versionCargada = oficial.version || 0;
+      cargarDatos(oficial);
       mostrarToast('✏️ Datos cargados — podés editar', '');
+    } else if (otros.length === 1) {
+      // Un cierre de antes del cambio: se sigue usando y guardando sobre ese mismo
+      docIdActual = otros[0].id; versionCargada = otros[0].version || 0;
+      cargarDatos(otros[0]);
+      mostrarToast('✏️ Datos cargados — podés editar', '');
+    } else if (otros.length === 0) {
+      mostrarToast('Día nuevo — formulario en blanco', '');
     } else {
-      const unificado = unificarTurnos(registros);
-      docIdActual = null; // Al guardar creará uno nuevo unificado
-      cargarDatos(unificado);
-      mostrarToast(`📋 ${registros.length} turnos unificados`, '');
+      // Varios cierres del mismo día y ninguno oficial: no se junta nada y no se deja guardar
+      cargarDatos(elegirCierre(otros, fecha)); // se muestra el más reciente, solo para mirar
+      docIdActual = null;
+      bloqueadoMotivo = '⚠️ Este día tiene ' + otros.length + ' cierres guardados (duplicados). Se muestra el más reciente, pero NO se puede guardar para no pisar datos. Avisale al administrador.';
     }
+    fechaCargada = fecha;
     verificarApertura();
     verificarSobrantePanes();
   } catch (err) {
+    if (miCarga !== cargaSeq) return;
     console.error(err);
+    bloqueadoMotivo = '⚠️ No se pudo cargar este día. NO guardes, podrías pisar datos que ya estaban. Cambiá de día y volvé, o recargá la página.';
     mostrarToast('Error al cargar el día', 'error');
+  } finally {
+    if (miCarga === cargaSeq) { cargando = false; actualizarBloqueo(); }
   }
 };
 
-function unificarTurnos(registros) {
-  // Suma todos los valores numéricos, combina gastos
-  const base = registros[0];
-  const campos = ['aperturaFuerte','aperturaRegistradora','cierreFuerte','cierreRegistradora','apertura','cierreContado','importeTarjetas','cantidadTarjetas','totalGastos',
-    'mercadoPago','posnetBalcarce','gastosDiarios','ventasIva','vouchers',
-    'mercadoDelivery','rappi','pedidosYa','uberEats'];
-
-  const resultado = { ...base };
-  for (let i = 1; i < registros.length; i++) {
-    campos.forEach(c => { resultado[c] = (resultado[c] || 0) + (registros[i][c] || 0); });
-    // Combinar gastos
-    if (registros[i].gastos) {
-      resultado.gastos = [...(resultado.gastos || []), ...registros[i].gastos];
-    }
-    if (registros[i].panes && resultado.panes) {
-      // Para panes, usar el último turno (más reciente)
-      resultado.panes = registros[i].panes;
-    }
-    // Combinar firmas de todos los turnos que se están unificando
-    if (registros[i].firmas) {
-      resultado.firmas = [...(resultado.firmas || []), ...registros[i].firmas];
-    }
-  }
-  return resultado;
+// Indica si el formulario está totalmente vacío (todo en 0)
+function formularioVacio() {
+  const ids = ['apertura-fuerte','apertura-registradora','cierre-fuerte','cierre-registradora','ventas-iva','vouchers','posnet-balcarce','dif-delivery-input'];
+  if (ids.some(id => getNum(id) !== 0)) return false;
+  if (tarjetasActuales.some(t => (parseFloat(t.importe) || 0) || (parseInt(t.cantidad) || 0))) return false;
+  if (gastosActuales.some(g => g.desc || (parseFloat(g.monto) || 0))) return false;
+  if (deliveryBloques.some(b => b.canales.some(c => parseFloat(c.monto) || 0))) return false;
+  return true;
 }
 
 // Muestra el registro de cajeros que ya guardaron ese día, cada uno con la hora
@@ -1081,7 +1109,7 @@ function renderResumenDelDia() {
 
 function cargarDatos(data) {
   const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
-  firmasDelDia = data.firmas || [];
+  firmasDelDia = dedupFirmas(data.firmas || []);
   renderResumenDelDia();
   set('apertura-fuerte',       data.aperturaFuerte);
   set('apertura-registradora', data.aperturaRegistradora);
@@ -1166,6 +1194,15 @@ function limpiarFormulario() {
 
 // ── GUARDAR ─────────────────────────────────────────────
 window.guardarCierre = async function() {
+  // Protecciones: no se guarda si el día no terminó de cargar, si está bloqueado o si la fecha cambió
+  if (guardando) return;
+  if (cargando) { mostrarToast('Esperá a que termine de cargar el día', 'error'); return; }
+  if (bloqueadoMotivo) { mostrarToast('No se puede guardar este día. Avisale al administrador.', 'error'); return; }
+  if (!fechaCargada || document.getElementById('campo-fecha').value !== fechaCargada) {
+    mostrarToast('La fecha cambió: esperá a que cargue el día elegido', 'error');
+    return;
+  }
+
   // Un gasto con monto cargado tiene que tener descripción sí o sí
   const gastoIncompleto = gastosActuales.find(g => (parseFloat(g.monto) || 0) > 0 && !(g.desc && g.desc.trim()));
   if (gastoIncompleto) {
@@ -1189,7 +1226,11 @@ window.guardarCierre = async function() {
   }
   marcarSeccionEgresos(false);
 
+  // Un cierre totalmente vacío casi siempre es un error: se pide confirmar
+  if (formularioVacio() && !confirm('El cierre está completamente vacío (todo en 0). ¿Guardarlo así igual?')) return;
+
   const btn = document.getElementById('btn-guardar');
+  guardando = true;
   btn.disabled = true; btn.textContent = 'Guardando...';
 
   try {
@@ -1221,19 +1262,12 @@ window.guardarCierre = async function() {
       panesVendidos: panesVendidosActual,
       sinEgresos: sinEgresos
     };
-    alert('La fecha que se va a guardar es: ' + nuevaFirma.fechaGuardado);
-    // Si este cajero ya tiene una firma hoy, se actualiza (no se duplica) —
-    // así no importa cuántas veces guarde durante el turno, solo queda una
-    // fila por persona con su último número.
-    const idxFirmaExistente = firmasDelDia.findIndex(f => f.cajero === nombreUsuario);
-    if (idxFirmaExistente >= 0) {
-      firmasDelDia[idxFirmaExistente] = nuevaFirma;
-    } else {
-      firmasDelDia.push(nuevaFirma);
-    }
+    // Una sola firma por persona: la de este cajero reemplaza a todas las anteriores suyas
+    firmasDelDia = [...firmasDelDia.filter(f => f.cajero !== nombreUsuario), nuevaFirma];
 
     const datos = {
-      fecha:           document.getElementById('campo-fecha').value,
+      fecha:           fechaCargada,
+      version:         versionCargada + 1,
       cajero:          nombreUsuario,
       local:           localUsuario,
       timestamp:       serverTimestamp(),
@@ -1275,26 +1309,39 @@ window.guardarCierre = async function() {
       };
     }
 
-    if (docIdActual) {
-      // Editar registro existente
-      await updateDoc(doc(db, 'cajero_cierres', docIdActual), datos);
-      mostrarToast('✅ Cierre actualizado', 'success');
-    } else {
-      // Nuevo registro
-      const ref = await addDoc(collection(db, 'cajero_cierres'), datos);
-      docIdActual = ref.id;
-      mostrarToast('✅ Cierre guardado', 'success');
-    }
+    // Siempre sobre el mismo cierre del día (nunca se crea uno nuevo al lado de otro).
+    // Si otra persona guardó este día después de que se abrió, no se pisa su trabajo.
+    const eraNuevo = !docIdActual;
+    const ref = doc(db, 'cajero_cierres', docIdActual || idCierre(localUsuario, fechaCargada));
+    await runTransaction(db, async (tx) => {
+      const actual = await tx.get(ref);
+      const versionActual = actual.exists() ? (actual.data().version || 0) : 0;
+      if (versionActual !== versionCargada) throw new Error('CONFLICTO');
+      tx.set(ref, datos, { merge: true });
+    });
+    docIdActual = ref.id;
+    versionCargada = datos.version;
+    mostrarToast(eraNuevo ? '✅ Cierre guardado' : '✅ Cierre actualizado', 'success');
 
     renderResumenDelDia();
 
-    document.getElementById('btn-guardar').textContent = '✅ Guardado — volver a guardar para actualizar';
-    setTimeout(() => { btn.disabled = false; btn.textContent = 'Guardar cierre del día'; }, 3000);
+    guardando = false;
+    actualizarBotonGuardar();
+    btn.textContent = '✅ Guardado — volver a guardar para actualizar';
+    setTimeout(actualizarBotonGuardar, 3000);
 
   } catch (err) {
     console.error(err);
-    mostrarToast('❌ Error al guardar', 'error');
-    btn.disabled = false; btn.textContent = 'Guardar cierre del día';
+    guardando = false;
+    actualizarBotonGuardar();
+    if (err && err.message === 'CONFLICTO') {
+      mostrarToast('⚠️ Otra persona guardó este día mientras lo tenías abierto. No se guardó nada.', 'error');
+      if (confirm('Otra persona guardó este cierre después de que lo abriste.\n\nPara no pisar su trabajo, NO se guardó nada.\n\n¿Querés recargar el día para ver lo último? (se pierde lo que escribiste desde que lo abriste)')) {
+        cargarDia();
+      }
+    } else {
+      mostrarToast('❌ Error al guardar', 'error');
+    }
   }
 };
 
