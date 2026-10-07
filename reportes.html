@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Reportes · Waysub</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: sans-serif; background: #f0f2f5; color: #1a1a1a; min-height: 100vh; }
@@ -147,7 +148,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-  import { getFirestore, collection, getDocs, setDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getFirestore, collection, getDocs, setDoc, deleteDoc, doc, query, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyAB2-btgFqGiCe1YdZSDv4EShV601N-uQs",
@@ -192,7 +193,6 @@
 
   let marcaActual = 'Subway';
   let docs = [];           // documentos guardados a mano (reportes_mes)
-  let cierres = [];        // cierres de caja
   let registros = [];      // un registro por local + marca + mes, con las ventas ya calculadas
   let draft = null;        // lo que se está tipeando en Cargar
   let appActual = APPS[0].id;
@@ -309,33 +309,122 @@
     return Number(t) || 0;
   }
 
-  // Arma un registro por local + marca + mes, juntando lo cargado a mano con las ventas de los cierres
-  function construirRegistros() {
-    // 1) Por cada local y día se usa el cierre guardado más recientemente (si hubiera más de uno)
+
+  // ── RESUMEN MENSUAL DE VENTAS ────────────────────────────────────
+  // Para no releer todos los cierres de caja cada vez, cada mes viejo se guarda ya calculado
+  // (colección ventas_resumen, un documento por mes). Solo el mes en curso y el anterior se calculan en vivo.
+  const COL_RESUMEN = 'ventas_resumen';
+  let resumenes = {};   // mes -> { mes, locales: { 'Subway Ramos Mejía': { dias: {1: {...}}, dup } }, vivo?, actualizado? }
+
+  function mesMas(mes, n) { const [y, m] = mes.split('-').map(Number); const d = new Date(y, m - 1 + n, 1); return d.getFullYear() + '-' + pad(d.getMonth() + 1); }
+  function ultimoMesCongelado() { return mesMas(mesActual(), -2); }
+
+  // Lo que se guarda de cada día: ventas, vouchers, diferencia de delivery y delivery por app
+  function registroDia(d) {
+    return { v: Number(d.ventasIva) || 0, vo: Number(d.vouchers) || 0, dd: Number(d.difDelivery) || 0, dl: ventasPorApp(d) };
+  }
+
+  // Por cada local y día se usa el cierre guardado más recientemente (si hubiera más de uno)
+  function resumirCierres(lista) {
     const porDia = {};
-    cierres.forEach(d => {
+    lista.forEach(d => {
       if (!d.local || !d.fecha) return;
       const k = d.local + '|' + d.fecha;
       const t = tiempoDe(d);
       if (!porDia[k]) porDia[k] = { d, t, n: 1 };
       else { porDia[k].n++; if (t >= porDia[k].t) { porDia[k].d = d; porDia[k].t = t; } }
     });
-
-    // 2) Ventas por local, mes, app y día
-    const idx = {};
+    const out = {};
     Object.values(porDia).forEach(x => {
       const d = x.d;
       const mes = String(d.fecha).slice(0, 7);
-      const dia = Number(String(d.fecha).slice(8, 10));
-      const k = d.local + '|' + mes;
-      if (!idx[k]) idx[k] = { porApp: {}, dias: new Set(), duplicados: 0 };
-      const e = idx[k];
-      e.dias.add(dia);
-      if (x.n > 1) e.duplicados++;
-      const v = ventasPorApp(d);
-      APPS.forEach(a => {
-        if (!e.porApp[a.id]) e.porApp[a.id] = {};
-        e.porApp[a.id][dia] = (e.porApp[a.id][dia] || 0) + v[a.id];
+      const dia = String(Number(String(d.fecha).slice(8, 10)));
+      if (!out[mes]) out[mes] = {};
+      if (!out[mes][d.local]) out[mes][d.local] = { dias: {}, dup: 0 };
+      out[mes][d.local].dias[dia] = registroDia(d);
+      if (x.n > 1) out[mes][d.local].dup++;
+    });
+    return out;
+  }
+
+  // Lee SOLO los cierres de un mes (una sola condición sobre el campo fecha: no necesita índices)
+  async function cierresDelMes(mes) {
+    const snap = await getDocs(query(collection(db, COL_CIERRES), where('fecha', '>=', mes + '-01'), where('fecha', '<=', mes + '-31')));
+    const lista = [];
+    snap.forEach(d => lista.push(d.data()));
+    return lista;
+  }
+
+  async function guardarResumen(mes, locales) {
+    const r = { mes, locales, congelado: true, actualizado: Date.now() };
+    await setDoc(doc(db, COL_RESUMEN, mes), r);
+    resumenes[mes] = r;
+  }
+
+  async function cargarResumenes() {
+    const hoyMes = mesActual(), prev = mesMas(hoyMes, -1), ante = ultimoMesCongelado();
+    const snap = await getDocs(collection(db, COL_RESUMEN));
+    resumenes = {};
+    snap.forEach(d => { resumenes[d.id] = d.data(); });
+    const guardados = Object.keys(resumenes).sort();
+    let yaLeidos = null;
+
+    if (!guardados.length) {
+      // Primera vez: se leen todos los cierres UNA sola vez y se arma el historial
+      const snapC = await getDocs(collection(db, COL_CIERRES));
+      const todos = [];
+      snapC.forEach(d => todos.push(d.data()));
+      yaLeidos = resumirCierres(todos);
+      for (const m of Object.keys(yaLeidos).sort()) {
+        if (m <= ante) await guardarResumen(m, yaLeidos[m]);
+      }
+    } else {
+      // Meses viejos que todavía no se armaron
+      for (let m = guardados[0]; m <= ante; m = mesMas(m, 1)) {
+        if (resumenes[m]) continue;
+        await guardarResumen(m, resumirCierres(await cierresDelMes(m))[m] || {});
+      }
+    }
+
+    // Mes anterior y mes en curso: siempre en vivo (solo se leen los cierres de esos dos meses)
+    for (const m of [prev, hoyMes]) {
+      const locales = yaLeidos ? (yaLeidos[m] || {}) : (resumirCierres(await cierresDelMes(m))[m] || {});
+      resumenes[m] = { mes: m, locales, vivo: true };
+    }
+  }
+
+  window.recalcularMes = async function(mes) {
+    if (mes > ultimoMesCongelado()) { toast('Ese mes se calcula en vivo, no hace falta', 'ok'); return; }
+    if (!confirm('¿Volver a calcular ' + nombreMes(mes) + ' leyendo sus cierres de caja? Hacelo solo si corregiste un cierre de ese mes.')) return;
+    try {
+      await guardarResumen(mes, resumirCierres(await cierresDelMes(mes))[mes] || {});
+      construirRegistros(); renderComparar(); if (tabActual === 'analisis') renderAnalisis();
+      toast('Mes recalculado', 'ok');
+    } catch(e) { toast('No se pudo recalcular: ' + e.message, 'error'); }
+  }
+
+  function avisoResumen(mes) {
+    const r = resumenes[mes];
+    if (!r) return '';
+    if (r.vivo) return '<div class="aviso info">🟢 Mes calculado en vivo desde los cierres de caja.</div>';
+    const cuando = r.actualizado ? new Date(r.actualizado).toLocaleDateString('es-AR') : '';
+    return '<div class="aviso info">📦 Mes ya armado' + (cuando ? ' (guardado el ' + cuando + ')' : '') + ': no vuelve a leer los cierres de caja. Si corregiste un cierre de ese mes, <a href="#" onclick="recalcularMes(\'' + mes + '\');return false;" style="color:inherit;font-weight:700;">volver a calcularlo</a>.</div>';
+  }
+
+  // Arma un registro por local + marca + mes, juntando lo cargado a mano con las ventas de los cierres
+  function construirRegistros() {
+    // 1) y 2) Ventas por local, mes, app y día, tomadas del resumen mensual
+    const idx = {};
+    Object.values(resumenes).forEach(rs => {
+      Object.entries(rs.locales || {}).forEach(([localCaja, info]) => {
+        const e = { porApp: {}, dias: new Set(), duplicados: info.dup || 0 };
+        APPS.forEach(a => { e.porApp[a.id] = {}; });
+        Object.entries(info.dias || {}).forEach(([dia, r]) => {
+          const n = Number(dia);
+          e.dias.add(n);
+          APPS.forEach(a => { e.porApp[a.id][n] = Number(r.dl && r.dl[a.id]) || 0; });
+        });
+        idx[localCaja + '|' + rs.mes] = e;
       });
     });
 
@@ -409,16 +498,12 @@
   }
 
   // ── DATOS ────────────────────────────────────────────────────────
-  async function cargarTodo() {
-    // Se trae todo y se filtra acá (sin query con varios where)
-    const [snapDocs, snapCierres] = await Promise.all([
-      getDocs(collection(db, COLECCION)),
-      getDocs(collection(db, COL_CIERRES))
-    ]);
+  async function cargarTodo(soloDocs) {
+    // Lo cargado a mano (pocos documentos) + el resumen mensual de ventas (ver más arriba)
+    const snapDocs = await getDocs(collection(db, COLECCION));
     docs = [];
     snapDocs.forEach(d => docs.push({ id: d.id, ...d.data() }));
-    cierres = [];
-    snapCierres.forEach(d => cierres.push(d.data()));
+    if (!soloDocs || !Object.keys(resumenes).length) await cargarResumenes();
     construirRegistros();
   }
 
@@ -594,7 +679,7 @@
         local: localActual, marca: marcaActual, mes,
         apps: draft.apps, nota: (draft.nota || '').trim(), timestamp: Date.now()
       });
-      await cargarTodo();
+      await cargarTodo(true);
       prepararDraft();
       renderCargar();
       toast('Mes guardado', 'ok');
@@ -716,6 +801,26 @@
   document.getElementById('sel-mes').addEventListener('change', e => { compMes = e.target.value; renderComparar(); });
   window.setScope = function(s) { compScope = s; renderComparar(); }
 
+  window.descargarMes = function() {
+    if (typeof XLSX === 'undefined') { toast('No se pudo armar el Excel', 'error'); return; }
+    const r = registroDe(marcaActual, localActual, compMes);
+    const n = diasDelMes(r.mes);
+    const suma = arr => arr.reduce((x, y) => x + y, 0);
+    const filas = [[marcaActual + ' ' + localActual + ' — ' + nombreMes(r.mes)], [], ['Ventas por día (cierres de caja)'], ['Día', ...APPS.map(a => a.nombre), 'Total']];
+    for (let d = 1; d <= n; d++) { const v = APPS.map(a => r.apps[a.id].diasMes[d - 1]); filas.push([d, ...v, suma(v)]); }
+    const tot = APPS.map(a => r.apps[a.id].ventas);
+    filas.push(['TOTAL', ...tot, suma(tot)]);
+    const nombres = { pedidos: 'Pedidos', ticket: 'Ticket promedio ($)', conversion: 'Tasa de conversión (%)', impresiones: 'Impresiones', menu: 'Visualizaron el menú', carrito: 'De menú a carrito', pedido: 'Realizaron un pedido', prep: 'Tiempo de preparación (min)', reclamos: 'Pedidos con reclamo', recompra: 'Recompra (%)' };
+    filas.push([], ['Datos cargados a mano'], ['Dato', ...APPS.map(a => a.nombre)]);
+    CAMPOS_NUM.forEach(c => filas.push([nombres[c] || c, ...APPS.map(a => r.apps[a.id][c])]));
+    if (r.nota) filas.push([], ['Nota', r.nota]);
+    const ws = XLSX.utils.aoa_to_sheet(filas);
+    ws['!cols'] = [{ wch: 30 }, ...APPS.map(() => ({ wch: 16 })), { wch: 16 }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Reporte');
+    XLSX.writeFile(wb, 'reporte_' + slug(marcaActual + ' ' + localActual) + '_' + r.mes + '.xlsx');
+  }
+
   function renderComparar() {
     const cont = document.getElementById('comparar-contenido');
     const sel = document.getElementById('sel-mes');
@@ -746,6 +851,8 @@
     let html = '';
     html += `<div class="vs-texto">${previa ? 'Comparado con ' + nombreMes(previa.mes) : 'Es el primer mes con datos, todavía no hay con qué comparar.'}</div>`;
     if (actual.mes === mesActual()) html += `<div class="aviso">Es el mes en curso: los números están incompletos y la comparación con el mes anterior no es justa todavía.</div>`;
+    html += avisoResumen(actual.mes);
+    html += `<div style="margin:10px 16px 0;"><button onclick="descargarMes()" style="background:#f0fff4;color:#2a9d5c;border:1px solid #c3e6cb;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;">📥 Descargar Excel de este mes</button></div>`;
     html += `<div class="aviso info">Ventas tomadas de ${actual.diasConCierre} de ${n} días con cierre de caja.${actual.sinCierre.length ? ' Sin cierre: ' + actual.sinCierre.join(', ') + '.' : ''}</div>`;
     if (!actual.existe) html += `<div class="aviso">Este mes todavía no tiene los datos de pedidos, embudo, tiempos y reclamos. Se cargan en la pestaña 📥.</div>`;
     if (actual.nota) html += `<div class="nota-semana">📝 ${esc(actual.nota)}</div>`;
@@ -812,7 +919,7 @@
     if (!confirm('¿Eliminar los datos cargados de ' + nombreMes(s.mes) + ' (' + s.marca + ' ' + s.local + ')? Las ventas no se borran porque salen de los cierres de caja.')) return;
     try {
       await deleteDoc(doc(db, COLECCION, id));
-      await cargarTodo();
+      await cargarTodo(true);
       compMes = '';
       prepararDraft();
       renderCargar();
@@ -838,7 +945,7 @@
         local: s.local, marca: s.marca, mes: nuevo, apps: s.apps, nota: s.nota || '', timestamp: Date.now()
       });
       await deleteDoc(doc(db, COLECCION, id));
-      await cargarTodo();
+      await cargarTodo(true);
       compMes = nuevo;
       prepararDraft();
       renderCargar();
