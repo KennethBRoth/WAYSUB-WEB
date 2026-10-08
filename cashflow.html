@@ -467,7 +467,7 @@
     if (st && st.mercaderia) {
       Object.entries(st.mercaderia).forEach(([prov, fs]) => {
         const t = Array.isArray(fs) ? sum(fs, f => Number(f.monto) || 0) : 0;
-        if (t > 0) { merc[prov] = t; mercTotal += t; }
+        if (t !== 0) { merc[prov] = t; mercTotal += t; }
       });
     }
     const obj = o => sum(Object.values(o || {}), x => Number(x) || 0);
@@ -856,6 +856,7 @@
     if (tab === 'resultado') renderResultado();
     if (tab === 'comparar') renderComparar();
     if (tab === 'comprobantes') abrirComprobantes();
+    if (tab === 'carga') renderCarga();
   }
 
   function renderVistaBar(id) {
@@ -1084,7 +1085,7 @@
     form = formVacio();
     if (!st) return;
     Object.entries(st.mercaderia || {}).forEach(([p, fs]) => {
-      if (Array.isArray(fs)) form.mercaderia[p] = fs.map(f => ({ monto: Number(f.monto) || 0, fecha: f.fecha || '' }));
+      if (Array.isArray(fs)) form.mercaderia[p] = fs.map(f => ({ monto: Number(f.monto) || 0, fecha: f.fecha || '', ...(f.cid ? { cid: f.cid } : {}) }));
     });
     // Sueldos: dos items. Un mes guardado con el formato viejo (un solo total) queda como Sueldo 1.
     if (st.sueldos && typeof st.sueldos === 'object') { form.sueldos.s1 = Number(st.sueldos.s1) || 0; form.sueldos.s2 = Number(st.sueldos.s2) || 0; }
@@ -1093,15 +1094,63 @@
     form.tarjetas = Number(st.tarjetas) || 0;
     ['s1','s2','s3','s4'].forEach(k => { form.regalias[k] = Number((st.regalias || {})[k]) || 0; form.publicidad[k] = Number((st.publicidad || {})[k]) || 0; });
     ['iva','ibb','autonomos'].forEach(k => { form.impuestos[k] = Number((st.impuestos || {})[k]) || 0; });
-    form.servicios = (st.servicios || []).map(s => ({ desc: s.desc || '', monto: Number(s.monto) || 0, fecha: s.fecha || '', nroFact: s.nroFact || '' }));
-    form.extra = (st.extraordinarios || []).map(s => ({ desc: s.desc || '', monto: Number(s.monto) || 0 }));
+    form.servicios = (st.servicios || []).map(s => ({ desc: s.desc || '', monto: Number(s.monto) || 0, fecha: s.fecha || '', nroFact: s.nroFact || '', ...(s.cid ? { cid: s.cid } : {}) }));
+    form.extra = (st.extraordinarios || []).map(s => ({ desc: s.desc || '', monto: Number(s.monto) || 0, ...(s.cid ? { cid: s.cid } : {}) }));
   }
 
   // Proveedores de la lista, más los que tengan facturas cargadas aunque se hayan sacado de la lista
   function provsForm() {
-    const extra = Object.keys(form.mercaderia).filter(p => !PROVEEDORES.includes(p) && sum(form.mercaderia[p], f => f.monto) > 0);
+    const extra = Object.keys(form.mercaderia).filter(p => !PROVEEDORES.includes(p) && sum(form.mercaderia[p], f => f.monto) !== 0);
     return [...PROVEEDORES, ...extra];
   }
+
+  // ── FACTURAS → CARGA ─────────────────────────────────────────────
+  // Las facturas de la pestaña 🧾 Facturas se ponen solas en Carga (mercadería, servicios y otros gastos).
+  // Cada renglón que viene de una factura lleva su "cid" (id de la factura): se rehacen cada vez, así no se duplican
+  // y si corregís o borrás la factura, Carga se actualiza. Lo que escribís a mano no se toca.
+  let cargaFacturasCargando = null;
+  function parteDeFactura(c, local) {
+    const g = Number((c.calc && c.calc.gasto)) || 0;
+    if (c.reparto === 'mitad' || c.local === 'Sociedad') {
+      const ramos = r2(g / 2);
+      return local === 'Ramos Mejía' ? ramos : r2(g - ramos);
+    }
+    return c.local === local ? g : 0;
+  }
+  function facturasDeCarga(mes, local) {
+    const lista = compCache[mes] || [];
+    const aCarga = [], pendientes = [];
+    lista.forEach(c => {
+      const monto = parteDeFactura(c, local);
+      if (!monto) return;
+      if (c.categoria === 'Costo de mercadería') aCarga.push({ tipo: 'merc', c, monto });
+      else if (c.categoria === 'Servicios') aCarga.push({ tipo: 'serv', c, monto });
+      else if (c.categoria === 'Otros gastos') aCarga.push({ tipo: 'extra', c, monto });
+      else pendientes.push({ c, monto });
+    });
+    return { aCarga, pendientes };
+  }
+  function mezclarFacturas() {
+    const mes = mesCarga();
+    Object.keys(form.mercaderia).forEach(p => { form.mercaderia[p] = form.mercaderia[p].filter(f => !f.cid); });
+    form.servicios = form.servicios.filter(x => !x.cid);
+    form.extra = form.extra.filter(x => !x.cid);
+    if (!mes) return { pendientes: [], hayFacturas: false };
+    const { aCarga, pendientes } = facturasDeCarga(mes, localCarga);
+    aCarga.forEach(({ tipo, c, monto }) => {
+      if (tipo === 'merc') {
+        const p = c.proveedor;
+        if (!form.mercaderia[p]) form.mercaderia[p] = [];
+        form.mercaderia[p].push({ monto, fecha: c.fecha || '', cid: c.id });
+      } else if (tipo === 'serv') {
+        form.servicios.push({ desc: c.detalle || c.proveedor, monto, fecha: c.fecha || '', nroFact: '', cid: c.id });
+      } else {
+        form.extra.push({ desc: c.detalle ? c.proveedor + ' – ' + c.detalle : c.proveedor, monto, cid: c.id });
+      }
+    });
+    return { pendientes, hayFacturas: (compCache[mes] || []).length > 0 };
+  }
+  window.bloquear = function() { toast('Esto viene de una factura. Para cambiarlo, andá a 🧾 Facturas.', 'error'); }
 
   function inpNum(v, onin) {
     return `<input type="number" inputmode="decimal" min="0" value="${Number(v) || 0}" onfocus="if(this.value==='0')this.value=''" onblur="if(this.value==='')this.value='0'" oninput="${onin}">`;
@@ -1113,6 +1162,13 @@
     const mes = mesCarga();
     const estado = document.getElementById('carga-estado');
     if (!mes) { estado.style.display = 'none'; document.getElementById('carga-form').innerHTML = ''; return; }
+    if (!compCache[mes] && cargaFacturasCargando !== mes) {
+      cargaFacturasCargando = mes;
+      compCargarMes(mes).catch(() => { compCache[mes] = []; }).then(() => {
+        cargaFacturasCargando = null;
+        if (tabActual === 'carga' && mesCarga() === mes) renderCarga();
+      });
+    }
     const existe = docs.some(d => d.local === localCarga && d.mes === mes);
     estado.style.display = 'inline-block';
     estado.className = 'estado ' + (existe ? 'existente' : 'nueva');
@@ -1122,6 +1178,7 @@
 
   function renderForm() {
     const mes = mesCarga();
+    const mez = mezclarFacturas();
     const v = ventasDe(localCarga, mes);
     const totVentas = v.Subway.ventas + v.Balcarce.ventas;
     const totVouchers = v.Subway.vouchers + v.Balcarce.vouchers;
@@ -1170,7 +1227,10 @@
       const fs = form.mercaderia[p];
       merc += `<div class="proveedor-bloque">
         <div class="proveedor-header"><span class="proveedor-nombre">📦 ${esc(p)}</span><span class="proveedor-total" id="tot-prov-${pi}">${fmt(sum(fs, f => f.monto))}</span></div>
-        <div class="proveedor-facturas">${fs.map((f, i) => `<div class="factura-fila">
+        <div class="proveedor-facturas">${fs.map((f, i) => f.cid ? `<div class="factura-fila">
+          <input type="text" value="${fmt2(f.monto)}" disabled>
+          <input type="date" value="${f.fecha || ''}" disabled>
+          <button onclick="bloquear()" title="Viene de una factura">🧾</button></div>` : `<div class="factura-fila">
           ${inpNum(f.monto, `setFactura(${pi},${i},'monto',this.value)`)}
           <input type="date" value="${f.fecha || ''}" onchange="setFactura(${pi},${i},'fecha',this.value)">
           <button onclick="delFactura(${pi},${i})">×</button></div>`).join('')}</div>
@@ -1182,22 +1242,39 @@
 
     const serv = `<div class="card"><h3>⚡ Servicios</h3>${form.servicios.map((s, i) => `
       <div class="servicio-fila">
-        <div class="servicio-top"><input type="text" placeholder="Descripción (luz, gas, internet...)" value="${esc(s.desc)}" oninput="setServicio(${i},'desc',this.value)"><button class="fila-del" onclick="delServicio(${i})">×</button></div>
+        ${s.cid ? `<div class="servicio-top"><input type="text" value="${esc(s.desc)}" disabled><button class="fila-del" onclick="bloquear()" title="Viene de una factura">🧾</button></div>
+        <div class="servicio-inputs">
+          <div><label>Monto ($)</label><input type="text" value="${fmt2(s.monto)}" disabled></div>
+          <div><label>Fecha factura</label><input type="date" value="${s.fecha || ''}" disabled></div>
+        </div></div>` : `<div class="servicio-top"><input type="text" placeholder="Descripción (luz, gas, internet...)" value="${esc(s.desc)}" oninput="setServicio(${i},'desc',this.value)"><button class="fila-del" onclick="delServicio(${i})">×</button></div>
         <div class="servicio-inputs">
           <div><label>Monto ($)</label>${inpNum(s.monto, `setServicio(${i},'monto',this.value)`)}</div>
           <div><label>Fecha factura</label><input type="date" value="${s.fecha || ''}" onchange="setServicio(${i},'fecha',this.value)"></div>
           <div style="grid-column:1/-1;"><label>Nro. factura (opcional)</label><input type="text" placeholder="0001-00012345" value="${esc(s.nroFact)}" oninput="setServicio(${i},'nroFact',this.value)"></div>
-        </div></div>`).join('')}
+        </div></div>`}`).join('')}
       <button class="btn-agregar" onclick="addServicio()">+ Agregar servicio</button></div>`;
 
     const ext = `<div class="card"><h3>⚠️ Gastos extraordinarios</h3>${form.extra.map((s, i) => `
-      <div class="servicio-fila"><div class="servicio-top">
+      <div class="servicio-fila"><div class="servicio-top">${s.cid ? `
+        <input type="text" value="${esc(s.desc)}" disabled>
+        <div style="width:120px;flex-shrink:0;"><input type="text" value="${fmt2(s.monto)}" disabled></div>
+        <button class="fila-del" onclick="bloquear()" title="Viene de una factura">🧾</button>` : `
         <input type="text" placeholder="Descripción" value="${esc(s.desc)}" oninput="setExtra(${i},'desc',this.value)">
         <div style="width:120px;flex-shrink:0;">${inpNum(s.monto, `setExtra(${i},'monto',this.value)`)}</div>
-        <button class="fila-del" onclick="delExtra(${i})">×</button></div></div>`).join('')}
+        <button class="fila-del" onclick="delExtra(${i})">×</button>`}</div></div>`).join('')}
       <button class="btn-agregar" onclick="addExtra()">+ Agregar gasto</button></div>`;
 
-    document.getElementById('carga-form').innerHTML = auto + merc + `
+    let avisoFact = '';
+    if (mez.hayFacturas) {
+      avisoFact = `<div class="card"><h3>🧾 Facturas de ${esc(nombreMes(mes))}</h3>
+        <p class="nota">Las facturas de mercadería, servicios y otros gastos ya están puestas abajo (se marcan con 🧾). Se actualizan solas si cambiás algo en la pestaña Facturas.</p>`;
+      if (mez.pendientes.length) {
+        avisoFact += `<p class="nota" style="margin-top:8px;"><b>Estas no se pasan solas, cargalas vos abajo:</b></p>` +
+          mez.pendientes.map(x => `<div class="auto-fila"><span>${esc(x.c.proveedor)} · ${esc(x.c.categoria)}</span><strong>${fmt2(x.monto)}</strong></div>`).join('');
+      }
+      avisoFact += `</div>`;
+    }
+    document.getElementById('carga-form').innerHTML = avisoFact + auto + merc + `
       <div class="card"><h3>👥 Sueldos</h3><div class="grid-2">
         <div class="campo" style="margin-bottom:0;"><label>Sueldo 1 ($)</label>${inpNum(form.sueldos.s1, `setSub('sueldos','s1',this.value)`)}</div>
         <div class="campo" style="margin-bottom:0;"><label>Sueldo 2 ($)</label>${inpNum(form.sueldos.s2, `setSub('sueldos','s2',this.value)`)}</div></div></div>
@@ -1277,15 +1354,15 @@
 
     const mercaderia = {};
     Object.entries(form.mercaderia).forEach(([p, fs]) => {
-      const ok = fs.filter(f => f.monto > 0).map(f => ({ monto: f.monto, fecha: f.fecha || '' }));
+      const ok = fs.filter(f => f.monto > 0 || (f.cid && f.monto !== 0)).map(f => ({ monto: f.monto, fecha: f.fecha || '', ...(f.cid ? { cid: f.cid } : {}) }));
       if (ok.length) mercaderia[p] = ok;
     });
-    const servicios = form.servicios.filter(s => (s.desc && s.desc.trim()) || s.monto > 0)
-      .map(s => ({ desc: s.desc.trim(), monto: s.monto, fecha: s.fecha || '', nroFact: s.nroFact || '' }));
-    const extraordinarios = form.extra.filter(s => (s.desc && s.desc.trim()) || s.monto > 0)
-      .map(s => ({ desc: s.desc.trim(), monto: s.monto }));
+    const servicios = form.servicios.filter(s => (s.desc && s.desc.trim()) || s.monto > 0 || (s.cid && s.monto !== 0))
+      .map(s => ({ desc: s.desc.trim(), monto: s.monto, fecha: s.fecha || '', nroFact: s.nroFact || '', ...(s.cid ? { cid: s.cid } : {}) }));
+    const extraordinarios = form.extra.filter(s => (s.desc && s.desc.trim()) || s.monto > 0 || (s.cid && s.monto !== 0))
+      .map(s => ({ desc: s.desc.trim(), monto: s.monto, ...(s.cid ? { cid: s.cid } : {}) }));
 
-    if (servicios.some(s => s.monto > 0 && !s.desc) || extraordinarios.some(s => s.monto > 0 && !s.desc)) {
+    if (servicios.some(s => s.monto !== 0 && !s.desc) || extraordinarios.some(s => s.monto !== 0 && !s.desc)) {
       toast('Hay un gasto con monto pero sin descripción', 'error');
       return;
     }
