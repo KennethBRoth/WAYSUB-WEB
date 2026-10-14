@@ -76,6 +76,55 @@
     .tabla td:first-child { font-weight: 700; white-space: normal; }
     .tabla .peque { display: block; font-size: 10px; color: #aaa; font-weight: 600; }
 
+
+    /* ── ANÁLISIS (nuevo formato) ── */
+    .an-filtros .etq { font-size: 11px; font-weight: 800; color: #8a90a2; text-transform: uppercase; letter-spacing: .04em; margin: 14px 0 8px; }
+    .an-filtros .etq:first-child { margin-top: 0; }
+    .hero { background: linear-gradient(160deg, #1a1a2e 0%, #26264a 100%); color: white; margin: 12px 16px 0; border-radius: 16px; padding: 20px 18px 16px; box-shadow: 0 4px 14px rgba(26,26,46,.25); }
+    .hero .h-etq { font-size: 12px; font-weight: 700; color: #b9bdd6; }
+    .hero .h-valor { font-size: 34px; font-weight: 800; letter-spacing: -.5px; margin-top: 4px; word-break: break-word; }
+    .hero .h-fila { display: flex; align-items: center; gap: 8px; margin-top: 6px; flex-wrap: wrap; }
+    .hero .h-sub { font-size: 12px; color: #b9bdd6; line-height: 1.45; }
+    .hero .h-mini { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 16px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,.14); }
+    .hero .h-mini div span { display: block; font-size: 11px; color: #b9bdd6; font-weight: 700; }
+    .hero .h-mini div strong { display: block; font-size: 16px; margin-top: 2px; }
+    .hero .h-mini .delta { margin-top: 4px; }
+    .an-card { background: white; margin: 12px 16px 0; border-radius: 14px; padding: 18px 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); }
+    .an-card h2 { font-size: 16px; font-weight: 800; color: #1a1a2e; }
+    .an-card .an-sub { font-size: 12px; color: #8a90a2; margin: 3px 0 14px; line-height: 1.45; }
+    .ins { display: flex; gap: 10px; padding: 10px 0; border-bottom: 1px solid #f1f2f6; font-size: 13.5px; line-height: 1.5; color: #333; }
+    .ins:last-child { border-bottom: 0; padding-bottom: 0; }
+    .ins:first-of-type { padding-top: 0; }
+    .ins .pto { flex: 0 0 auto; width: 10px; height: 10px; border-radius: 50%; margin-top: 6px; background: #b5bacb; }
+    .ins .pto.bien { background: #1f9d55; }
+    .ins .pto.mal { background: #d63031; }
+    .rank-fila { padding: 10px 0; border-bottom: 1px solid #f1f2f6; }
+    .rank-fila:last-child { border-bottom: 0; padding-bottom: 0; }
+    .rank-top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; font-size: 14px; }
+    .rank-top b { color: #1a1a2e; }
+    .rank-top .monto { font-weight: 800; color: #1a1a2e; white-space: nowrap; }
+    .rank-barra { height: 8px; background: #eef0f5; border-radius: 6px; margin: 7px 0 6px; overflow: hidden; }
+    .rank-barra i { display: block; height: 100%; border-radius: 6px; }
+    .rank-det { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 11.5px; color: #8a90a2; }
+    .rank-det b { color: #555; font-weight: 700; }
+    .emb-paso { margin-bottom: 4px; }
+    .emb-barra { background: #e8b84b; color: #1a1a2e; border-radius: 8px; padding: 9px 12px; display: flex; justify-content: space-between; gap: 8px; font-size: 13px; font-weight: 700; min-width: 150px; }
+    .emb-barra span:last-child { font-weight: 800; }
+    .emb-paso.e0 .emb-barra { background: #dfe2ec; }
+    .emb-paso.e1 .emb-barra { background: #f3d58a; }
+    .emb-paso.e2 .emb-barra { background: #e8b84b; }
+    .emb-paso.e3 .emb-barra { background: #2ecc71; color: white; }
+    .emb-pasa { font-size: 11.5px; color: #8a90a2; padding: 4px 4px 6px 12px; }
+    .emb-pasa b { color: #555; }
+    .op-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .op-grid .kpi { box-shadow: none; background: #f7f8fa; }
+    details.an-det { background: white; margin: 12px 16px 0; border-radius: 14px; padding: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); }
+    details.an-det summary { cursor: pointer; font-size: 14px; font-weight: 800; color: #1a1a2e; }
+    details.an-det .kpi-grid { padding: 8px 0 0; }
+    details.an-det .grupo-titulo { padding: 16px 0 0; }
+    details.an-det .vs-texto { padding: 4px 0 0; }
+    details.an-det .kpi { background: #f7f8fa; box-shadow: none; }
+
     .toast { position: fixed; left: 50%; bottom: 140px; transform: translateX(-50%); background: #1a1a2e; color: white; padding: 12px 18px; border-radius: 10px; font-size: 13px; max-width: 85vw; width: max-content; white-space: normal; text-align: center; z-index: 300; display: none; }
     .toast.error { background: #c0392b; }
     .toast.ok { background: #1f9d55; }
@@ -128,12 +177,12 @@
 
 <!-- TAB ANÁLISIS (uno o varios locales) -->
 <div class="seccion" id="tab-analisis">
-  <div class="card">
-    <h3>Locales (podés elegir varios)</h3>
+  <div class="card an-filtros">
+    <div class="etq">Locales (podés elegir varios)</div>
     <div class="chips-wrap" id="an-locs"></div>
-    <h3 class="sub">Período</h3>
+    <div class="etq">Período</div>
     <div class="chips-wrap" id="an-periodo"></div>
-    <h3 class="sub">Aplicación</h3>
+    <div class="etq">Aplicación</div>
     <div class="chips-wrap" id="an-apps"></div>
   </div>
   <div id="analisis-contenido"></div>
@@ -1008,88 +1057,150 @@
     const cur = agregarVarios(actualRecs, anApp);
     const prev = prevRecs.length ? agregarVarios(prevRecs, anApp) : null;
 
+    const DIAS_LARGO = ['lunes','martes','miércoles','jueves','viernes','sábado','domingo'];
+    const suma = arr => arr.reduce((x, y) => x + y, 0);
+    const pctTxt = n => n.toLocaleString('es-AR', { maximumFractionDigits: 1 }) + '%';
+    const compacto = v => v >= 1e6 ? '$' + (v / 1e6).toLocaleString('es-AR', { maximumFractionDigits: 1 }) + ' M' : v >= 1e3 ? '$' + Math.round(v / 1e3).toLocaleString('es-AR') + ' mil' : '$' + Math.round(v);
+    const tooltipDinero = { callbacks: { label: c => ' ' + (c.dataset.label ? c.dataset.label + ': ' : '') + fmt(c.parsed.y !== undefined && c.chart.options.indexAxis !== 'y' ? c.parsed.y : c.parsed.x, 'dinero') } };
+
+    const primero = mesesUnicos[0], ultimoM = mesesUnicos[mesesUnicos.length - 1];
+    const rango = mesesUnicos.length === 1 ? nombreMes(primero) : nombreMes(primero) + ' a ' + nombreMes(ultimoM);
+    const quienes = elegidos.length === visibles.length && elegidos.length > 1 ? 'Todos los locales' : elegidos.map(nombreLocal).join(' + ');
+    const queApp = anApp === 'todas' ? 'todas las apps' : APPS.find(a => a.id === anApp).nombre;
+
     let html = '';
-    html += `<div class="vs-texto">Del ${mesCorto(mesesUnicos[0])} al ${mesCorto(mesesUnicos[mesesUnicos.length - 1])} · ${mesesUnicos.length} ${mesesUnicos.length === 1 ? 'mes' : 'meses'} con datos.<br>${
-      prev ? 'Comparado con el período anterior (' + new Set(prevRecs.map(r => r.mes)).size + ' meses con datos).' :
-      (anPeriodo > 0 ? 'No hay datos del período anterior para comparar.' : '')}</div>`;
+
+    // 1) Resumen principal
+    html += `<div class="hero">
+      <div class="h-etq">Ventas por delivery · ${esc(queApp)}</div>
+      <div class="h-valor">${fmt(cur.ventas, 'dinero')}</div>
+      <div class="h-fila">${prev ? deltaHtml(cur.ventas, prev.ventas, 'dinero', false) + '<span class="h-sub">vs. período anterior (' + fmt(prev.ventas, 'dinero') + ')</span>' : '<span class="h-sub">' + (anPeriodo > 0 ? 'No hay datos del período anterior para comparar.' : '') + '</span>'}</div>
+      <div class="h-sub" style="margin-top:8px;">${esc(quienes)}<br>${esc(rango)} · ${mesesUnicos.length} ${mesesUnicos.length === 1 ? 'mes' : 'meses'} con datos</div>
+      <div class="h-mini">
+        <div><span>Pedidos</span><strong>${fmt(cur.pedidos, 'numero')}</strong>${prev ? deltaHtml(cur.pedidos, prev.pedidos, 'numero', false) : ''}</div>
+        <div><span>Ticket promedio</span><strong>${fmtOpc(cur.ticket, 'dinero')}</strong>${prev && cur.ticket > 0 && prev.ticket > 0 ? deltaHtml(cur.ticket, prev.ticket, 'dinero', false) : ''}</div>
+        <div><span>Con reclamo</span><strong>${fmt(cur.pctReclamos, 'porcentaje')}</strong>${prev ? deltaHtml(cur.pctReclamos, prev.pctReclamos, 'porcentaje', true) : ''}</div>
+      </div>
+    </div>`;
     if (mesesUnicos.includes(mesActual())) html += `<div class="aviso">El período incluye el mes en curso, que todavía está incompleto.</div>`;
-    html += kpisHtml(cur, prev);
 
-    html += `<div class="card"><h3>Ventas por mes${elegidos.length > 1 ? ' (por local)' : ''}</h3><canvas id="ch-an-mes" height="190"></canvas></div>`;
-    html += `<div class="card"><h3>Ventas por día de la semana (suma del período)</h3><canvas id="ch-an-dias" height="170"></canvas></div>`;
-    if (anApp === 'todas') html += `<div class="card"><h3>Ventas por aplicación</h3><canvas id="ch-an-apps" height="150"></canvas></div>`;
-    const tieneEmbudo = cur.impresiones > 0 || cur.menu > 0 || cur.carrito > 0 || cur.pedido > 0;
-    if (tieneEmbudo) html += `<div class="card"><h3>Embudo</h3><canvas id="ch-an-emb" height="150"></canvas></div>`;
-
-    if (elegidos.length > 1) {
-      let filas = '';
-      elegidos.forEach(l => {
-        const rl = actualRecs.filter(r => r.marca === l.marca && r.local === l.local);
-        const r = agregarVarios(rl, anApp);
-        const m = rl.length;
-        filas += `<tr><td><span class="dot" style="background:${l.color}"></span>${nombreLocal(l)}<span class="peque">${m} ${m === 1 ? 'mes' : 'meses'} con datos</span></td><td>${fmt(r.ventas, 'dinero')}</td><td>${fmt(r.pedidos, 'numero')}</td><td>${fmtOpc(r.ticket, 'dinero')}</td><td>${fmt(r.pctReclamos, 'porcentaje')}</td><td>${fmtOpc(r.prep, 'minutos')}</td></tr>`;
-      });
-      html += `<div class="card"><h3>Por local</h3><div style="overflow-x:auto;"><table class="tabla">
-        <thead><tr><th>Local</th><th>Ventas</th><th>Pedidos</th><th>Ticket</th><th>% recl.</th><th>Prep.</th></tr></thead>
-        <tbody>${filas}</tbody></table></div></div>`;
+    // 2) Lo más importante, en palabras
+    const ins = [];
+    if (prev && prev.ventas > 0) {
+      const p = (cur.ventas - prev.ventas) / prev.ventas * 100;
+      ins.push({ t: p >= 0 ? 'bien' : 'mal', txt: `Las ventas <b>${p >= 0 ? 'subieron' : 'bajaron'} ${pctTxt(Math.abs(p))}</b> respecto del período anterior.` });
+    }
+    const totDias = suma(cur.dias);
+    if (totDias > 0) {
+      const mx = cur.dias.indexOf(Math.max(...cur.dias)), mn = cur.dias.indexOf(Math.min(...cur.dias));
+      ins.push({ t: '', txt: `El mejor día es el <b>${DIAS_LARGO[mx]}</b> (${pctTxt(cur.dias[mx] / totDias * 100)} de las ventas) y el más flojo el <b>${DIAS_LARGO[mn]}</b> (${pctTxt(cur.dias[mn] / totDias * 100)}).` });
+    }
+    const porApp = APPS.map(a => ({ a, r: agregarVarios(actualRecs, a.id) })).sort((x, y) => y.r.ventas - x.r.ventas);
+    const totApps = suma(porApp.map(x => x.r.ventas));
+    if (anApp === 'todas' && totApps > 0 && porApp[0].r.ventas > 0) {
+      ins.push({ t: '', txt: `<b>${esc(porApp[0].a.nombre)}</b> es la app que más vende: ${pctTxt(porApp[0].r.ventas / totApps * 100)} del total.` });
+    }
+    const porLocal = elegidos.map(l => ({ l, r: agregarVarios(actualRecs.filter(x => x.marca === l.marca && x.local === l.local), anApp) })).sort((x, y) => y.r.ventas - x.r.ventas);
+    const totLocales = suma(porLocal.map(x => x.r.ventas));
+    if (elegidos.length > 1 && totLocales > 0 && porLocal[0].r.ventas > 0) {
+      ins.push({ t: '', txt: `El local que más vende es <b>${esc(nombreLocal(porLocal[0].l))}</b> (${pctTxt(porLocal[0].r.ventas / totLocales * 100)} del total).` });
+    }
+    if (cur.pedidos > 0) {
+      ins.push({ t: prev && prev.pedidos > 0 ? (cur.pctReclamos <= prev.pctReclamos ? 'bien' : 'mal') : '', txt: `<b>${pctTxt(cur.pctReclamos)}</b> de los pedidos tuvo reclamo${prev && prev.pedidos > 0 ? ' (en el período anterior: ' + pctTxt(prev.pctReclamos) + ')' : ''}.` });
+    }
+    const pasos = [['de ver la app a abrir el menú', cur.c_menu], ['de ver el menú a armar el carrito', cur.c_carrito], ['de armar el carrito a pedir', cur.c_pedido]].filter(x => x[1] > 0);
+    if (pasos.length > 1) {
+      const peor = pasos.reduce((m, x) => x[1] < m[1] ? x : m);
+      ins.push({ t: '', txt: `Donde más clientes se pierden es en el paso ${peor[0]}: solo sigue el <b>${pctTxt(peor[1])}</b>.` });
+    }
+    if (ins.length) {
+      html += `<div class="an-card"><h2>Lo más importante</h2><div class="an-sub">Un resumen en palabras de lo que muestran los números de abajo.</div>${
+        ins.map(x => `<div class="ins"><span class="pto ${x.t}"></span><div>${x.txt}</div></div>`).join('')}</div>`;
     }
 
-    if (anApp === 'todas') {
-      let filas = '';
-      APPS.forEach(a => {
-        const r = agregarVarios(actualRecs, a.id);
-        filas += `<tr><td><span class="dot" style="background:${a.color}"></span>${a.nombre}</td><td>${fmt(r.ventas, 'dinero')}</td><td>${fmt(r.pedidos, 'numero')}</td><td>${fmtOpc(r.ticket, 'dinero')}</td><td>${fmt(r.pctReclamos, 'porcentaje')}</td><td>${fmtOpc(r.prep, 'minutos')}</td></tr>`;
-      });
-      html += `<div class="card"><h3>Por aplicación</h3><div style="overflow-x:auto;"><table class="tabla">
-        <thead><tr><th>App</th><th>Ventas</th><th>Pedidos</th><th>Ticket</th><th>% recl.</th><th>Prep.</th></tr></thead>
-        <tbody>${filas}</tbody></table></div></div>`;
+    // 3) Evolución y días
+    if (mesesUnicos.length > 1) {
+      html += `<div class="an-card"><h2>Ventas mes a mes</h2><div class="an-sub">${elegidos.length > 1 ? 'Cada color es un local.' : 'Cuánto se vendió en cada mes.'}</div><canvas id="ch-an-mes" height="200"></canvas></div>`;
     }
+    html += `<div class="an-card"><h2>Ventas por día de la semana</h2><div class="an-sub">Suma de todo el período. El día más fuerte va resaltado.</div><canvas id="ch-an-dias" height="180"></canvas></div>`;
+
+    // 4) Por aplicación (ranking con barras)
+    if (anApp === 'todas' && totApps > 0) {
+      const maxA = porApp[0].r.ventas || 1;
+      html += `<div class="an-card"><h2>Por aplicación</h2><div class="an-sub">Ordenadas de la que más vende a la que menos. La barra muestra cuánto pesa cada una.</div>` +
+        porApp.map(({ a, r }) => `<div class="rank-fila">
+          <div class="rank-top"><b><span class="dot" style="background:${a.color}"></span>${esc(a.nombre)}</b><span class="monto">${fmt(r.ventas, 'dinero')}</span></div>
+          <div class="rank-barra"><i style="width:${Math.max(r.ventas / maxA * 100, r.ventas > 0 ? 2 : 0)}%;background:${a.color}"></i></div>
+          <div class="rank-det"><span><b>${pctTxt(r.ventas / totApps * 100)}</b> del total</span><span><b>${fmt(r.pedidos, 'numero')}</b> pedidos</span><span>Ticket <b>${fmtOpc(r.ticket, 'dinero')}</b></span><span>Reclamos <b>${fmt(r.pctReclamos, 'porcentaje')}</b></span><span>Prep. <b>${fmtOpc(r.prep, 'minutos')}</b></span></div>
+        </div>`).join('') + `</div>`;
+    }
+
+    // 5) Por local
+    if (elegidos.length > 1 && totLocales > 0) {
+      const maxL = porLocal[0].r.ventas || 1;
+      html += `<div class="an-card"><h2>Por local</h2><div class="an-sub">Ordenados de el que más vende al que menos.</div>` +
+        porLocal.map(({ l, r }) => {
+          const m = actualRecs.filter(x => x.marca === l.marca && x.local === l.local).length;
+          return `<div class="rank-fila">
+          <div class="rank-top"><b><span class="dot" style="background:${l.color}"></span>${esc(nombreLocal(l))}</b><span class="monto">${fmt(r.ventas, 'dinero')}</span></div>
+          <div class="rank-barra"><i style="width:${Math.max(r.ventas / maxL * 100, r.ventas > 0 ? 2 : 0)}%;background:${l.color}"></i></div>
+          <div class="rank-det"><span><b>${pctTxt(r.ventas / totLocales * 100)}</b> del total</span><span><b>${fmt(r.pedidos, 'numero')}</b> pedidos</span><span>Ticket <b>${fmtOpc(r.ticket, 'dinero')}</b></span><span>Reclamos <b>${fmt(r.pctReclamos, 'porcentaje')}</b></span><span>Prep. <b>${fmtOpc(r.prep, 'minutos')}</b></span><span>${m} ${m === 1 ? 'mes' : 'meses'} con datos</span></div>
+        </div>`; }).join('') + `</div>`;
+    }
+
+    // 6) Embudo
+    const pasosEmb = [['Vieron la app (impresiones)', cur.impresiones], ['Abrieron el menú', cur.menu], ['Armaron el carrito', cur.carrito], ['Hicieron el pedido', cur.pedido]].filter(x => x[1] > 0);
+    if (pasosEmb.length > 1) {
+      const base = pasosEmb[0][1];
+      html += `<div class="an-card"><h2>Del interés al pedido</h2><div class="an-sub">Cuántos clientes avanzan en cada paso. Las apps que no informan un dato no se cuentan en ese paso.</div>` +
+        pasosEmb.map(([nom, v], k) => `<div class="emb-paso e${k}"><div class="emb-barra" style="width:${Math.max(v / base * 100, 62)}%"><span>${nom}</span><span>${fmt(v, 'numero')}</span></div>${
+          k < pasosEmb.length - 1 ? `<div class="emb-pasa">↓ pasa el <b>${pctTxt(pasosEmb[k + 1][1] / v * 100)}</b> al siguiente paso</div>` : ''}</div>`).join('') + `</div>`;
+    }
+
+    // 7) Calidad del servicio
+    const hayOp = cur.prep > 0 || cur.recompra > 0 || cur.pedidos > 0;
+    if (hayOp) {
+      const kp = (lab, val, tipo, p, menos) => `<div class="kpi"><div class="kpi-label">${lab}</div><div class="kpi-valor">${val}</div>${p}</div>`;
+      html += `<div class="an-card"><h2>Calidad del servicio</h2><div class="an-sub">Cuanto más bajos el tiempo y los reclamos, mejor.</div><div class="op-grid">` +
+        kp('Preparación', fmtOpc(cur.prep, 'minutos'), '', prev && cur.prep > 0 && prev.prep > 0 ? deltaHtml(cur.prep, prev.prep, 'minutos', true) : '') +
+        kp('Pedidos con reclamo', fmt(cur.reclamos, 'numero'), '', prev ? deltaHtml(cur.reclamos, prev.reclamos, 'numero', true) : '') +
+        kp('Recompra', fmtOpc(cur.recompra, 'porcentaje'), '', prev && cur.recompra > 0 && prev.recompra > 0 ? deltaHtml(cur.recompra, prev.recompra, 'porcentaje', false) : '') +
+        `</div></div>`;
+    }
+
+    // 8) Todos los indicadores (el detalle completo de siempre)
+    html += `<details class="an-det"><summary>Ver todos los indicadores</summary>${kpisHtml(cur, prev)}</details>`;
+
     cont.innerHTML = html;
 
-    // Gráfico: ventas por mes, una barra apilada por local
-    nuevoChart('ch-an-mes', {
-      type: 'bar',
-      data: {
-        labels: mesesUnicos.map(mesCorto),
-        datasets: elegidos.map(l => ({
-          label: nombreLocal(l),
-          backgroundColor: l.color,
-          data: mesesUnicos.map(mes => {
-            const r = actualRecs.find(x => x.marca === l.marca && x.local === l.local && x.mes === mes);
-            return r ? agregar(r, anApp).ventas : 0;
-          })
-        }))
-      },
-      options: { responsive: true, plugins: { legend: { display: elegidos.length > 1 } }, scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } } }
-    });
-
-    // Gráfico: ventas por día de la semana
-    nuevoChart('ch-an-dias', {
-      type: 'bar',
-      data: { labels: DIAS, datasets: [{ data: cur.dias, backgroundColor: '#e8b84b' }] },
-      options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
-    });
-
-    // Gráfico: ventas por app
-    if (anApp === 'todas') {
-      nuevoChart('ch-an-apps', {
+    // Gráfico: ventas por mes (barras apiladas por local)
+    if (mesesUnicos.length > 1) {
+      nuevoChart('ch-an-mes', {
         type: 'bar',
         data: {
-          labels: APPS.map(a => a.nombre),
-          datasets: [{ data: APPS.map(a => agregarVarios(actualRecs, a.id).ventas), backgroundColor: APPS.map(a => a.color) }]
+          labels: mesesUnicos.map(mesCorto),
+          datasets: elegidos.map(l => ({
+            label: nombreLocal(l),
+            backgroundColor: l.color,
+            borderRadius: 4,
+            data: mesesUnicos.map(mes => {
+              const r = actualRecs.find(x => x.marca === l.marca && x.local === l.local && x.mes === mes);
+              return r ? agregar(r, anApp).ventas : 0;
+            })
+          }))
         },
-        options: { indexAxis: 'y', responsive: true, plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true } } }
+        options: { responsive: true, plugins: { legend: { display: elegidos.length > 1, position: 'bottom', labels: { boxWidth: 10, usePointStyle: true } }, tooltip: tooltipDinero },
+          scales: { x: { stacked: true, grid: { display: false } }, y: { stacked: true, beginAtZero: true, ticks: { callback: compacto } } } }
       });
     }
 
-    // Gráfico: embudo
-    nuevoChart('ch-an-emb', {
+    // Gráfico: ventas por día de la semana (el mejor día resaltado)
+    const maxDia = Math.max(...cur.dias);
+    nuevoChart('ch-an-dias', {
       type: 'bar',
-      data: {
-        labels: ['Impresiones', 'Visualizaron el menú', 'De menú a carrito', 'Realizaron un pedido'],
-        datasets: [{ data: [cur.impresiones, cur.menu, cur.carrito, cur.pedido], backgroundColor: ['#cfd3dc', '#e8b84b', '#d9822b', '#2ecc71'] }]
-      },
-      options: { indexAxis: 'y', responsive: true, plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true } } }
+      data: { labels: DIAS, datasets: [{ label: 'Ventas', data: cur.dias, borderRadius: 6, backgroundColor: cur.dias.map(v => v === maxDia && v > 0 ? '#e8b84b' : '#d9dce6') }] },
+      options: { responsive: true, plugins: { legend: { display: false }, tooltip: tooltipDinero },
+        scales: { x: { grid: { display: false } }, y: { beginAtZero: true, ticks: { callback: compacto } } } }
     });
   }
 
