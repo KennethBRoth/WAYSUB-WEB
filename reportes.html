@@ -80,6 +80,8 @@
     /* ── ANÁLISIS (nuevo formato) ── */
     .an-filtros .etq { font-size: 11px; font-weight: 800; color: #8a90a2; text-transform: uppercase; letter-spacing: .04em; margin: 14px 0 8px; }
     .an-filtros .etq:first-child { margin-top: 0; }
+    .sel-mes { flex: 0 0 auto; border: 2px solid #e0e0e0; border-radius: 20px; padding: 8px 12px; font-size: 13px; font-weight: 700; color: #888; background: white; }
+    .sel-mes.activo { background: #1a1a2e; border-color: #1a1a2e; color: white; }
     .hero { background: linear-gradient(160deg, #1a1a2e 0%, #26264a 100%); color: white; margin: 12px 16px 0; border-radius: 16px; padding: 20px 18px 16px; box-shadow: 0 4px 14px rgba(26,26,46,.25); }
     .hero .h-etq { font-size: 12px; font-weight: 700; color: #b9bdd6; }
     .hero .h-valor { font-size: 34px; font-weight: 800; letter-spacing: -.5px; margin-top: 4px; word-break: break-word; }
@@ -254,6 +256,7 @@
   let visibles = [];       // locales (de LOCALES_DEF) que este usuario puede ver
   let selLocs = new Set(); // índices de LOCALES_DEF seleccionados
   let anPeriodo = 3;
+  let anMesSel = '';       // si hay un mes elegido, el análisis es de ese mes solo
   let anApp = 'todas';
 
   // ── HELPERS ──────────────────────────────────────────────────────
@@ -1017,7 +1020,8 @@
     selLocs = new Set(lista.map(l => l.idx));
     renderAnalisis();
   }
-  window.setPeriodo = function(n) { anPeriodo = n; renderAnalisis(); }
+  window.setPeriodo = function(n) { anPeriodo = n; anMesSel = ''; renderAnalisis(); }
+  window.setMesSel = function(m) { anMesSel = m; renderAnalisis(); }
   window.setAnApp = function(a) { anApp = a; renderAnalisis(); }
 
   function renderAnalisis() {
@@ -1031,7 +1035,9 @@
       `<div class="chip accion" onclick="selRapida('Subway')">Solo Subway</div>` +
       `<div class="chip accion" onclick="selRapida('Balcarce')">Solo Balcarce</div>`;
     document.getElementById('an-periodo').innerHTML =
-      PERIODOS.map(p => `<div class="chip ${p.n === anPeriodo ? 'activo' : ''}" onclick="setPeriodo(${p.n})">${p.txt}</div>`).join('');
+      PERIODOS.map(p => `<div class="chip ${!anMesSel && p.n === anPeriodo ? 'activo' : ''}" onclick="setPeriodo(${p.n})">${p.txt}</div>`).join('') +
+      `<select class="sel-mes ${anMesSel ? 'activo' : ''}" onchange="setMesSel(this.value)"><option value="">Elegir un mes…</option>${
+        [...new Set(registros.map(r => r.mes))].sort().reverse().map(m => `<option value="${m}" ${m === anMesSel ? 'selected' : ''}>${nombreMes(m)}</option>`).join('')}</select>`;
     document.getElementById('an-apps').innerHTML =
       [{ id: 'todas', nombre: 'Todas' }, ...APPS].map(a => `<div class="chip ${a.id === anApp ? 'activo' : ''}" onclick="setAnApp('${a.id}')">${a.nombre}</div>`).join('');
 
@@ -1046,7 +1052,14 @@
     // Período: los últimos N meses desde el más reciente con datos entre los locales elegidos
     const ultimo = lista.reduce((m, r) => r.mes > m ? r.mes : m, '');
     let actualRecs = lista, prevRecs = [];
-    if (anPeriodo > 0) {
+    if (anMesSel) {
+      actualRecs = lista.filter(r => r.mes === anMesSel);
+      prevRecs = lista.filter(r => r.mes === sumarMeses(anMesSel, -1));
+      if (!actualRecs.length) {
+        cont.innerHTML = '<div class="vacio">No hay datos de ' + nombreMes(anMesSel) + ' para los locales elegidos.</div>';
+        return;
+      }
+    } else if (anPeriodo > 0) {
       const ini = sumarMeses(ultimo, -(anPeriodo - 1));
       const iniPrev = sumarMeses(ini, -anPeriodo);
       actualRecs = lista.filter(r => r.mes >= ini);
@@ -1074,7 +1087,7 @@
     html += `<div class="hero">
       <div class="h-etq">Ventas por delivery · ${esc(queApp)}</div>
       <div class="h-valor">${fmt(cur.ventas, 'dinero')}</div>
-      <div class="h-fila">${prev ? deltaHtml(cur.ventas, prev.ventas, 'dinero', false) + '<span class="h-sub">vs. período anterior (' + fmt(prev.ventas, 'dinero') + ')</span>' : '<span class="h-sub">' + (anPeriodo > 0 ? 'No hay datos del período anterior para comparar.' : '') + '</span>'}</div>
+      <div class="h-fila">${prev ? deltaHtml(cur.ventas, prev.ventas, 'dinero', false) + '<span class="h-sub">vs. período anterior (' + fmt(prev.ventas, 'dinero') + ')</span>' : '<span class="h-sub">' + (anMesSel || anPeriodo > 0 ? 'No hay datos del período anterior para comparar.' : '') + '</span>'}</div>
       <div class="h-sub" style="margin-top:8px;">${esc(quienes)}<br>${esc(rango)} · ${mesesUnicos.length} ${mesesUnicos.length === 1 ? 'mes' : 'meses'} con datos</div>
       <div class="h-mini">
         <div><span>Pedidos</span><strong>${fmt(cur.pedidos, 'numero')}</strong>${prev ? deltaHtml(cur.pedidos, prev.pedidos, 'numero', false) : ''}</div>
