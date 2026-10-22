@@ -489,6 +489,7 @@
       sueldo1, sueldo2,
       alq1: Number(alq.a1) || 0, alq2: Number(alq.a2) || 0, expensas: Number(alq.expensas) || 0,
       tarjetas: st ? Number(st.tarjetas) || 0 : 0,
+      z: st ? Number(st.z) || 0 : 0,
       regalias: st ? obj(st.regalias) : 0,
       publicidad: st ? obj(st.publicidad) : 0,
       impIva: Number(imp.iva) || 0, impIbb: Number(imp.ibb) || 0, impAut: Number(imp.autonomos) || 0,
@@ -500,9 +501,9 @@
   function combinar(lista) {
     const r = { local: 'Total', mes: lista[0].mes, existe: lista.some(x => x.existe),
       ventasSW: 0, ventasBC: 0, vouchers: 0, delivery: deliveryVacio(), difDelivery: 0, merc: {}, mercTotal: 0, sueldo1: 0, sueldo2: 0, alq1: 0, alq2: 0, expensas: 0, tarjetas: 0,
-      regalias: 0, publicidad: 0, impIva: 0, impIbb: 0, impAut: 0, servLista: [], extLista: [] };
+      regalias: 0, publicidad: 0, impIva: 0, impIbb: 0, impAut: 0, z: 0, servLista: [], extLista: [] };
     lista.forEach(x => {
-      ['ventasSW','ventasBC','vouchers','mercTotal','sueldo1','sueldo2','alq1','alq2','expensas','tarjetas','regalias','publicidad','impIva','impIbb','impAut'].forEach(k => { r[k] += x[k]; });
+      ['ventasSW','ventasBC','vouchers','mercTotal','sueldo1','sueldo2','alq1','alq2','expensas','tarjetas','regalias','publicidad','impIva','impIbb','impAut','z'].forEach(k => { r[k] += x[k]; });
       Object.entries(x.merc).forEach(([p, v]) => { r.merc[p] = (r.merc[p] || 0) + v; });
       APPS_DELIVERY.forEach(a => { r.delivery[a.id] += x.delivery[a.id]; });
       r.difDelivery += x.difDelivery;
@@ -955,6 +956,22 @@
 
     const { cols, labels } = columnas(vista, resMes);
     const tot = cols[cols.length - 1];
+    if (!compCache[resMes] && resFacturasCargando !== resMes) {
+      resFacturasCargando = resMes;
+      const mesPedido = resMes;
+      compCargarMes(mesPedido).catch(() => { compCache[mesPedido] = []; }).then(() => {
+        resFacturasCargando = null;
+        if (tabActual === 'resultado' && resMes === mesPedido) renderResultado();
+      });
+    }
+    const hayZ = cols.some(c => c.z > 0);
+    const bloqueImp = !compCache[resMes]
+      ? `<div class="card"><h3>🏛️ Impuestos a pagar</h3><div class="vacio" style="padding:20px;">Cargando facturas…</div></div>`
+      : `<div class="card"><h3>🏛️ Impuestos a pagar — ${nombreMes(resMes)}</h3>
+          ${hayZ ? '' : '<div class="aviso" style="margin:0 0 12px;">Todavía no cargaste la Z de este mes. Se carga en la pestaña 📥 (tarjeta "Z del mes").</div>'}
+          <div style="overflow-x:auto;">${tablaImpuestos(cols, labels, resMes)}</div>
+          <p class="nota" style="margin:12px 0 0;">El IVA crédito y las percepciones salen de las facturas cargadas en 🧾 Facturas (las notas de crédito restan). La provisión de Ganancias se calcula sobre el resultado de la tabla de arriba. Si en Carga cargaste a mano IVA o IBB en "Impuestos", ya están sumados en ese resultado.</p>
+        </div>`;
 
     // Avisos sobre los cierres de caja que alimentan las ventas
     let av = '';
@@ -983,21 +1000,23 @@
         <div style="margin:-4px 0 12px;"><button onclick="descargarERR()" style="background:#f0fff4;color:#2a9d5c;border:1px solid #c3e6cb;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;">📥 Descargar Excel</button></div>
         <div style="overflow-x:auto;">${tablaERR(cols, labels)}</div>
         <p class="nota" style="margin:12px 0 0;">Los porcentajes son sobre el total de ingresos (ventas más vouchers). Todo con IVA incluido.</p>
-      </div>`;
+      </div>` + bloqueImp;
   }
 
   window.descargarERR = function() {
-    const tabla = document.querySelector('#res-contenido table.cf-tabla');
-    if (!tabla || typeof XLSX === 'undefined') { toast('No se pudo armar el Excel', 'error'); return; }
-    const filas = [...tabla.rows].map(tr => [...tr.cells].map(td => {
-      const t = td.textContent.trim();
-      const m = t.match(/^(-?)\$([\d.]+)$/);
-      return m ? Number(m[1] + m[2].replace(/\./g, '')) : t;
-    }));
-    const ws = XLSX.utils.aoa_to_sheet(filas);
-    ws['!cols'] = [{ wch: 40 }, { wch: 16 }, { wch: 16 }, { wch: 16 }];
+    const tablas = [...document.querySelectorAll('#res-contenido table.cf-tabla')];
+    if (!tablas.length || typeof XLSX === 'undefined') { toast('No se pudo armar el Excel', 'error'); return; }
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Estado de resultados');
+    tablas.forEach((tabla, i) => {
+      const filas = [...tabla.rows].map(tr => [...tr.cells].map(td => {
+        const t = td.textContent.trim();
+        const m = t.match(/^(-?)\$([\d.]+)$/);
+        return m ? Number(m[1] + m[2].replace(/\./g, '')) : t;
+      }));
+      const ws = XLSX.utils.aoa_to_sheet(filas);
+      ws['!cols'] = [{ wch: 48 }, { wch: 16 }, { wch: 16 }, { wch: 16 }];
+      XLSX.utils.book_append_sheet(wb, ws, i === 0 ? 'Estado de resultados' : 'Impuestos a pagar');
+    });
     XLSX.writeFile(wb, 'estado-de-resultados_' + (vista === 'todo' ? 'ambos-locales' : slug(vista)) + '_' + resMes + '.xlsx');
   }
 
@@ -1073,7 +1092,7 @@
 
   function formVacio() {
     return {
-      mercaderia: {}, sueldos: { s1: 0, s2: 0 }, alquiler: { a1: 0, a2: 0, expensas: 0 }, tarjetas: 0,
+      z: 0, mercaderia: {}, sueldos: { s1: 0, s2: 0 }, alquiler: { a1: 0, a2: 0, expensas: 0 }, tarjetas: 0,
       regalias: { s1: 0, s2: 0, s3: 0, s4: 0 }, publicidad: { s1: 0, s2: 0, s3: 0, s4: 0 },
       impuestos: { iva: 0, ibb: 0, autonomos: 0 }, servicios: [], extra: []
     };
@@ -1092,6 +1111,7 @@
     else { form.sueldos.s1 = Number(st.sueldos) || 0; }
     ['a1','a2','expensas'].forEach(k => { form.alquiler[k] = Number((st.alquiler || {})[k]) || 0; });
     form.tarjetas = Number(st.tarjetas) || 0;
+    form.z = Number(st.z) || 0;
     ['s1','s2','s3','s4'].forEach(k => { form.regalias[k] = Number((st.regalias || {})[k]) || 0; form.publicidad[k] = Number((st.publicidad || {})[k]) || 0; });
     ['iva','ibb','autonomos'].forEach(k => { form.impuestos[k] = Number((st.impuestos || {})[k]) || 0; });
     form.servicios = (st.servicios || []).map(s => ({ desc: s.desc || '', monto: Number(s.monto) || 0, fecha: s.fecha || '', nroFact: s.nroFact || '', ...(s.cid ? { cid: s.cid } : {}) }));
@@ -1109,13 +1129,61 @@
   // Cada renglón que viene de una factura lleva su "cid" (id de la factura): se rehacen cada vez, así no se duplican
   // y si corregís o borrás la factura, Carga se actualiza. Lo que escribís a mano no se toca.
   let cargaFacturasCargando = null;
-  function parteDeFactura(c, local) {
-    const g = Number((c.calc && c.calc.gasto)) || 0;
+  let resFacturasCargando = null;
+  // Parte de un importe de la factura que le toca a un local (Sociedad / reparto: mitad y mitad)
+  function parteValor(c, local, v) {
     if (c.reparto === 'mitad' || c.local === 'Sociedad') {
-      const ramos = r2(g / 2);
-      return local === 'Ramos Mejía' ? ramos : r2(g - ramos);
+      const ramos = r2(v / 2);
+      return local === 'Ramos Mejía' ? ramos : r2(v - ramos);
     }
-    return c.local === local ? g : 0;
+    return c.local === local ? v : 0;
+  }
+  function parteDeFactura(c, local) { return parteValor(c, local, Number((c.calc && c.calc.gasto)) || 0); }
+
+  // ── IMPUESTOS A PAGAR (salen de la Z y de las facturas) ───────────
+  const ALIC_IVA = 0.21, ALIC_IIBB = 0.045, ALIC_GAN = 0.25;
+  function impuestosDe(col, mes) {
+    const locs = col.local === 'Total' ? LOCALES : [col.local];
+    let cred = 0, pIva = 0, pIibb = 0;
+    (compCache[mes] || []).forEach(f => {
+      const k = f.calc || {};
+      locs.forEach(l => {
+        cred += parteValor(f, l, Number(k.creditoIva) || 0);
+        pIva += parteValor(f, l, Number(k.percIva) || 0);
+        pIibb += parteValor(f, l, Number(k.percIibb) || 0);
+      });
+    });
+    const z = Number(col.z) || 0;
+    const zNeto = r2(z / (1 + ALIC_IVA));
+    const debito = r2(z - zNeto);
+    const ivaPagar = r2(debito - cred - pIva);
+    const iibbBruto = r2(zNeto * ALIC_IIBB);
+    const iibbPagar = r2(iibbBruto - pIibb);
+    const ganancias = col.resultado > 0 ? r2(col.resultado * ALIC_GAN) : 0;
+    return { z, zNeto, debito, cred: r2(cred), pIva: r2(pIva), ivaPagar, iibbBruto, pIibb: r2(pIibb), iibbPagar, ganancias, total: r2(ivaPagar + iibbPagar + ganancias) };
+  }
+  function tablaImpuestos(cols, labels, mes) {
+    const n = cols.length, im = cols.map(c => impuestosDe(c, mes));
+    const head = t => `<tr class="cf-header"><td colspan="${n + 1}">${t}</td></tr>`;
+    const row = (cls, label, fn) => `<tr class="${cls}"><td>${label}</td>${im.map((x, i) => `<td>${fmt(fn(x, cols[i]))}</td>`).join('')}</tr>`;
+    let h = n > 1 ? `<tr class="cf-colhead"><td></td>${labels.map(l => `<td>${esc(l)}</td>`).join('')}</tr>` : '';
+    h += head('BASE: Z DEL MES');
+    h += row('cf-ingreso', 'Z (con IVA)', x => x.z);
+    h += row('cf-sub', '↳ Z neto (sin IVA, ÷ 1,21)', x => x.zNeto);
+    h += head('IVA');
+    h += row('cf-egreso', 'IVA débito (21% incluido en la Z)', x => x.debito);
+    h += row('cf-egreso', 'IVA crédito (facturas A menos notas de crédito)', x => -x.cred);
+    h += row('cf-egreso', 'Percepciones de IVA', x => -x.pIva);
+    h += row('cf-subtotal', 'IVA a pagar', x => x.ivaPagar);
+    h += head('INGRESOS BRUTOS (4,5%)');
+    h += row('cf-egreso', 'IIBB 4,5% sobre Z neto', x => x.iibbBruto);
+    h += row('cf-egreso', 'Percepciones de IIBB', x => -x.pIibb);
+    h += row('cf-subtotal', 'IIBB a pagar', x => x.iibbPagar);
+    h += head('GANANCIAS (PROVISIÓN 25%)');
+    h += row('cf-egreso', 'Resultado del mes (el de la tabla de arriba)', (x, c) => c.resultado);
+    h += row('cf-subtotal', 'Provisión Ganancias (25% si el resultado es positivo)', x => x.ganancias);
+    h += row('cf-total', 'TOTAL IMPUESTOS A PAGAR', x => x.total);
+    return `<table class="cf-tabla">${h}</table>`;
   }
   function facturasDeCarga(mes, local) {
     const lista = compCache[mes] || [];
@@ -1274,7 +1342,10 @@
       }
       avisoFact += `</div>`;
     }
-    document.getElementById('carga-form').innerHTML = avisoFact + auto + merc + `
+    const zCard = `<div class="card"><h3>🧾 Z del mes</h3>
+      <p class="nota">Total de la Z (ventas facturadas del mes), con el IVA incluido. De este monto salen solos el IVA débito, el IIBB 4,5% y la provisión de Ganancias, que se ven en el Resultado.</p>
+      <div class="campo" style="margin-bottom:0;"><label>Monto Z ($)</label>${inpNum(form.z, `setSimple('z',this.value)`)}</div></div>`;
+    document.getElementById('carga-form').innerHTML = avisoFact + auto + zCard + merc + `
       <div class="card"><h3>👥 Sueldos</h3><div class="grid-2">
         <div class="campo" style="margin-bottom:0;"><label>Sueldo 1 ($)</label>${inpNum(form.sueldos.s1, `setSub('sueldos','s1',this.value)`)}</div>
         <div class="campo" style="margin-bottom:0;"><label>Sueldo 2 ($)</label>${inpNum(form.sueldos.s2, `setSub('sueldos','s2',this.value)`)}</div></div></div>
@@ -1369,7 +1440,7 @@
 
     try {
       await setDoc(doc(db, COL_ERR, slug(localCarga) + '_' + mes), {
-        local: localCarga, mes, mercaderia,
+        local: localCarga, mes, mercaderia, z: Number(form.z) || 0,
         sueldos: form.sueldos, alquiler: form.alquiler, tarjetas: form.tarjetas,
         regalias: form.regalias, publicidad: form.publicidad, impuestos: form.impuestos,
         servicios, extraordinarios, timestamp: Date.now()
